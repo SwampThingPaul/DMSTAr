@@ -1,0 +1,23 @@
+Package: DMSTAr
+Type: Package
+Title: Dynamic Model for Stormwater Treatment Areas in R
+Version: 0.1.0
+Date: 2026-02-11
+Authors@R: c(person("Paul", "Julian",role=c("aut","cre"),
+            email="pjulian@evergladesfoundation.org"))
+Maintainer: Paul Julian <pjulian@evergladesfoundation.org>
+URL: https://github.com/SwampThingPaul/DMSTAr
+BugReports: https://github.com/SwampThingPaul/DMSTAr/issues
+Description: Performs treatment wetland modeling consistent with the original 
+             Excel spreadsheet and VBA code version of DMSTA2 developed by
+             Dr Bill Walker <https://wwwalker.net/dmsta/>.
+License: MIT + file LICENSE
+Encoding: UTF-8
+LazyData: true
+Depends: 
+    R (>= 2.10)
+Suggests: 
+    testthat (>= 3.0.0)
+Config/testthat/edition: 3
+RoxygenNote: 7.2.3
+Roxygen: list(markdown = TRUE)
