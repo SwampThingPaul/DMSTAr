@@ -7,3 +7,4 @@
 ^_beta$
 ^build\.R$
 ^data-raw$
+^_workingfiles$

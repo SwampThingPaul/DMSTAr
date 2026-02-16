@@ -1,0 +1,44 @@
+#' Parameter Sets for Stormwater Treatment Area Dynamic Model
+#'
+#' Internal lookup table of calibration sets used by the Dynamic Model for
+#' Stormwater Treatment Areas (DMSTA). Each row corresponds to a vegetation /
+#' compartment set (e.g., emergent marsh, SAV, PSTA, reservoir) and provides
+#' model coefficients, depth/flow/concentration ranges, and variability terms.
+#'
+#' @format A data frame with 5 rows and 25 variables:
+#' \describe{
+#'   \item{Set}{Character. Parameter set identifier (e.g., `"EMG_3"`).}
+#'   \item{Descript}{Character. Human-readable description of the set.}
+#'   \item{C0}{Integer. Concentration parameter C0 = Conc at  0 g/m2 P Storage (ug/L).}
+#'   \item{C1}{Integer. Concentration parameter C1 = Conc at 1 g/m2 P storage (ug/L).}
+#'   \item{C2}{Integer. Concentration parameter C2 =  Conc at Half-Max Uptake.}
+#'   \item{Ks}{Numeric. Net Settling Rate at Steady State (m/yr).}
+#'   \item{Z1}{Integer. Saturated Uptake Depth (cm).}
+#'   \item{Z2}{Integer. Lower Penalty Depth (cm).}
+#'   \item{Z3}{Integer. Upper Penalty Depth (cm).}
+#'   \item{K1}{Numeric. First Order Removal Rate (m/yr).}
+#'   \item{C0_NEWS_SF}{Numeric. Periphyton for NEWS or Seasonal Adjustment for P Uptake (ug/L).}
+#'   \item{C1_Peri}{Numeric. Periphyton system - concentration parameter (ug/L).}
+#'   \item{Ks_Peri}{Numeric. Periphyton system - settling rate (1/yr).}
+#'   \item{Zx_Peri}{Numeric. Periphyton system - saturated uptake depth (cm).}
+#'   \item{Sm}{Numeric.  Transition Storage Midpoint (mg/m2).}
+#'   \item{Sb}{Numeric. Transition Storage Bandwidth (mg/m2).}
+#'   \item{MinDepth}{Integer. Minimum depth observed/allowed for the set.}
+#'   \item{MaxDepth}{Integer. Maximum depth observed/allowed for the set.}
+#'   \item{MinQW}{Integer. Minimum flow (QW) observed/allowed for the set.}
+#'   \item{MaxQW}{Integer. Maximum flow (QW) observed/allowed for the set.}
+#'   \item{MinConc}{Numeric. Minimum concentration observed/allowed for the set.}
+#'   \item{MaxConc}{Numeric. Maximum concentration observed/allowed for the set.}
+#'   \item{MinFreqZ_LT10cm}{Numeric. Minimum frequency of Z < 10 cm.}
+#'   \item{MaxFreqZ_LT10cm}{Numeric. Maximum frequency of Z < 10 cm.}
+#'   \item{K_CV}{Numeric. Coefficient of variation for Ks (or related K term).}
+#' }
+#'
+#' @source
+#' dmsta xlsm file, sheet `Calibrations`
+#'
+#' @examples
+#' data(dmsta_cals)
+#' dmsta_cals
+
+"dmsta_cals"

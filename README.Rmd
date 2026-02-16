@@ -30,9 +30,19 @@ install.packages("devtools");# if you do not have it installed on your PC
 devtools::install_github("SwampThingPaul/DMSTAr")
 ```
 
-To install the deployed version from CRAN use:
+<!-- To install the deployed version from CRAN use: -->
 
-```{r,eval = FALSE}
-install.packages("DMSTAr")
+```{r,eval = FALSE,  include=FALSE,echo=FALSE}
+# install.packages("DMSTAr")
 ```
 
+
+## *Indevelopment*
+
+ * Develop Ordinary Differential Equation (ODE) versions DMSTA functions
+ 
+ * Develop calibration tools 
+ 
+ * Include Low-P Wetland Event Model framework consistent with Juston and Kadlec (2019)
+ 
+ * Develop flume and alum based models 
