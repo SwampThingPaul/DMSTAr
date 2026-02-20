@@ -508,6 +508,7 @@ dmsta_flow_day <- function(
   # structured outputs
   results <- list(
     V_end = V,
+    Qin = Qi_eff,
     Qout = Qout_day,
     Q_treated = Q_treated_day,
     Q_rel1 = Q_rel1_day,
@@ -694,6 +695,7 @@ dmsta_flow_day_steps <- function(
     steps = step_out,
 
     # daily totals
+    Qin = Qi_eff,
     Qout = Qout_day,
     Q_treated = Q_treated_day,
     Q_rel1 = Q_rel1_day,
@@ -872,7 +874,7 @@ dmsta_flow_series <- function(V_init, series, params, Nsteps = 4L){
     V <- day_res$results$V_end
 
     # Store results
-
+    results_df$Qin[i]      <- day_res$results$Qin
     results_df$Qout[i]      <- day_res$results$Qout
     results_df$Q_treated[i] <- day_res$results$Q_treated
     results_df$Q_rel1[i]    <- day_res$results$Q_rel1
@@ -893,7 +895,7 @@ dmsta_flow_series <- function(V_init, series, params, Nsteps = 4L){
     water_df$WB_rel[i]  <- day_res$budgets$water$WB_rel
   }
 
-  results_df$Qin <- series$Qin
+  # results_df$Qin <- series$Qin
   # Structured output
   out <- list(
     results = results_df,

@@ -669,6 +669,7 @@ dmsta_flowP_day <- function(V, P_state, tanks, inputs, params,
     Z_end      = Z_end,
     Z_avg      = Z_avg,
     V_cell_day = V_cell_day,
+    Qin        = hyd$Qin,
 
     # hydrology totals
     Qout      = hyd$Qout,
@@ -1016,7 +1017,7 @@ dmsta_flowP_series <- function(
     V_end = NA_real_, Z_end = NA_real_, Z_avg = NA_real_, V_cell_day = NA_real_,
 
     # hydrology
-    Qin = series$Qi,
+    Qin = NA_real_,
     Qout = NA_real_, Q_treated = NA_real_, Q_rel1 = NA_real_, Q_rel2 = NA_real_,
     SeepOut = NA_real_, SeepIn = NA_real_, Bypass = NA_real_,
 
@@ -1129,6 +1130,7 @@ dmsta_flowP_series <- function(
     results_df$Z_avg[i] <- res$results$Z_avg
     results_df$V_cell_day[i] <- res$results$V_cell_day
 
+    results_df$Qin[i]       <- res$results$Qin
     results_df$Qout[i]      <- res$results$Qout
     results_df$Q_treated[i] <- res$results$Q_treated
     results_df$Q_rel1[i]    <- res$results$Q_rel1
