@@ -95,6 +95,27 @@ safe_num <- function(x, default = 0) {
   x
 }
 
+#' Safely Resolve a Numeric vector
+#'
+#' Returns a numeric value if it is non-NULL and finite.
+#' Otherwise returns a specified default.
+#'
+#' This helper is used internally to guard against
+#' NULL, NA, NaN, or infinite values in model calculations.
+#'
+#' @param x A candidate numeric value.
+#' @param default A scalar value returned if `x` is NULL or not finite.
+#'
+#' @return A single numeric value.
+#'
+#' @keywords internal
+#' @noRd
+safe_num_vec <- function(x, default = 0){
+  if (is.null(x)) return(default)
+  x[!is.finite(x)] <- default
+  x
+}
+
 #' Return First Non-NULL Finite Value
 #'
 #' Scans a list of candidate values and returns the first element
