@@ -19,24 +19,23 @@ webpage](https://wwwalker.net/dmsta/) and relevant publications below.
 
 ``` r
 citation('DMSTAr')
+#> 
+#> To cite package 'DMSTAr' in publications use:
+#> 
+#>   Paul Julian (2026). DMSTAr: Dynamic Model for Stormwater Treatment
+#>   Areas in R. R package version 0.1.0.
+#>   https://github.com/SwampThingPaul/DMSTAr
+#> 
+#> A BibTeX entry for LaTeX users is
+#> 
+#>   @Manual{,
+#>     title = {DMSTAr: Dynamic Model for Stormwater Treatment Areas in R},
+#>     author = {Paul Julian},
+#>     year = {2026},
+#>     note = {R package version 0.1.0},
+#>     url = {https://github.com/SwampThingPaul/DMSTAr},
+#>   }
 ```
-
-    ## 
-    ## To cite package 'DMSTAr' in publications use:
-    ## 
-    ##   Paul Julian (2026). DMSTAr: Dynamic Model for Stormwater Treatment
-    ##   Areas in R. R package version 0.1.0.
-    ##   https://github.com/SwampThingPaul/DMSTAr
-    ## 
-    ## A BibTeX entry for LaTeX users is
-    ## 
-    ##   @Manual{,
-    ##     title = {DMSTAr: Dynamic Model for Stormwater Treatment Areas in R},
-    ##     author = {Paul Julian},
-    ##     year = {2026},
-    ##     note = {R package version 0.1.0},
-    ##     url = {https://github.com/SwampThingPaul/DMSTAr},
-    ##   }
 
 ## Installation <a name="install"></a>
 
@@ -52,9 +51,6 @@ devtools::install_github("SwampThingPaul/DMSTAr")
 ## *Indevelopment*
 
 - Develop Ordinary Differential Equation (ODE) versions DMSTA functions
-
-- Include Low-P Wetland Event Model framework consistent with Juston and
-  Kadlec (2019)
 
 - Develop flume and alum based models
 
@@ -84,6 +80,7 @@ For purposes of this demonstration we will use only the first year and
 half of the example input data frame.
 
 ``` r
+
 # for example, limit input file
 series <- series[1:540,];
 
@@ -144,7 +141,7 @@ Each function provides a list of data.frames including results
 
 <div class="figure" style="text-align: center">
 
-<img src="README_files/figure-gfm/hydro_plot-1.png" alt="Simulated outflow discharge (top) and water level (bottom)."  />
+<img src="man/figures/README-hydro_plot-1.png" alt="Simulated outflow discharge (top) and water level (bottom)."  />
 <p class="caption">
 Simulated outflow discharge (top) and water level (bottom).
 </p>
@@ -254,7 +251,7 @@ budget, to view see `out$budgets$mass`.
 
 <div class="figure" style="text-align: center">
 
-<img src="README_files/figure-gfm/hydroP_plot-1.png" alt="Simulated outflow discharge (top left), water level (bottom left), TP load (top right) and TP concentration (bottom right)."  />
+<img src="man/figures/README-hydroP_plot-1.png" alt="Simulated outflow discharge (top left), water level (bottom left), TP load (top right) and TP concentration (bottom right)."  />
 <p class="caption">
 Simulated outflow discharge (top left), water level (bottom left), TP
 load (top right) and TP concentration (bottom right).
@@ -379,6 +376,9 @@ hydroP_net_rslt <- dmsta_flowP_case(
 
 hydroP_case_rslt <- hydroP_net_rslt$results$case
 hydroP_cells_rslt <- hydroP_net_rslt$results$cells
+
+
+  
 ```
 
 Much like the other functions this function stores results, water and
@@ -388,7 +388,7 @@ as well as cell specific information.
 
 <div class="figure" style="text-align: center">
 
-<img src="README_files/figure-gfm/hydroP_case_plot-1.png" alt="Simulated outflow discharge, water level, TP load and TP concentration for cell 1 (top) and cell 2 (bottom)."  />
+<img src="man/figures/README-hydroP_case_plot-1.png" alt="Simulated outflow discharge, water level, TP load and TP concentration for cell 1 (top) and cell 2 (bottom)."  />
 <p class="caption">
 Simulated outflow discharge, water level, TP load and TP concentration
 for cell 1 (top) and cell 2 (bottom).

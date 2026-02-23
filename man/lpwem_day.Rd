@@ -2,7 +2,7 @@
 % Please edit documentation in R/lpwem.R
 \name{lpwem_day}
 \alias{lpwem_day}
-\title{Run one model day with DMSTA hydrology and LPWEM TP kinetics}
+\title{\strong{In-developement:} Run one model day with DMSTA hydrology and LPWEM TP kinetics}
 \usage{
 lpwem_day(
   V,
@@ -57,9 +57,28 @@ tank-chain phosphorus dynamics. Hydrology is advanced using
 \code{DMSTAr:::dmsta_flow_day_steps()}, and TP is updated in each hydrology
 substep using multiple LPWEM micro-steps (explicit Euler).
 }
+\details{
+\strong{Caveat:}
+The Low-P Wetland Event Model (LPWEM) (Juston and Kadlec, 2019) was
+developed for STA analysis and to address known shortcomings with the
+DMSTA (Juston, 2016). LPWEM focused on explaining dynamics in the
+low-P domain of well-performing STAs but did not model STA response
+to elevated Phosphorous Loading Rates (PLRs).Furthermore, the LPWEM model
+was calibrates using measured internal PLR, as site specific measure of
+P flux from the sediment to the overlying water column see
+Jeraud et al (2020) for more detail. Therefore, application of this model
+is flow-way specific and presumably underpredict outflow TP
+concentrations under elevated PLRs.
+}
 \references{
 Juston, J. M., & Kadlec, R. H. (2019).
 Data-driven modeling of phosphorus (P) dynamics in low-P stormwater wetlands.
 \emph{Environmental Modelling & Software}, 118, 226–240.
-https://doi.org/10.1016/j.envsoft.2019.05.002
+\doi{https://doi.org/10.1016/j.envsoft.2019.05.002}
+
+Jerauld M, Juston J, DeBusk T, et al (2020) Internal phosphorus loading
+rate (iPLR) in a low-P stormwater treatment wetland.
+\emph{Ecological Engineering}, 156:105944.
+\doi{10.1016/j.ecoleng.2020.105944}
 }
+\keyword{internal}

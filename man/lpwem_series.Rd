@@ -2,7 +2,7 @@
 % Please edit documentation in R/lpwem.R
 \name{lpwem_series}
 \alias{lpwem_series}
-\title{Run a multi-day LPWEM simulation over a time series}
+\title{\strong{In-developement} Run a multi-day LPWEM simulation over a time series}
 \usage{
 lpwem_series(
   series,
@@ -42,6 +42,19 @@ outflow TP, outflow, load, uptake, and return totals
 Wraps \code{\link[=lpwem_day]{lpwem_day()}} over a daily time series, carrying forward
 end-of-day volume and the tank TP profile as initial conditions for the next
 day.
+}
+\details{
+\strong{Caveat:}
+The Low-P Wetland Event Model (LPWEM) (Juston and Kadlec, 2019) was
+developed for STA analysis and to address known shortcomings with the
+DMSTA (Juston, 2016). LPWEM focused on explaining dynamics in the
+low-P domain of well-performing STAs but did not model STA response
+to elevated Phosphorous Loading Rates (PLRs).Furthermore, the LPWEM model
+was calibrates using measured internal PLR, as site specific measure of
+P flux from the sediment to the overlying water column see
+Jeraud et al (2020) for more detail. Therefore, application of this model
+is flow-way specific and presumably underpredict outflow TP
+concentrations under elevated PLRs.
 }
 \examples{
 \dontrun{
@@ -96,7 +109,6 @@ pars_lpwem <- list(
 )
 
 res <- lpwem_series(series, params_hydro = params, pars_lpwem = pars_lpwem)
-
 }
 
 }
@@ -104,5 +116,11 @@ res <- lpwem_series(series, params_hydro = params, pars_lpwem = pars_lpwem)
 Juston, J. M., & Kadlec, R. H. (2019).
 Data-driven modeling of phosphorus (P) dynamics in low-P stormwater wetlands.
 \emph{Environmental Modelling & Software}, 118, 226–240.
-https://doi.org/10.1016/j.envsoft.2019.05.002
+\doi{https://doi.org/10.1016/j.envsoft.2019.05.002}
+
+Jerauld M, Juston J, DeBusk T, et al (2020) Internal phosphorus loading
+rate (iPLR) in a low-P stormwater treatment wetland.
+\emph{Ecological Engineering}, 156:105944.
+\doi{10.1016/j.ecoleng.2020.105944}
 }
+\keyword{internal}

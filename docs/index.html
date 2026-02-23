@@ -79,42 +79,340 @@
 <h2 id="citing-package">Citing package<a class="anchor" aria-label="anchor" href="#citing-package"></a>
 </h2>
 <div class="sourceCode" id="cb1"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/utils/citation.html" class="external-link">citation</a></span><span class="op">(</span><span class="st">'DMSTAr'</span><span class="op">)</span></span></code></pre></div>
-<div class="sourceCode" id="cb2"><pre class="sourceCode R"><code class="sourceCode r"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="do">## </span></span>
-<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a><span class="do">## To cite package 'DMSTAr' in publications use:</span></span>
-<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a><span class="do">## </span></span>
-<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a><span class="do">##   Paul Julian (2026). DMSTAr: Dynamic Model for Stormwater Treatment</span></span>
-<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a><span class="do">##   Areas in R. R package version 0.1.0.</span></span>
-<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a><span class="do">##   https://github.com/SwampThingPaul/DMSTAr</span></span>
-<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a><span class="do">## </span></span>
-<span id="cb2-8"><a href="#cb2-8" aria-hidden="true" tabindex="-1"></a><span class="do">## A BibTeX entry for LaTeX users is</span></span>
-<span id="cb2-9"><a href="#cb2-9" aria-hidden="true" tabindex="-1"></a><span class="do">## </span></span>
-<span id="cb2-10"><a href="#cb2-10" aria-hidden="true" tabindex="-1"></a><span class="do">##   @Manual{,</span></span>
-<span id="cb2-11"><a href="#cb2-11" aria-hidden="true" tabindex="-1"></a><span class="do">##     title = {DMSTAr: Dynamic Model for Stormwater Treatment Areas in R},</span></span>
-<span id="cb2-12"><a href="#cb2-12" aria-hidden="true" tabindex="-1"></a><span class="do">##     author = {Paul Julian},</span></span>
-<span id="cb2-13"><a href="#cb2-13" aria-hidden="true" tabindex="-1"></a><span class="do">##     year = {2026},</span></span>
-<span id="cb2-14"><a href="#cb2-14" aria-hidden="true" tabindex="-1"></a><span class="do">##     note = {R package version 0.1.0},</span></span>
-<span id="cb2-15"><a href="#cb2-15" aria-hidden="true" tabindex="-1"></a><span class="do">##     url = {https://github.com/SwampThingPaul/DMSTAr},</span></span>
-<span id="cb2-16"><a href="#cb2-16" aria-hidden="true" tabindex="-1"></a><span class="do">##   }</span></span></code></pre></div>
+<code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/utils/citation.html" class="external-link">citation</a></span><span class="op">(</span><span class="st">'DMSTAr'</span><span class="op">)</span></span>
+<span><span class="co">#&gt; </span></span>
+<span><span class="co">#&gt; To cite package 'DMSTAr' in publications use:</span></span>
+<span><span class="co">#&gt; </span></span>
+<span><span class="co">#&gt;   Paul Julian (2026). DMSTAr: Dynamic Model for Stormwater Treatment</span></span>
+<span><span class="co">#&gt;   Areas in R. R package version 0.1.0.</span></span>
+<span><span class="co">#&gt;   https://github.com/SwampThingPaul/DMSTAr</span></span>
+<span><span class="co">#&gt; </span></span>
+<span><span class="co">#&gt; A BibTeX entry for LaTeX users is</span></span>
+<span><span class="co">#&gt; </span></span>
+<span><span class="co">#&gt;   @Manual{,</span></span>
+<span><span class="co">#&gt;     title = {DMSTAr: Dynamic Model for Stormwater Treatment Areas in R},</span></span>
+<span><span class="co">#&gt;     author = {Paul Julian},</span></span>
+<span><span class="co">#&gt;     year = {2026},</span></span>
+<span><span class="co">#&gt;     note = {R package version 0.1.0},</span></span>
+<span><span class="co">#&gt;     url = {https://github.com/SwampThingPaul/DMSTAr},</span></span>
+<span><span class="co">#&gt;   }</span></span></code></pre></div>
 </div>
 <div class="section level2">
 <h2 id="installation-">Installation <a name="install"></a>
 <a class="anchor" aria-label="anchor" href="#installation-"></a>
 </h2>
 <p>Development version can be installed from this repo using:</p>
-<div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb2"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/utils/install.packages.html" class="external-link">install.packages</a></span><span class="op">(</span><span class="st">"devtools"</span><span class="op">)</span>;<span class="co"># if you do not have it installed on your PC</span></span>
 <span><span class="fu">devtools</span><span class="fu">::</span><span class="fu"><a href="https://remotes.r-lib.org/reference/install_github.html" class="external-link">install_github</a></span><span class="op">(</span><span class="st">"SwampThingPaul/DMSTAr"</span><span class="op">)</span></span></code></pre></div>
 <!-- To install the deployed version from CRAN use: -->
 </div>
 <div class="section level2">
-<h2 id="indevelopment">Indevelopment<a class="anchor" aria-label="anchor" href="#indevelopment"></a>
+<h2 id="indevelopment">
+<em>Indevelopment</em><a class="anchor" aria-label="anchor" href="#indevelopment"></a>
 </h2>
 <ul>
 <li><p>Develop Ordinary Differential Equation (ODE) versions DMSTA functions</p></li>
-<li><p>Develop calibration tools</p></li>
-<li><p>include Low-P Wetland Event Model framework consistent with Juston and Kadlec (2019)</p></li>
+<li><p>Develop flume and alum based models</p></li>
 </ul>
+</div>
+<div class="section level2">
+<h2 id="how-to">How to<a class="anchor" aria-label="anchor" href="#how-to"></a>
+</h2>
+<p>Below are a couple of examples of how use the functions in this R-package to do simple simulations. The three main modeling functions in <code>DMSTAr</code> is <code>dmsta_flow_series(...)</code> (single cell hydrology only), <code>dmsta_flowP_series(...)</code> (single cell hydrology and P) and <code>dmsta_flowP_case(...)</code> (networked hydrology and P). Each function requires input parameters and input (i.e. forcing) data to simulate outflow conditions.</p>
+<p>For input data purposes we will use the internal data series in this package:</p>
+<div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://github.com/SwampThingPaul/DMSTAr" class="external-link">DMSTAr</a></span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/utils/data.html" class="external-link">data</a></span><span class="op">(</span><span class="va">series</span><span class="op">)</span></span></code></pre></div>
+<p>To see what this is use <code><a href="reference/series.html">?DMSTAr::series</a></code></p>
+<div class="section level3">
+<h3 id="hydrology-only">Hydrology only<a class="anchor" aria-label="anchor" href="#hydrology-only"></a>
+</h3>
+<p>For purposes of this demonstration we will use only the first year and half of the example input data frame.</p>
+<div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span></span>
+<span><span class="co"># for example, limit input file</span></span>
+<span><span class="va">series</span> <span class="op">&lt;-</span> <span class="va">series</span><span class="op">[</span><span class="fl">1</span><span class="op">:</span><span class="fl">540</span>,<span class="op">]</span>;</span>
+<span></span>
+<span><span class="co"># Data formatting</span></span>
+<span><span class="va">series</span><span class="op">$</span><span class="va">Qi</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/cfs_to_hm3d.html">cfs_to_hm3d</a></span><span class="op">(</span><span class="va">series</span><span class="op">$</span><span class="va">Flow</span><span class="op">)</span> <span class="co"># cfs to hm3/d</span></span>
+<span><span class="va">series</span><span class="op">$</span><span class="va">Rain</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/in_to_m.html">in_to_m</a></span><span class="op">(</span><span class="va">series</span><span class="op">$</span><span class="va">Rainfall</span><span class="op">)</span> <span class="co"># inches to meters per day</span></span>
+<span><span class="va">series</span><span class="op">$</span><span class="va">Et</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/in_to_m.html">in_to_m</a></span><span class="op">(</span><span class="va">series</span><span class="op">$</span><span class="va">ET</span><span class="op">)</span></span>
+<span><span class="va">series</span><span class="op">$</span><span class="va">Zcontrol</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/cm_to_m.html">cm_to_m</a></span><span class="op">(</span><span class="fl">0</span><span class="op">)</span> <span class="co"># meters; setting to zero to see what happens</span></span>
+<span><span class="co"># If you have release series; otherwise set to 0</span></span>
+<span><span class="va">series</span><span class="op">$</span><span class="va">Qr0</span> <span class="op">&lt;-</span> <span class="fl">0</span>   <span class="co"># constrained outflow (forced Q) if used</span></span>
+<span><span class="va">series</span><span class="op">$</span><span class="va">Qr1</span> <span class="op">&lt;-</span> <span class="fl">0</span>   <span class="co"># release 1</span></span>
+<span><span class="va">series</span><span class="op">$</span><span class="va">Qr2</span> <span class="op">&lt;-</span> <span class="fl">0</span>   <span class="co"># release 2</span></span>
+<span><span class="va">series</span><span class="op">$</span><span class="va">Ci</span> <span class="op">&lt;-</span> <span class="va">series</span><span class="op">$</span><span class="va">Conc</span></span>
+<span></span>
+<span><span class="co"># input parameters</span></span>
+<span><span class="va">params</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span></span>
+<span>  A_cell <span class="op">=</span> <span class="fl">2.19</span>,          <span class="co"># cell area; km2</span></span>
+<span>  Zmin   <span class="op">=</span> <span class="fl">2</span>,             <span class="co"># minimum depth; cm</span></span>
+<span>  Vmin   <span class="op">=</span> <span class="fl">0</span>,             <span class="co"># minimum volume; hm3</span></span>
+<span>  Q_a <span class="op">=</span> <span class="fl">1.0</span>,              <span class="co"># discharge coef</span></span>
+<span>  Q_b <span class="op">=</span> <span class="fl">4.0</span>,              <span class="co"># discharge exponent</span></span>
+<span>  Zweir <span class="op">=</span> <span class="fl">0</span>,              <span class="co"># depth offset for outflow computation; cm</span></span>
+<span>  Q_zmin <span class="op">=</span> <span class="fl">38</span>,            <span class="co"># minimum depth of discharge; cm</span></span>
+<span>  Qomax <span class="op">=</span> <span class="fl">0.0</span>,            <span class="co"># maximum discharge  hm3/day</span></span>
+<span>  Qimax <span class="op">=</span> <span class="fl">0</span>,              <span class="co"># maximum inflow  (hm3/day)</span></span>
+<span>  Width <span class="op">=</span> <span class="fl">1.55</span>,           <span class="co"># cell widthl km</span></span>
+<span>  Bypass_elev <span class="op">=</span> <span class="fl">0</span>,        <span class="co"># mean depth at which bypass begins, cm</span></span>
+<span>  Seepout_Rate <span class="op">=</span> <span class="fl">0.00789</span>, <span class="co"># outflow seepage rate per unit head; cm/d/cm</span></span>
+<span>  Seepout_Elev <span class="op">=</span> <span class="fl">0.0</span>,     <span class="co"># elevation controlling outflow seepage rate; cm</span></span>
+<span>  Seepin_Rate  <span class="op">=</span> <span class="fl">0.0</span>,     <span class="co"># seepage inflow rate; ; cm/d/cm</span></span>
+<span>  Seepin_Elev  <span class="op">=</span> <span class="fl">0.0</span>,     <span class="co"># elevation controlling inflow seepage rate; cm</span></span>
+<span>  ShutdownET <span class="op">=</span> <span class="cn">TRUE</span>,</span>
+<span>  force_Q_out <span class="op">=</span> <span class="cn">FALSE</span>,</span>
+<span>  wrap_interp <span class="op">=</span> <span class="cn">TRUE</span>,</span>
+<span>  Zinit <span class="op">=</span> <span class="fl">40</span>,             <span class="co"># initial water column depth; cm</span></span>
+<span>  Qin_Frac <span class="op">=</span> <span class="fl">0.22</span>,        <span class="co"># fraction of basin flows going into this cell</span></span>
+<span>  Zrelease <span class="op">=</span> <span class="fl">0</span>,           <span class="co">#  minimum depth for releases; cm</span></span>
+<span>  RecycleQ <span class="op">=</span> <span class="fl">0</span></span>
+<span><span class="op">)</span></span>
+<span></span>
+<span><span class="co"># initial volume (based on input values)</span></span>
+<span><span class="va">V_init</span> <span class="op">&lt;-</span> <span class="op">(</span><span class="fu"><a href="reference/cm_to_m.html">cm_to_m</a></span><span class="op">(</span><span class="va">params</span><span class="op">$</span><span class="va">Zinit</span><span class="op">)</span> <span class="op">*</span> <span class="va">params</span><span class="op">$</span><span class="va">A_cell</span><span class="op">)</span></span>
+<span><span class="va">out_hydro</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/dmsta_flow_series.html">dmsta_flow_series</a></span><span class="op">(</span><span class="va">V_init</span>, <span class="va">series</span>, <span class="va">params</span>, Nsteps <span class="op">=</span> <span class="fl">4</span><span class="op">)</span></span>
+<span></span>
+<span><span class="va">hydro_rslt</span> <span class="op">&lt;-</span> <span class="va">out_hydro</span><span class="op">$</span><span class="va">results</span></span>
+<span></span>
+<span><span class="co"># convert water depth from meter to centimeters </span></span>
+<span><span class="va">hydro_rslt</span><span class="op">$</span><span class="va">Z_end_cm</span> <span class="op">&lt;-</span><span class="fu"><a href="reference/m_to_cm.html">m_to_cm</a></span><span class="op">(</span><span class="va">hydro_rslt</span><span class="op">$</span><span class="va">Z_end</span><span class="op">)</span></span></code></pre></div>
+<div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/utils/str.html" class="external-link">str</a></span><span class="op">(</span><span class="va">out_hydro</span><span class="op">)</span></span></code></pre></div>
+<p>Each function provides a list of data.frames including results (<code>out$results</code>), daily water budget (<code>out$budgets$water</code>) and metadata (<code>out$meta</code>).</p>
+<div class="figure" style="text-align: center">
+<img src="reference/figures/README-hydro_plot-1.png" alt="Simulated outflow discharge (top) and water level (bottom)."><p class="caption">
+Simulated outflow discharge (top) and water level (bottom).
+</p>
+</div>
+</div>
+<div class="section level3">
+<h3 id="hydrology-and-p">Hydrology and P<a class="anchor" aria-label="anchor" href="#hydrology-and-p"></a>
+</h3>
+<div class="sourceCode" id="cb6"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="co">## Phosphorous Modeling parameters</span></span>
+<span><span class="va">pparams</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span></span>
+<span>  DutyCycle <span class="op">=</span> <span class="fl">0.95</span>,</span>
+<span>  Cmax <span class="op">=</span> <span class="fl">2000</span>,</span>
+<span>  C1000 <span class="op">=</span> <span class="fl">22</span>,        </span>
+<span>  Cstar <span class="op">=</span> <span class="fl">3</span>,         </span>
+<span>  Ks_per_yr <span class="op">=</span> <span class="fl">16.8</span>, </span>
+<span>  Z1 <span class="op">=</span> <span class="fl">40</span>,          </span>
+<span>  Z2 <span class="op">=</span> <span class="fl">100</span>,         </span>
+<span>  Z3 <span class="op">=</span> <span class="fl">200</span>,         </span>
+<span>  Chalf <span class="op">=</span> <span class="fl">300</span>,      </span>
+<span>  K2Coef1 <span class="op">=</span> <span class="fl">0</span>,      </span>
+<span>  Ytrans <span class="op">=</span> <span class="fl">0</span>,       </span>
+<span>  Ysigma <span class="op">=</span> <span class="fl">0</span>,       </span>
+<span>  Czero <span class="op">=</span> <span class="fl">0</span>,        </span>
+<span>  C_rain <span class="op">=</span> <span class="fl">10</span>,      </span>
+<span>  DryDepo <span class="op">=</span> <span class="fl">20</span>,     </span>
+<span>  SeasonalFactor <span class="op">=</span> <span class="fl">0</span>,</span>
+<span>  C1000_2 <span class="op">=</span> <span class="cn">NULL</span>,    </span>
+<span>  ks_2 <span class="op">=</span> <span class="fl">0</span>,          </span>
+<span>  zh_2 <span class="op">=</span> <span class="fl">0</span>,          </span>
+<span>  k_depth_penalty <span class="op">=</span> <span class="fl">1</span>,</span>
+<span>  seepage_c <span class="op">=</span> <span class="fl">20</span>,     </span>
+<span>  seepin_conc <span class="op">=</span> <span class="fl">0</span>,    </span>
+<span>  C_init_ppb <span class="op">=</span> <span class="fl">30</span>,    </span>
+<span>  Y_init_mgm2 <span class="op">=</span> <span class="fl">3387.67297548954</span>, </span>
+<span>  n_tanks <span class="op">=</span> <span class="fl">3</span>,</span>
+<span>  Nsteps <span class="op">=</span> <span class="fl">4</span></span>
+<span><span class="op">)</span></span>
+<span></span>
+<span><span class="co"># Add the hydrology parameters (above) to the P parameters</span></span>
+<span><span class="va">params</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/utils/modifyList.html" class="external-link">modifyList</a></span><span class="op">(</span><span class="va">params</span>,<span class="va">pparams</span><span class="op">)</span></span>
+<span></span>
+<span><span class="co">##  choose model structure</span></span>
+<span><span class="va">ttankS</span>  <span class="op">&lt;-</span> <span class="va">params</span><span class="op">$</span><span class="va">n_tanks</span>    <span class="co"># tanks in series (can be fractional)</span></span>
+<span><span class="va">Nsteps</span>  <span class="op">&lt;-</span> <span class="va">params</span><span class="op">$</span><span class="va">Nsteps</span>     <span class="co"># RK substeps per day</span></span>
+<span></span>
+<span><span class="co">##  build tank geometry once</span></span>
+<span><span class="va">tanks</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/dmsta_build_tanks.html">dmsta_build_tanks</a></span><span class="op">(</span><span class="va">params</span><span class="op">$</span><span class="va">A_cell</span>, <span class="va">ttankS</span><span class="op">)</span></span>
+<span></span>
+<span><span class="co">##  build kinetics once: 3 modules STA/PSTA/RES</span></span>
+<span><span class="va">ppar</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/build_P_kin_slots.html">build_P_kin_slots</a></span><span class="op">(</span></span>
+<span>   mods     <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"STA"</span>, <span class="st">"PSTA"</span>, <span class="st">"RES"</span><span class="op">)</span>,</span>
+<span>   pparams  <span class="op">=</span> <span class="va">params</span>,</span>
+<span>   Dpy      <span class="op">=</span> <span class="fl">365.25</span>,</span>
+<span>   DutyCycle <span class="op">=</span> <span class="va">params</span><span class="op">$</span><span class="va">DutyCycle</span><span class="op">)</span></span>
+<span></span>
+<span><span class="co"># A function to validation/check input parameters</span></span>
+<span><span class="fu"><a href="reference/validate_P_paramsK.html">validate_P_paramsK</a></span><span class="op">(</span><span class="va">ppar</span><span class="op">)</span></span>
+<span></span>
+<span><span class="co">##  constants </span></span>
+<span> <span class="va">constants</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span></span>
+<span>   Cmax <span class="op">=</span> <span class="va">params</span><span class="op">$</span><span class="va">Cmax</span>,</span>
+<span>   C_rain <span class="op">=</span> <span class="va">params</span><span class="op">$</span><span class="va">C_rain</span>,</span>
+<span>   DryDepo <span class="op">=</span> <span class="va">params</span><span class="op">$</span><span class="va">DryDepo</span> <span class="op">/</span> <span class="fl">365.25</span>,   <span class="co"># convert to mg/m2-day</span></span>
+<span>   seepin_conc <span class="op">=</span> <span class="va">params</span><span class="op">$</span><span class="va">seepin_conc</span>,</span>
+<span>   seepout_conc_max <span class="op">=</span> <span class="va">params</span><span class="op">$</span><span class="va">seepage_c</span>, </span>
+<span>   fseep_recycle <span class="op">=</span> <span class="fl">0</span>,                   </span>
+<span>   fseep_out <span class="op">=</span> <span class="fl">0</span></span>
+<span> <span class="op">)</span></span>
+<span></span>
+<span> <span class="co">##  initial conditions</span></span>
+<span> <span class="va">Z_init_m</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/cm_to_m.html">cm_to_m</a></span><span class="op">(</span><span class="va">params</span><span class="op">$</span><span class="va">Zinit</span><span class="op">)</span></span>
+<span> <span class="va">V_init</span>   <span class="op">&lt;-</span> <span class="va">params</span><span class="op">$</span><span class="va">A_cell</span> <span class="op">*</span> <span class="va">Z_init_m</span></span>
+<span></span>
+<span><span class="va">P_state0</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/dmsta_p_init_state.html">dmsta_p_init_state</a></span><span class="op">(</span></span>
+<span>   <span class="va">tanks</span>,</span>
+<span>   Z_init_m      <span class="op">=</span> <span class="va">Z_init_m</span>,</span>
+<span>   C_init_ppb    <span class="op">=</span> <span class="va">params</span><span class="op">$</span><span class="va">C_init_ppb</span>,</span>
+<span>   Y_init_mgm2   <span class="op">=</span> <span class="va">params</span><span class="op">$</span><span class="va">Y_init_mgm2</span></span>
+<span> <span class="op">)</span></span>
+<span></span>
+<span><span class="va">hydroP_out</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/dmsta_flowP_series.html">dmsta_flowP_series</a></span><span class="op">(</span></span>
+<span>   series <span class="op">=</span> <span class="va">series</span>,</span>
+<span>   params <span class="op">=</span> <span class="va">params</span>,</span>
+<span>   ttankS <span class="op">=</span> <span class="va">ttankS</span>,</span>
+<span>   Nsteps <span class="op">=</span> <span class="va">Nsteps</span>,</span>
+<span>   tanks  <span class="op">=</span> <span class="va">tanks</span>,</span>
+<span>   ppar   <span class="op">=</span> <span class="va">ppar</span>,</span>
+<span>   constants <span class="op">=</span> <span class="va">constants</span>,</span>
+<span>   V_init <span class="op">=</span> <span class="va">V_init</span>,</span>
+<span>   init_P_state <span class="op">=</span> <span class="va">P_state0</span>,</span>
+<span>   return_steps  <span class="op">=</span> <span class="cn">FALSE</span></span>
+<span>  <span class="op">)</span></span>
+<span></span>
+<span><span class="va">hydroP_rslt</span> <span class="op">&lt;-</span> <span class="va">hydroP_out</span><span class="op">$</span><span class="va">results</span></span>
+<span></span>
+<span><span class="va">hydroP_rslt</span><span class="op">$</span><span class="va">Z_end_cm</span> <span class="op">&lt;-</span><span class="fu"><a href="reference/m_to_cm.html">m_to_cm</a></span><span class="op">(</span><span class="va">hydroP_rslt</span><span class="op">$</span><span class="va">Z_end</span><span class="op">)</span></span></code></pre></div>
+<div class="sourceCode" id="cb7"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/utils/str.html" class="external-link">str</a></span><span class="op">(</span><span class="va">hydroP_out</span><span class="op">)</span></span></code></pre></div>
+<p>Similarly to the hydrology outputs <code>out</code> contains a list of data frames, the only difference in this function also include a P mass balance budget, to view see <code>out$budgets$mass</code>.</p>
+<div class="figure" style="text-align: center">
+<img src="reference/figures/README-hydroP_plot-1.png" alt="Simulated outflow discharge (top left), water level (bottom left), TP load (top right) and TP concentration (bottom right)."><p class="caption">
+Simulated outflow discharge (top left), water level (bottom left), TP load (top right) and TP concentration (bottom right).
+</p>
+</div>
+</div>
+<div class="section level3">
+<h3 id="hydrology-and-p-networked">Hydrology and P networked<a class="anchor" aria-label="anchor" href="#hydrology-and-p-networked"></a>
+</h3>
+<p><code>dmsta_flowP_case</code> allows for the simulation of cells in series where for example, Cell 1 flows into Cell 2. It is part wrapper function but also links more complex interactions of seepage and recycled discharge/load between cells.</p>
+<div class="sourceCode" id="cb8"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="co"># input parameters</span></span>
+<span><span class="co"># 1) Base hydrology params (shared structure)</span></span>
+<span><span class="va">hydro_base</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span></span>
+<span>  A_cell <span class="op">=</span> <span class="fl">2.19</span>, <span class="co"># km2</span></span>
+<span>  <span class="co"># depths in cm </span></span>
+<span>  Zmin   <span class="op">=</span> <span class="fl">2</span>,              <span class="co"># cm</span></span>
+<span>  Zinit  <span class="op">=</span> <span class="fl">40</span>,             <span class="co"># cm</span></span>
+<span>  Zweir  <span class="op">=</span> <span class="fl">0</span>,              <span class="co"># cm</span></span>
+<span>  Q_zmin <span class="op">=</span> <span class="fl">38</span>,             <span class="co"># cm</span></span>
+<span>  Zrelease <span class="op">=</span> <span class="fl">0</span>,            <span class="co"># cm</span></span>
+<span>  Bypass_elev <span class="op">=</span> <span class="fl">0</span>,  </span>
+<span>  <span class="co"># hydraulics</span></span>
+<span>  Q_a <span class="op">=</span> <span class="fl">1.0</span>,</span>
+<span>  Q_b <span class="op">=</span> <span class="fl">4.0</span>,</span>
+<span>  Width <span class="op">=</span> <span class="fl">1.55</span>,            <span class="co"># km</span></span>
+<span>  Qomax <span class="op">=</span> <span class="fl">0.0</span>,             <span class="co"># hm3/day; 0 disables max cap in this implementation</span></span>
+<span>  Qimax <span class="op">=</span> <span class="fl">0.0</span>,             <span class="co"># hm3/day; 0 disables inflow cap</span></span>
+<span>  <span class="co"># seepage (rates in m/day per m head; elevations in cm)</span></span>
+<span>  Seepout_Rate <span class="op">=</span> <span class="fl">0.0</span>,</span>
+<span>  Seepout_Elev <span class="op">=</span> <span class="fl">0.0</span>,      <span class="co"># cm</span></span>
+<span>  Seepin_Rate  <span class="op">=</span> <span class="fl">0.0</span>,</span>
+<span>  Seepin_Elev  <span class="op">=</span> <span class="fl">0.0</span>,      <span class="co"># cm</span></span>
+<span>  ShutdownET <span class="op">=</span> <span class="cn">TRUE</span>,</span>
+<span>  force_Q_out <span class="op">=</span> <span class="cn">FALSE</span>,</span>
+<span>  DutyCycle <span class="op">=</span> <span class="fl">0.95</span>,</span>
+<span>  Cmax <span class="op">=</span> <span class="fl">2000</span></span>
+<span><span class="op">)</span></span>
+<span></span>
+<span><span class="co"># 2) Base P params (shared structure)</span></span>
+<span><span class="va">P_base</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span></span>
+<span>  <span class="co"># STA module</span></span>
+<span>  C1000 <span class="op">=</span> <span class="fl">22</span>,</span>
+<span>  Cstar <span class="op">=</span> <span class="fl">3</span>,</span>
+<span>  Ks_per_yr <span class="op">=</span> <span class="fl">16.8</span>,</span>
+<span>  Z1 <span class="op">=</span> <span class="fl">40</span>,</span>
+<span>  Z2 <span class="op">=</span> <span class="fl">100</span>,</span>
+<span>  Z3 <span class="op">=</span> <span class="fl">200</span>,</span>
+<span>  Chalf <span class="op">=</span> <span class="fl">300</span>,</span>
+<span>  K2Coef1 <span class="op">=</span> <span class="fl">0</span>,</span>
+<span>  SeasonalFactor <span class="op">=</span> <span class="fl">0</span>,    <span class="co"># keep 0 for base parity</span></span>
+<span>  <span class="co"># PSTA (NEWS transition)</span></span>
+<span>  Ytrans <span class="op">=</span> <span class="fl">0</span>,</span>
+<span>  Ysigma <span class="op">=</span> <span class="fl">0</span>,</span>
+<span>  Czero <span class="op">=</span> <span class="fl">0</span>,</span>
+<span>  C1000_2 <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  ks_2 <span class="op">=</span> <span class="fl">0</span>,</span>
+<span>  zh_2 <span class="op">=</span> <span class="fl">0</span>,</span>
+<span>  <span class="co"># RES depth penalty</span></span>
+<span>  k_depth_penalty <span class="op">=</span> <span class="fl">1</span>,</span>
+<span>  <span class="co"># atmos + seepage water quality</span></span>
+<span>  C_rain <span class="op">=</span> <span class="fl">10</span>,           <span class="co"># ppb (ug/L)</span></span>
+<span>  DryDepo <span class="op">=</span> <span class="fl">20</span>,          <span class="co"># mg/m2-yr</span></span>
+<span>  seepage_c <span class="op">=</span> <span class="fl">20</span>,        <span class="co"># ppb cap for seep outflow</span></span>
+<span>  seepin_conc <span class="op">=</span> <span class="fl">0</span>,       <span class="co"># ppb</span></span>
+<span>  <span class="co"># initial P state</span></span>
+<span>  C_init_ppb <span class="op">=</span> <span class="fl">30</span>,</span>
+<span>  Y_init_mgm2 <span class="op">=</span> <span class="fl">1000</span></span>
+<span>  <span class="op">)</span></span>
+<span></span>
+<span><span class="co">#  3) Cell-specific params</span></span>
+<span>  <span class="va">params_cell1</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/utils/modifyList.html" class="external-link">modifyList</a></span><span class="op">(</span><span class="va">hydro_base</span>, <span class="fu"><a href="https://rdrr.io/r/utils/modifyList.html" class="external-link">modifyList</a></span><span class="op">(</span><span class="va">P_base</span>, <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span></span>
+<span>  Qin_Frac <span class="op">=</span> <span class="fl">0.22</span>,</span>
+<span>  Seepout_Rate <span class="op">=</span> <span class="fl">0.00789</span>,</span>
+<span>  Ks_per_yr <span class="op">=</span> <span class="fl">16.8</span>,</span>
+<span>  Y_init_mgm2 <span class="op">=</span> <span class="fl">3387.67297548954</span></span>
+<span>  <span class="op">)</span><span class="op">)</span><span class="op">)</span></span>
+<span></span>
+<span>  <span class="va">params_cell2</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/utils/modifyList.html" class="external-link">modifyList</a></span><span class="op">(</span><span class="va">hydro_base</span>, <span class="fu"><a href="https://rdrr.io/r/utils/modifyList.html" class="external-link">modifyList</a></span><span class="op">(</span><span class="va">P_base</span>, <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span></span>
+<span>  Qin_Frac <span class="op">=</span> <span class="fl">0</span>,</span>
+<span>  Seepout_Rate <span class="op">=</span> <span class="fl">0.00155</span>,</span>
+<span>  Ks_per_yr <span class="op">=</span> <span class="fl">52.5</span>,</span>
+<span>  Y_init_mgm2 <span class="op">=</span> <span class="fl">768.480041186681</span></span>
+<span>  <span class="op">)</span><span class="op">)</span><span class="op">)</span></span>
+<span></span>
+<span><span class="co"># 4) Build cells</span></span>
+<span>  <span class="va">cells</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span></span>
+<span>  <span class="fu"><a href="reference/dmsta_make_cell.html">dmsta_make_cell</a></span><span class="op">(</span></span>
+<span>  label <span class="op">=</span> <span class="st">"CELL1"</span>,</span>
+<span>  params <span class="op">=</span> <span class="va">params_cell1</span>,</span>
+<span>  ttankS <span class="op">=</span> <span class="fl">3.0</span>,</span>
+<span>  DownCell <span class="op">=</span> <span class="fl">2L</span>,</span>
+<span>  Qin_Frac <span class="op">=</span> <span class="va">params_cell1</span><span class="op">$</span><span class="va">Qin_Frac</span>,</span>
+<span>  RecycleIndex <span class="op">=</span> <span class="fl">1L</span>  <span class="co"># self; can omit if your validator maps NA/0 -&gt; self</span></span>
+<span>  <span class="op">)</span>,</span>
+<span>  <span class="fu"><a href="reference/dmsta_make_cell.html">dmsta_make_cell</a></span><span class="op">(</span></span>
+<span>  label <span class="op">=</span> <span class="st">"CELL2"</span>,</span>
+<span>  params <span class="op">=</span> <span class="va">params_cell2</span>,</span>
+<span>  ttankS <span class="op">=</span> <span class="fl">3.0</span>,</span>
+<span>  DownCell <span class="op">=</span> <span class="fl">0L</span>,</span>
+<span>  Qin_Frac <span class="op">=</span> <span class="va">params_cell2</span><span class="op">$</span><span class="va">Qin_Frac</span>,</span>
+<span>  RecycleIndex <span class="op">=</span> <span class="fl">2L</span>  <span class="co"># self</span></span>
+<span>  <span class="op">)</span></span>
+<span>  <span class="op">)</span></span>
+<span></span>
+<span><span class="va">cells</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/dmsta_validate_cells.html">dmsta_validate_cells</a></span><span class="op">(</span><span class="va">cells</span><span class="op">)</span></span>
+<span></span>
+<span><span class="co"># Run case</span></span>
+<span><span class="va">hydroP_net_rslt</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/dmsta_flowP_case.html">dmsta_flowP_case</a></span><span class="op">(</span></span>
+<span>   series <span class="op">=</span> <span class="va">series</span>,</span>
+<span>   cells  <span class="op">=</span> <span class="va">cells</span>,</span>
+<span>   Nsteps <span class="op">=</span> <span class="fl">4L</span>,</span>
+<span>   max_iter <span class="op">=</span> <span class="fl">1L</span>,</span>
+<span>   return_cell_series <span class="op">=</span> <span class="cn">TRUE</span>,</span>
+<span>   keep_Q17 <span class="op">=</span> <span class="cn">TRUE</span>,</span>
+<span>   keep_extra <span class="op">=</span> <span class="cn">FALSE</span></span>
+<span><span class="op">)</span></span>
+<span></span>
+<span><span class="va">hydroP_case_rslt</span> <span class="op">&lt;-</span> <span class="va">hydroP_net_rslt</span><span class="op">$</span><span class="va">results</span><span class="op">$</span><span class="va">case</span></span>
+<span><span class="va">hydroP_cells_rslt</span> <span class="op">&lt;-</span> <span class="va">hydroP_net_rslt</span><span class="op">$</span><span class="va">results</span><span class="op">$</span><span class="va">cells</span></span>
+<span></span>
+<span></span>
+<span>  </span></code></pre></div>
+<p>Much like the other functions this function stores results, water and mass budgets and meta data. The difference being this function stores the data at the <em>“case”</em> level (inflow to cell 1 and outflow of cell 2) as well as cell specific information.</p>
+<div class="figure" style="text-align: center">
+<img src="reference/figures/README-hydroP_case_plot-1.png" alt="Simulated outflow discharge, water level, TP load and TP concentration for cell 1 (top) and cell 2 (bottom)."><p class="caption">
+Simulated outflow discharge, water level, TP load and TP concentration for cell 1 (top) and cell 2 (bottom).
+</p>
+</div>
+</div>
 </div>
 </div>
   </div>

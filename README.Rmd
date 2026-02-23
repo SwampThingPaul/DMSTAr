@@ -6,7 +6,14 @@ editor_options:
 
 
 ```{r setup, include=FALSE,echo=FALSE}
-knitr::opts_chunk$set(echo = TRUE)
+
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment  = "#>",
+  fig.path = "man/figures/README-",
+  echo = TRUE
+)
+
 ```
 # DMSTAr <img src="man/figures/DMSTAr_hexish.png" align="right" alt="" width="120" />
 
@@ -42,8 +49,6 @@ devtools::install_github("SwampThingPaul/DMSTAr")
 ## *Indevelopment*
 
  * Develop Ordinary Differential Equation (ODE) versions DMSTA functions
- 
- * Include Low-P Wetland Event Model framework consistent with Juston and Kadlec (2019)
  
  * Develop flume and alum based models 
 

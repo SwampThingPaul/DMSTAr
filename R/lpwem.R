@@ -220,12 +220,24 @@ lpwem_tp_euler_step <- function(TP, Vavg_hm3, Q0_hm3d, QN_hm3d, tis, pars, dt_da
   )
 }
 
-#' Run one model day with DMSTA hydrology and LPWEM TP kinetics
+#' **In-developement:** Run one model day with DMSTA hydrology and LPWEM TP kinetics
 #'
 #' Runs a single day consisting of DMSTA hydrology substeps coupled with LPWEM
 #' tank-chain phosphorus dynamics. Hydrology is advanced using
 #' `DMSTAr:::dmsta_flow_day_steps()`, and TP is updated in each hydrology
 #' substep using multiple LPWEM micro-steps (explicit Euler).
+#'
+#' **Caveat:**
+#' The Low-P Wetland Event Model (LPWEM) (Juston and Kadlec, 2019) was
+#' developed for STA analysis and to address known shortcomings with the
+#' DMSTA (Juston, 2016). LPWEM focused on explaining dynamics in the
+#' low-P domain of well-performing STAs but did not model STA response
+#' to elevated Phosphorous Loading Rates (PLRs).Furthermore, the LPWEM model
+#' was calibrates using measured internal PLR, as site specific measure of
+#' P flux from the sediment to the overlying water column see
+#' Jeraud et al (2020) for more detail. Therefore, application of this model
+#' is flow-way specific and presumably underpredict outflow TP
+#' concentrations under elevated PLRs.
 #'
 #' @param V Starting wetland volume at the beginning of the day (\eqn{hm^3}).
 #' @param TP_init Optional numeric vector of initial TP concentrations (ppb) in
@@ -263,10 +275,15 @@ lpwem_tp_euler_step <- function(TP, Vavg_hm3, Q0_hm3d, QN_hm3d, tis, pars, dt_da
 #' Juston, J. M., & Kadlec, R. H. (2019).
 #' Data-driven modeling of phosphorus (P) dynamics in low-P stormwater wetlands.
 #' *Environmental Modelling & Software*, 118, 226–240.
-#' https://doi.org/10.1016/j.envsoft.2019.05.002
+#' \doi{https://doi.org/10.1016/j.envsoft.2019.05.002}
 #'
+#'Jerauld M, Juston J, DeBusk T, et al (2020) Internal phosphorus loading
+#'rate (iPLR) in a low-P stormwater treatment wetland.
+#'*Ecological Engineering*, 156:105944.
+#'\doi{10.1016/j.ecoleng.2020.105944}
 #'
-#' @export
+#' @keywords internal
+#'
 lpwem_day <- function(
     V,
     TP_init = NULL,
@@ -394,11 +411,23 @@ lpwem_day <- function(
 }
 
 
-#' Run a multi-day LPWEM simulation over a time series
+#' **In-developement** Run a multi-day LPWEM simulation over a time series
 #'
 #' Wraps [lpwem_day()] over a daily time series, carrying forward
 #' end-of-day volume and the tank TP profile as initial conditions for the next
 #' day.
+#'
+#' **Caveat:**
+#' The Low-P Wetland Event Model (LPWEM) (Juston and Kadlec, 2019) was
+#' developed for STA analysis and to address known shortcomings with the
+#' DMSTA (Juston, 2016). LPWEM focused on explaining dynamics in the
+#' low-P domain of well-performing STAs but did not model STA response
+#' to elevated Phosphorous Loading Rates (PLRs).Furthermore, the LPWEM model
+#' was calibrates using measured internal PLR, as site specific measure of
+#' P flux from the sediment to the overlying water column see
+#' Jeraud et al (2020) for more detail. Therefore, application of this model
+#' is flow-way specific and presumably underpredict outflow TP
+#' concentrations under elevated PLRs.
 #'
 #' @param series Data frame containing daily drivers. Must include columns:
 #' `Date`, `Qi`, `Ci`, `Rain`, `Et`, `Zcontrol`.
@@ -423,7 +452,12 @@ lpwem_day <- function(
 #' Juston, J. M., & Kadlec, R. H. (2019).
 #' Data-driven modeling of phosphorus (P) dynamics in low-P stormwater wetlands.
 #' *Environmental Modelling & Software*, 118, 226–240.
-#' https://doi.org/10.1016/j.envsoft.2019.05.002
+#' \doi{https://doi.org/10.1016/j.envsoft.2019.05.002}
+#'
+#'Jerauld M, Juston J, DeBusk T, et al (2020) Internal phosphorus loading
+#'rate (iPLR) in a low-P stormwater treatment wetland.
+#'*Ecological Engineering*, 156:105944.
+#'\doi{10.1016/j.ecoleng.2020.105944}
 #'
 #' @examples
 #' \dontrun{
@@ -478,12 +512,10 @@ lpwem_day <- function(
 #' )
 #'
 #' res <- lpwem_series(series, params_hydro = params, pars_lpwem = pars_lpwem)
-
-
-#'
 #' }
 #'
-#' @export
+#' @keywords internal
+#'
 lpwem_series <- function(
     series,             # data.frame with Date, Qi, Ci, Rain, Et, Zcontrol
     params_hydro,       # DMSTA hydro params
