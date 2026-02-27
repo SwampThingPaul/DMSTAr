@@ -38,8 +38,10 @@ NULL
 #' @export
 dmsta_build_tanks <- function(A_cell, ttankS,snap_last = TRUE) {
   # ttankS can be fractional; last tank gets the fraction, all others equal.
-  if (A_cell <= 0) stop("A_cell must be > 0 for tanks")
-  if (ttankS <= 0) stop("ttankS must be > 0")
+  if (A_cell <= 0) {
+    return(list(Ntanks = 1L, A_Tank = 0, F_Tank = 1, Fcum = 1))
+  }
+  if (ttankS <1) ttankS <- 1
 
   Ntanks <- max(1L, floor(ttankS))
   frac <- ttankS - Ntanks

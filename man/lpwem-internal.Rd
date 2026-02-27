@@ -129,11 +129,15 @@ Flow is interpolated along tanks from \eqn{Q_0} to \eqn{Q_N}, and the return
 flux \eqn{r^*} is interpolated linearly from the first to last tank values.
 }
 \examples{
+\dontrun{
 lpwem_build_tis(12, N = 6)
-
+}
+\dontrun{
 lpwem_rstar_vec(N = 4, r1_mgm2d = 10, rN_mgm2d = 2)
-
+}
+\dontrun{
 lpwem_Q_along_tanks(Q0_hm3d = 2, QN_hm3d = 1, N = 4)
+}
 
 }
 \keyword{internal}

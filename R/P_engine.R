@@ -376,6 +376,77 @@ dmsta_flowP_day <- function(V, P_state, tanks, inputs, params,
                             ppar, constants,
                             Nsteps = 4L, Z_plant = 0) {
 
+  A_cell <- params$A_cell
+  isa_node <- dmsta_is_node(A_cell, params$IsaNode)
+
+  if (isa_node) {
+    # hydrology already returns node behavior (after patch above)
+    hyd <- dmsta_flow_day_steps(V = 0, inputs = inputs, params = params, Nsteps = Nsteps)
+
+    Qi_eff <- params$Qin_Frac * inputs$Qi
+    Ci <- inputs$Ci
+    RecycleQ <- if (is.null(inputs$RecycleQ)) 0 else inputs$RecycleQ
+    RecycleM <- if (is.null(inputs$RecycleM)) 0 else inputs$RecycleM
+
+    # node “outlet” concentration: inflow+recycle weighted (VBA effectively uses inflow conc)
+    Qin_total <- Qi_eff - hyd$Bypass + RecycleQ
+    Lin_total <- (Qi_eff - hyd$Bypass) * Ci + RecycleM
+    Cout <- if (Qin_total > 0) Lin_total / Qin_total else 0
+
+    # assign all non-bypass outflow to “treated” stream in node mode
+    Q_treat <- hyd$Qout
+    L_treat <- Q_treat * Cout
+    Q_byp <- hyd$Bypass
+    L_byp <- Q_byp * Ci
+
+    seepC <- Cout
+    if (!is.null(constants$seepout_conc_max) && constants$seepout_conc_max > 0) {
+      seepC <- min(seepC, constants$seepout_conc_max)
+    }
+    f_rec <- if (is.null(constants$fseep_recycle)) 0 else constants$fseep_recycle
+    f_out <- if (is.null(constants$fseep_out)) 0 else constants$fseep_out
+
+    Q_seep_rec <- hyd$SeepOut * f_rec
+    Q_seep_dis <- hyd$SeepOut * f_out
+    L_seep_rec <- Q_seep_rec * seepC
+    L_seep_dis <- Q_seep_dis * seepC
+
+    out <- list(
+      results = list(
+        V_end = 0, Z_end = NA_real_, Z_avg = NA_real_, V_cell_day = 0,
+        Qout = hyd$Qout,
+        Q_treated = Q_treat, Q_rel1 = 0, Q_rel2 = 0,
+        SeepOut = hyd$SeepOut, SeepIn = 0, Bypass = hyd$Bypass,
+        P = list(
+          flows = list(
+            treated = Q_treat, rel1 = 0, rel2 = 0, bypass = Q_byp,
+            seep_recycle = Q_seep_rec, seep_discharge = Q_seep_dis
+          ),
+          loads = list(
+            treated = L_treat, rel1 = 0, rel2 = 0, bypass = L_byp,
+            seep_recycle = L_seep_rec, seep_discharge = L_seep_dis
+          ),
+          conc = list(
+            C_treated = if (Q_treat > 0) L_treat / Q_treat else NA_real_,
+            C_out = if (hyd$Qout > 0) L_treat / hyd$Qout else NA_real_,
+            C_bypass = if (Q_byp > 0) L_byp / Q_byp else NA_real_,
+            C_seep_recycle = if (Q_seep_rec > 0) L_seep_rec / Q_seep_rec else NA_real_,
+            C_seep_discharge = if (Q_seep_dis > 0) L_seep_dis / Q_seep_dis else NA_real_
+          )
+        ),
+        P_state_end = list(M = numeric(0), S = numeric(0))
+      ),
+      budgets = list(
+        water = list(
+          RainVol = hyd$RainVol, EtVol = hyd$EtVol, NetAtmo = hyd$NetAtmo,
+          WB_in = hyd$WB_in, WB_out = hyd$WB_out, WB_err = hyd$WB_err, WB_rel = hyd$WB_rel
+        ),
+        mass = NULL
+      ),
+      meta = list(Date = inputs$Date, IsaNode = TRUE)
+    )
+  }else{
+
   #  1) Hydrology with step series
   hyd <- dmsta_flow_day_steps(V, inputs, params, Nsteps = Nsteps)
   step_out <- hyd$steps
@@ -718,7 +789,7 @@ dmsta_flowP_day <- function(V, P_state, tanks, inputs, params,
     params_used = params
   )
 
-  list(
+  out <- list(
     results = results,
     budgets = list(
       water = water_budget,
@@ -726,6 +797,9 @@ dmsta_flowP_day <- function(V, P_state, tanks, inputs, params,
     ),
     meta = meta
   )
+  }
+
+  out
 }
 
 #' Run coupled DMSTA hydrology and phosphorus over a time series

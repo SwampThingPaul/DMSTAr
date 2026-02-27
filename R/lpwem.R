@@ -49,8 +49,9 @@ lpwem_areal_to_kgd <- function(rate_mgm2d, A_km2) {
 #' }
 #'
 #' @examples
+#' \dontrun{
 #' lpwem_build_tis(12, N = 6)
-#'
+#' }
 #' @rdname lpwem-internal
 #' @keywords internal
 lpwem_build_tis <- function(A_cell_km2, N = 6L) {
@@ -74,8 +75,9 @@ lpwem_build_tis <- function(A_cell_km2, N = 6L) {
 #' @return Numeric vector of length `N` with the return flux for each tank.
 #'
 #' @examples
+#' \dontrun{
 #' lpwem_rstar_vec(N = 4, r1_mgm2d = 10, rN_mgm2d = 2)
-#'
+#' }
 #' @rdname lpwem-internal
 #' @keywords internal
 lpwem_rstar_vec <- function(N, r1_mgm2d, rN_mgm2d) {
@@ -133,7 +135,9 @@ lpwem_J_vec <- function(TP_ppb, Q_hm3d, W_m, k0, alpha) {
 #' in \eqn{hm^3 d^{-1}}.
 #'
 #' @examples
+#' \dontrun{
 #' lpwem_Q_along_tanks(Q0_hm3d = 2, QN_hm3d = 1, N = 4)
+#' }
 #'
 #' @rdname lpwem-internal
 #' @keywords internal
@@ -224,7 +228,7 @@ lpwem_tp_euler_step <- function(TP, Vavg_hm3, Q0_hm3d, QN_hm3d, tis, pars, dt_da
 #'
 #' Runs a single day consisting of DMSTA hydrology substeps coupled with LPWEM
 #' tank-chain phosphorus dynamics. Hydrology is advanced using
-#' `DMSTAr:::dmsta_flow_day_steps()`, and TP is updated in each hydrology
+#' `dmsta_flow_day_steps()`, and TP is updated in each hydrology
 #' substep using multiple LPWEM micro-steps (explicit Euler).
 #'
 #' **Caveat:**
@@ -293,7 +297,7 @@ lpwem_day <- function(
     Nsteps_hydro = 4L
 ) {
   # 1) Hydrology with your DMSTA function (returns per-substep step list)
-  hyd <- DMSTAr:::dmsta_flow_day_steps(V,
+  hyd <- dmsta_flow_day_steps(V,
                                        inputs,
                                        params_hydro,
                                        Nsteps = Nsteps_hydro)
@@ -557,7 +561,7 @@ lpwem_series <- function(
     in_i <- as.list(series[i, ])
 
     # Neighbor Zcontrol handling (your helper)
-    nz <- DMSTAr:::neighbors_zcontrol(i, series$Zcontrol)
+    nz <- neighbors_zcontrol(i, series$Zcontrol)
     in_i$Zcontrol <- nz$today
     in_i$Zcontrol_prev <- nz$prev_day
     in_i$Zcontrol_next <- nz$nxt

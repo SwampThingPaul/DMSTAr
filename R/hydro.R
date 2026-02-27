@@ -422,10 +422,10 @@ dmsta_rk4_step <- function(V, args_base, step_index, Dt) {
 #' @rdname internal_dmsta_hydro
 
 dmsta_flow_day <- function(
-    V,                      # starting volume [hm3]
-    inputs,                  # list: Qi, Rain, Et, Zcontrol (today), Zcontrol_prev, Zcontrol_next,Qrelease (optional), RecycleQ (optional)
-    params,                  # list of parameters (see below)
-    Nsteps = 4             # steps per day (same meaning as DMSTA 'steps')
+    V,
+    inputs,
+    params,
+    Nsteps = 4
 ) {
 
   Dt <- 1 / Nsteps
@@ -439,137 +439,243 @@ dmsta_flow_day <- function(
   if (is.null(inputs$Zcontrol_next)) inputs$Zcontrol_next <- inputs$Zcontrol
   if (is.null(inputs$RecycleQ)) inputs$RecycleQ <- 0
 
+  A_cell <- params2$A_cell
+  isa_node <- dmsta_is_node(A_cell, params2$IsaNode)
+
   Qi_eff <- params2$Qin_Frac * inputs$Qi
+  RecycleQ <- inputs$RecycleQ
 
-  args_base <- list(
-    A_cell = params2$A_cell,
-    Qi = Qi_eff,
-    Rain = inputs$Rain,
-    Et = inputs$Et,
-    Zcontrol_t = inputs$Zcontrol,
-    Zcontrol_t_minus = inputs$Zcontrol_prev,
-    Zcontrol_t_plus = inputs$Zcontrol_next,
-    params = params2,
-    nsteps = Nsteps,
-    RecycleQ = inputs$RecycleQ,
-    Qr0 = if (is.null(inputs$Qr0)) 0 else inputs$Qr0,
-    Qr1 = if (is.null(inputs$Qr1)) 0 else inputs$Qr1,
-    Qr2 = if (is.null(inputs$Qr2)) 0 else inputs$Qr2,
-    has_depth_constraint = isTRUE(inputs$has_depth_constraint)
-  )
+  if (isa_node) {
+    nh <- dmsta_node_route(
+      Qi = Qi_eff,
+      RecycleQ = RecycleQ,
+      Seepout_Rate = params2$Seepout_Rate,
+      Qimax = params2$Qimax,
+      Qomax = params2$Qomax
+    )
 
-  # per-step records
-  step_out <- vector("list", Nsteps)
+    # Build a constant step_out (optional, but keeps meta$steps consistent)
+    step_out <- vector("list", Nsteps)
+    for (k in seq_len(Nsteps)) {
+      step_out[[k]] <- list(
+        step = k,
+        Vo = 0, V = 0,
+        Dt = Dt,
+        Qi_eff = Qi_eff,
+        Qout = nh$Qout,
+        Q_treated = nh$Qout,
+        Q_rel1 = 0,
+        Q_rel2 = 0,
+        SeepOut = nh$SeepOut,
+        SeepIn  = nh$SeepIn,
+        Bypass  = nh$Bypass,
+        Etest   = nh$Etest
+      )
+    }
 
-  for (k in seq_len(Nsteps)) {
-    Vo <- V
-    step_res <- dmsta_rk4_step(V, args_base, step_index = k, Dt = Dt)
-    V <- step_res$V_new
+    # Daily totals: since values are constant rates over the day, totals equal rates
+    Qout_day      <- nh$Qout
+    Q_treated_day <- nh$Qout
+    Q_rel1_day    <- 0
+    Q_rel2_day    <- 0
+    SeepOut_day   <- nh$SeepOut
+    SeepIn_day    <- nh$SeepIn
+    Bypass_day    <- nh$Bypass
 
-    step_out[[k]] <- list(
-      step = k,
-      Vo = Vo,
-      V  = V,
-      Dt = Dt,
-      Qi_eff = Qi_eff,
-      Qout = step_res$Qout_ts,
-      Q_treated = step_res$Q_treated_ts,
-      Q_rel1 = step_res$Q_rel1_ts,
-      Q_rel2 = step_res$Q_rel2_ts,
-      SeepOut = step_res$SeepOut_ts,
-      SeepIn  = step_res$SeepIn_ts,
-      Bypass  = step_res$Bypass_ts,
-      Etest   = step_res$Etest_ts
+    # No area-based rain/ET volumes in node mode
+    EtVol_day   <- 0
+    RainVol_day <- 0
+    NetAtmo_day <- 0
+
+    # No storage in node mode
+    V_end <- 0
+
+    # Water budget: include recycle on inflow like your normal budget does
+    WB_in  <- Qi_eff + RainVol_day + SeepIn_day + (RecycleQ * 1.0)
+    WB_out <- Qout_day + SeepOut_day + EtVol_day + Bypass_day
+    WB_err <- (V_end - V_start) - (WB_in - WB_out)
+    WB_rel <- WB_err / max(1e-12, max(WB_in, WB_out))
+
+    results <- list(
+      V_end = V_end,
+      Qin = Qi_eff,
+      Qout = Qout_day,
+      Q_treated = Q_treated_day,
+      Q_rel1 = Q_rel1_day,
+      Q_rel2 = Q_rel2_day,
+      SeepOut = SeepOut_day,
+      SeepIn = SeepIn_day,
+      Bypass = Bypass_day,
+      RainVol = RainVol_day,
+      EtVol = EtVol_day,
+      NetAtmo = NetAtmo_day
+    )
+
+    water_budget <- list(
+      WB_in = WB_in,
+      WB_out = WB_out,
+      WB_err = WB_err,
+      WB_rel = WB_rel,
+      RainVol = RainVol_day,
+      EtVol   = EtVol_day,
+      NetAtmo = NetAtmo_day,
+      in_components  = list(Qi_eff = Qi_eff, RainVol = RainVol_day, SeepIn = SeepIn_day, Recycle = RecycleQ),
+      out_components = list(Qout = Qout_day, SeepOut = SeepOut_day, EtVol = EtVol_day, Bypass = Bypass_day),
+      dV = V_end - V_start
+    )
+
+    meta <- list(
+      V_start = V_start,
+      V_end   = V_end,
+      Nsteps  = Nsteps,
+      Dt      = Dt,
+      Qi_eff  = Qi_eff,
+      params_used = params2,
+      inputs_used = inputs,
+      steps = step_out,
+      IsaNode = TRUE
+    )
+
+    out <- list(
+      results = results,
+      budgets = list(water = water_budget,
+                     mass = NULL),
+      meta = meta
+    )
+  }else{
+
+    args_base <- list(
+      A_cell = params2$A_cell,
+      Qi = Qi_eff,
+      Rain = inputs$Rain,
+      Et = inputs$Et,
+      Zcontrol_t = inputs$Zcontrol,
+      Zcontrol_t_minus = inputs$Zcontrol_prev,
+      Zcontrol_t_plus = inputs$Zcontrol_next,
+      params = params2,
+      nsteps = Nsteps,
+      RecycleQ = inputs$RecycleQ,
+      Qr0 = if (is.null(inputs$Qr0)) 0 else inputs$Qr0,
+      Qr1 = if (is.null(inputs$Qr1)) 0 else inputs$Qr1,
+      Qr2 = if (is.null(inputs$Qr2)) 0 else inputs$Qr2,
+      has_depth_constraint = isTRUE(inputs$has_depth_constraint)
+    )
+
+    # per-step records
+    step_out <- vector("list", Nsteps)
+
+    for (k in seq_len(Nsteps)) {
+      Vo <- V
+      step_res <- dmsta_rk4_step(V, args_base, step_index = k, Dt = Dt)
+      V <- step_res$V_new
+
+      step_out[[k]] <- list(
+        step = k,
+        Vo = Vo,
+        V  = V,
+        Dt = Dt,
+        Qi_eff = Qi_eff,
+        Qout = step_res$Qout_ts,
+        Q_treated = step_res$Q_treated_ts,
+        Q_rel1 = step_res$Q_rel1_ts,
+        Q_rel2 = step_res$Q_rel2_ts,
+        SeepOut = step_res$SeepOut_ts,
+        SeepIn  = step_res$SeepIn_ts,
+        Bypass  = step_res$Bypass_ts,
+        Etest   = step_res$Etest_ts
+      )
+    }
+
+    # daily aggregates (same as your dmsta_flow_day)
+    Qout_day <- sum(vapply(step_out, function(x) x$Qout * x$Dt, 0.0))
+    Q_treated_day <- sum(vapply(step_out, function(x) x$Q_treated * x$Dt, 0.0))
+    Q_rel1_day    <- sum(vapply(step_out, function(x) x$Q_rel1    * x$Dt, 0.0))
+    Q_rel2_day    <- sum(vapply(step_out, function(x) x$Q_rel2    * x$Dt, 0.0))
+
+    SeepOut_day <- sum(vapply(step_out, function(x) x$SeepOut * x$Dt, 0.0))
+    SeepIn_day  <- sum(vapply(step_out, function(x) x$SeepIn  * x$Dt, 0.0))
+    Bypass_day  <- sum(vapply(step_out, function(x) x$Bypass  * x$Dt, 0.0))
+
+    EtVol_day   <- sum(vapply(step_out, function(x) x$Etest * params2$A_cell * x$Dt, 0.0))
+    RainVol_day <- inputs$Rain * params2$A_cell
+    NetAtmo_day <- RainVol_day - EtVol_day
+
+    RecycleVol_day <- inputs$RecycleQ*1.0
+
+    # Water budget (DMSTA-style)
+    WB_in  <- Qi_eff + RainVol_day + SeepIn_day + RecycleVol_day
+    WB_out <- Qout_day + SeepOut_day + EtVol_day + Bypass_day
+    WB_err <- (V - V_start) - (WB_in - WB_out)
+    WB_rel <- WB_err / max(1e-12, max(WB_in, WB_out))
+
+    # structured outputs
+    results <- list(
+      V_end = V,
+      Qin = Qi_eff,
+      Qout = Qout_day,
+      Q_treated = Q_treated_day,
+      Q_rel1 = Q_rel1_day,
+      Q_rel2 = Q_rel2_day,
+      SeepOut = SeepOut_day,
+      SeepIn = SeepIn_day,
+      Bypass = Bypass_day,
+      RainVol = RainVol_day,
+      EtVol = EtVol_day,
+      NetAtmo = NetAtmo_day
+    )
+
+    water_budget <- list(
+      # main diagnostics
+      WB_in = WB_in,
+      WB_out = WB_out,
+      WB_err = WB_err,
+      WB_rel = WB_rel,
+
+      # atmospheric terms (often treated as budget components)
+      RainVol = RainVol_day,
+      EtVol   = EtVol_day,
+      NetAtmo = NetAtmo_day,
+
+      # optional component breakdowns (very useful for debugging)
+      in_components  = list(
+        Qi_eff   = Qi_eff,
+        RainVol  = RainVol_day,
+        SeepIn   = SeepIn_day,
+        Recycle  = RecycleVol_day
+      ),
+      out_components = list(
+        Qout     = Qout_day,
+        SeepOut  = SeepOut_day,
+        EtVol    = EtVol_day,
+        Bypass   = Bypass_day
+      ),
+      dV = V - V_start
+    )
+    mass_budget <- NULL  # hydrology-only
+
+    meta <- list(
+      V_start = V_start,
+      V_end   = V,
+      Nsteps  = Nsteps,
+      Dt      = Dt,
+      Qi_eff  = Qi_eff,
+      params_used = params2,
+      # useful for debugging / parity checks
+      inputs_used = inputs,
+      steps = step_out
+    )
+
+    out <- list(
+      results = results,
+      budgets = list(
+        water = water_budget,
+        mass  = mass_budget
+      ),
+      meta = meta
     )
   }
 
-  # daily aggregates (same as your dmsta_flow_day)
-  Qout_day <- sum(vapply(step_out, function(x) x$Qout * x$Dt, 0.0))
-  Q_treated_day <- sum(vapply(step_out, function(x) x$Q_treated * x$Dt, 0.0))
-  Q_rel1_day    <- sum(vapply(step_out, function(x) x$Q_rel1    * x$Dt, 0.0))
-  Q_rel2_day    <- sum(vapply(step_out, function(x) x$Q_rel2    * x$Dt, 0.0))
-
-  SeepOut_day <- sum(vapply(step_out, function(x) x$SeepOut * x$Dt, 0.0))
-  SeepIn_day  <- sum(vapply(step_out, function(x) x$SeepIn  * x$Dt, 0.0))
-  Bypass_day  <- sum(vapply(step_out, function(x) x$Bypass  * x$Dt, 0.0))
-
-  EtVol_day   <- sum(vapply(step_out, function(x) x$Etest * params2$A_cell * x$Dt, 0.0))
-  RainVol_day <- inputs$Rain * params2$A_cell
-  NetAtmo_day <- RainVol_day - EtVol_day
-
-  RecycleVol_day <- inputs$RecycleQ*1.0
-
-  # Water budget (DMSTA-style)
-  WB_in  <- Qi_eff + RainVol_day + SeepIn_day + RecycleVol_day
-  WB_out <- Qout_day + SeepOut_day + EtVol_day + Bypass_day
-  WB_err <- (V - V_start) - (WB_in - WB_out)
-  WB_rel <- WB_err / max(1e-12, max(WB_in, WB_out))
-
-  # structured outputs
-  results <- list(
-    V_end = V,
-    Qin = Qi_eff,
-    Qout = Qout_day,
-    Q_treated = Q_treated_day,
-    Q_rel1 = Q_rel1_day,
-    Q_rel2 = Q_rel2_day,
-    SeepOut = SeepOut_day,
-    SeepIn = SeepIn_day,
-    Bypass = Bypass_day,
-    RainVol = RainVol_day,
-    EtVol = EtVol_day,
-    NetAtmo = NetAtmo_day
-  )
-
-  water_budget <- list(
-    # main diagnostics
-    WB_in = WB_in,
-    WB_out = WB_out,
-    WB_err = WB_err,
-    WB_rel = WB_rel,
-
-    # atmospheric terms (often treated as budget components)
-    RainVol = RainVol_day,
-    EtVol   = EtVol_day,
-    NetAtmo = NetAtmo_day,
-
-    # optional component breakdowns (very useful for debugging)
-    in_components  = list(
-      Qi_eff   = Qi_eff,
-      RainVol  = RainVol_day,
-      SeepIn   = SeepIn_day,
-      Recycle  = RecycleVol_day
-    ),
-    out_components = list(
-      Qout     = Qout_day,
-      SeepOut  = SeepOut_day,
-      EtVol    = EtVol_day,
-      Bypass   = Bypass_day
-    ),
-    dV = V - V_start
-  )
-  mass_budget <- NULL  # hydrology-only
-
-  meta <- list(
-    V_start = V_start,
-    V_end   = V,
-    Nsteps  = Nsteps,
-    Dt      = Dt,
-    Qi_eff  = Qi_eff,
-    params_used = params2,
-    # useful for debugging / parity checks
-    inputs_used = inputs,
-    steps = step_out
-  )
-
-  list(
-    results = results,
-    budgets = list(
-      water = water_budget,
-      mass  = mass_budget
-    ),
-    meta = meta
-  )
+  out
 }
 
 #' Integrate one day of DMSTA hydrology and return sub-step means (internal)
@@ -613,8 +719,64 @@ dmsta_flow_day_steps <- function(
   if (is.null(inputs$Zcontrol_next)) inputs$Zcontrol_next <- inputs$Zcontrol
   if (is.null(inputs$RecycleQ)) inputs$RecycleQ <- 0
 
+  A_cell <- params2$A_cell
+  isa_node <- dmsta_is_node(A_cell, params2$IsaNode)
+
   # scale inflow by cell inflow fraction
   Qi_eff <- params2$Qin_Frac * inputs$Qi
+  RecycleQ <- inputs$RecycleQ
+
+
+  if (isa_node) {
+    # compute node routing at rate scale (hm3/day)
+    nh <- dmsta_node_route(
+      Qi = Qi_eff,
+      RecycleQ = RecycleQ,
+      Seepout_Rate = params2$Seepout_Rate,
+      Qimax = params2$Qimax,
+      Qomax = params2$Qomax
+    )
+
+    Dt <- 1 / Nsteps
+    step_out <- vector("list", Nsteps)
+    for (k in seq_len(Nsteps)) {
+      step_out[[k]] <- list(
+        step = k,
+        Vo = 0, V = 0,
+        Dt = Dt,
+        Qi_eff = Qi_eff,
+        Qout = nh$Qout,
+        Q_treated = nh$Qout,   # “treated” is just pass-through here
+        Q_rel1 = 0,
+        Q_rel2 = 0,
+        SeepOut = nh$SeepOut,
+        SeepIn = nh$SeepIn,
+        Bypass = nh$Bypass,
+        Etest = 0
+      )
+    }
+
+    # daily totals integrate mean rate over day -> equals the rate
+    Qout_day   <- nh$Qout
+    SeepOut_day <- nh$SeepOut
+    SeepIn_day  <- nh$SeepIn
+    Bypass_day  <- nh$Bypass
+
+    out <- list(
+      V_end = 0,
+      steps = step_out,
+      Qout = Qout_day,
+      Q_treated = Qout_day,
+      Q_rel1 = 0, Q_rel2 = 0,
+      SeepOut = SeepOut_day,
+      SeepIn = SeepIn_day,
+      Bypass = Bypass_day,
+      RainVol = 0, EtVol = 0, NetAtmo = 0,
+      WB_in = Qi_eff + RecycleQ,
+      WB_out = Qout_day + SeepOut_day + Bypass_day,
+      WB_err = 0, WB_rel = 0
+    )
+  }else{
 
   # base args passed into dmsta_rk4_step -> dmsta_deriv_flow
   args_base <- list(
@@ -687,7 +849,7 @@ dmsta_flow_day_steps <- function(
   WB_err <- (V - V_start) - (WB_in - WB_out)
   WB_rel <- WB_err / max(1e-12, max(WB_in, WB_out))
 
-  list(
+  out <- list(
     # end-of-day state
     V_end = V,
 
@@ -713,6 +875,8 @@ dmsta_flow_day_steps <- function(
     WB_err = WB_err,
     WB_rel = WB_rel
   )
+  }
+  out
 }
 
 
@@ -797,7 +961,8 @@ dmsta_flow_day_steps <- function(
 #'  Zinit = 40,  # cm; initial water column depth
 #'  Qin_Frac = 0.22, # inflow_frac; fraction of basin flows going into this cell
 #'  Zrelease = 0,   # cm; z_release; minimum depth for releases
-#'  RecycleQ = 0
+#'  RecycleQ = 0,
+#'  IsaNode = NULL
 #')
 #'
 #'  V_init <- (cm_to_m(params$Zinit) * params$A_cell)

@@ -121,6 +121,10 @@ dmsta_validate_cells <- function(cells) {
   for (i in seq_len(n)) {
     cd <- cells[[i]]
 
+    # check if a node
+    cd$IsaNode <- dmsta_is_node(cd$A_cell, cd$IsaNode)
+    cells[[i]]$params <- cd
+
     if (is.null(cd$params)) stop("cells[[", i, "]]$params is missing.")
     if (is.null(cd$ttankS)) stop("cells[[", i, "]]$ttankS is missing.")
 
@@ -266,6 +270,7 @@ dmsta_init_case_state <- function(cells) {
   Pstate<- vector("list", ncell)
 
   for (ic in seq_len(ncell)) {
+    ## if its a node, should still work
     p <- cells[[ic]]$params
     Z0 <- p$Zinit / 100
     V[ic] <- p$A_cell * Z0

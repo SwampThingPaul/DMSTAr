@@ -89,7 +89,8 @@ params <- list(
  Zinit = 40,  # cm; initial water column depth
  Qin_Frac = 0.22, # inflow_frac; fraction of basin flows going into this cell
  Zrelease = 0,   # cm; z_release; minimum depth for releases
- RecycleQ = 0
+ RecycleQ = 0,
+ IsaNode = NULL
 )
 
  V_init <- (cm_to_m(params$Zinit) * params$A_cell)

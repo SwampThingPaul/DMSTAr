@@ -18,7 +18,8 @@ test_that("dmsta_flow_series returns expected structure and class", {
     Bypass_elev = 0,
     Seepout_Rate = 0, Seepout_Elev = 0,
     Seepin_Rate = 0,  Seepin_Elev = 0,
-    Qin_Frac = 1
+    Qin_Frac = 1,
+    IsaNode = NULL
   )
 
   out <- dmsta_flow_series(V_init = 10, series = series, params = params, Nsteps = 4L)

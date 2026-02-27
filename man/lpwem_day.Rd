@@ -54,7 +54,7 @@ flow-weighted outflow concentration, mass exports, uptake/return totals)
 \description{
 Runs a single day consisting of DMSTA hydrology substeps coupled with LPWEM
 tank-chain phosphorus dynamics. Hydrology is advanced using
-\code{DMSTAr:::dmsta_flow_day_steps()}, and TP is updated in each hydrology
+\code{dmsta_flow_day_steps()}, and TP is updated in each hydrology
 substep using multiple LPWEM micro-steps (explicit Euler).
 }
 \details{
