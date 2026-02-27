@@ -122,8 +122,8 @@ dmsta_validate_cells <- function(cells) {
     cd <- cells[[i]]
 
     # check if a node
-    cd$IsaNode <- dmsta_is_node(cd$A_cell, cd$IsaNode)
-    cells[[i]]$params <- cd
+    # cd$IsaNode <- dmsta_is_node(cd$A_cell, NULL)
+    # cells[[i]]$params <- cd
 
     if (is.null(cd$params)) stop("cells[[", i, "]]$params is missing.")
     if (is.null(cd$ttankS)) stop("cells[[", i, "]]$ttankS is missing.")

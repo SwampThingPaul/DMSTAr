@@ -110,14 +110,15 @@ compute_DMSTA_kvals <- function(C1000, Cstar, Ks) { # internal function
 #' pparams <- list(
 #'   C1000 = 1, Cstar = 0.2, Ks_per_yr = 0.5,
 #'   Z1 = 10, Z2 = 30, Z3 = 60,
-#'   K2Coef1 = 0.1, Chalf = 0.2, SeasonalFactor = 1
+#'   K2Coef1 = 0.1, Chalf = 0.2, SeasonalFactor = 1,
+#'   DutyCycle = 0.95
 #' )
-#' pars <- build_P_kinetics("STA", Dpy = 365.25, DutyCycle = 0.95, pparams = pparams)
+#' pars <- build_P_kinetics("STA", Dpy = 365.25, pparams = pparams)
 #' pars$K1
 #' pars$PModel
 #'
 #' @export
-build_P_kinetics <- function(mod_type, Dpy = 365.25, DutyCycle = 0.95, pparams, ...) {
+build_P_kinetics <- function(mod_type, Dpy = 365.25, DutyCycle = NULL, pparams, ...) {
   mod_type <- toupper(trimws(mod_type))
 
   builder <- .P_MODEL_BUILDERS_DEFAULT[[mod_type]]
@@ -126,6 +127,8 @@ build_P_kinetics <- function(mod_type, Dpy = 365.25, DutyCycle = 0.95, pparams, 
          ". Valid: ", paste(names(.P_MODEL_BUILDERS_DEFAULT), collapse = ", "),
          call. = FALSE)
   }
+
+  DutyCycle <- pparams$DutyCycle
 
   pars <- builder(Dpy = Dpy, DutyCycle = DutyCycle,pparams = pparams, ...)
 
@@ -189,8 +192,7 @@ build_P_kinetics <- function(mod_type, Dpy = 365.25, DutyCycle = 0.95, pparams, 
 #' out <- build_P_kin_slots(
 #'   mods = c("STA", "PSTA", "RES"),
 #'   pparams = pparams,
-#'   Dpy = 365.25,
-#'   DutyCycle = 0.95
+#'   Dpy = 365.25
 #' )
 #' out$K1
 #' out$Z_1
@@ -202,7 +204,7 @@ build_P_kin_slots <- function(
     registry = NULL ,
     pparams,
     Dpy = 365.25,
-    DutyCycle = 0.95,
+    DutyCycle = NULL,
     derive_PModel = TRUE,
     default_PModel = 1L,
     ...
@@ -214,6 +216,8 @@ build_P_kin_slots <- function(
   if (any(!mods %in% names(registry))) {
     stop("All 'mods' must exist as names in 'registry'.")
   }
+
+  DutyCycle <- pparams$DutyCycle
 
 
   # 1) Build each slot with your existing single-slot function

@@ -9,7 +9,7 @@ build_P_kin_slots(
   registry = NULL,
   pparams,
   Dpy = 365.25,
-  DutyCycle = 0.95,
+  DutyCycle = NULL,
   derive_PModel = TRUE,
   default_PModel = 1L,
   ...
@@ -69,8 +69,7 @@ pparams <- list(
 out <- build_P_kin_slots(
   mods = c("STA", "PSTA", "RES"),
   pparams = pparams,
-  Dpy = 365.25,
-  DutyCycle = 0.95
+  Dpy = 365.25
 )
 out$K1
 out$Z_1

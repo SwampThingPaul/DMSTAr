@@ -411,215 +411,292 @@ dmsta_flowP_day <- function(V, P_state, tanks, inputs, params,
     L_seep_rec <- Q_seep_rec * seepC
     L_seep_dis <- Q_seep_dis * seepC
 
-    out <- list(
-      results = list(
-        V_end = 0, Z_end = NA_real_, Z_avg = NA_real_, V_cell_day = 0,
-        Qout = hyd$Qout,
-        Q_treated = Q_treat, Q_rel1 = 0, Q_rel2 = 0,
-        SeepOut = hyd$SeepOut, SeepIn = 0, Bypass = hyd$Bypass,
-        P = list(
-          flows = list(
-            treated = Q_treat, rel1 = 0, rel2 = 0, bypass = Q_byp,
-            seep_recycle = Q_seep_rec, seep_discharge = Q_seep_dis
-          ),
-          loads = list(
-            treated = L_treat, rel1 = 0, rel2 = 0, bypass = L_byp,
-            seep_recycle = L_seep_rec, seep_discharge = L_seep_dis
-          ),
-          conc = list(
-            C_treated = if (Q_treat > 0) L_treat / Q_treat else NA_real_,
-            C_out = if (hyd$Qout > 0) L_treat / hyd$Qout else NA_real_,
-            C_bypass = if (Q_byp > 0) L_byp / Q_byp else NA_real_,
-            C_seep_recycle = if (Q_seep_rec > 0) L_seep_rec / Q_seep_rec else NA_real_,
-            C_seep_discharge = if (Q_seep_dis > 0) L_seep_dis / Q_seep_dis else NA_real_
-          )
+    results <- list(
+      V_end = 0,
+      Z_end = NA_real_,
+      Z_avg = NA_real_,
+      V_cell_day = 0,
+      Qout = hyd$Qout,
+      Q_treated = Q_treat,
+      Q_rel1 = 0,
+      Q_rel2 = 0,
+      SeepOut = hyd$SeepOut,
+      SeepIn = 0,
+      Bypass = hyd$Bypass,
+      P = list(
+        flows = list(
+          treated = Q_treat, rel1 = 0, rel2 = 0, bypass = Q_byp,
+          seep_recycle = Q_seep_rec, seep_discharge = Q_seep_dis
         ),
-        P_state_end = list(M = numeric(0), S = numeric(0))
+        loads = list(
+          treated = L_treat, rel1 = 0, rel2 = 0, bypass = L_byp,
+          seep_recycle = L_seep_rec, seep_discharge = L_seep_dis
+        ),
+        conc = list(
+          C_treated = if (Q_treat > 0) L_treat / Q_treat else NA_real_,
+          C_rel1    = NA_real_,
+          C_rel2    = NA_real_,
+          C_out = if (hyd$Qout > 0) L_treat / hyd$Qout else NA_real_,
+          C_bypass = if (Q_byp > 0) L_byp / Q_byp else NA_real_,
+          C_seep_recycle = if (Q_seep_rec > 0) L_seep_rec / Q_seep_rec else NA_real_,
+          C_seep_discharge = if (Q_seep_dis > 0) L_seep_dis / Q_seep_dis else NA_real_
+        )
       ),
+      P_state_end = list(M = numeric(0), S = numeric(0))
+    )
+
+    water_budget <- list(
+      RainVol = hyd$RainVol,
+      EtVol   = hyd$EtVol,
+      NetAtmo = hyd$NetAtmo,
+      WB_in   = hyd$WB_in,
+      WB_out  = hyd$WB_out,
+      WB_err  = hyd$WB_err,
+      WB_rel  = hyd$WB_rel
+    )
+
+    # node has no tanks, so storage is defined as zero and unchanged
+    mass_budget <- list(
+      storage = list(
+        M_start = 0, S_start = 0, P_start = 0,
+        M_end = 0,   S_end = 0,   P_end = 0,
+        dM = 0, dS = 0, dP = 0
+      ),
+      inflow_tanks = list(
+        Q_in_tanks = Qin_total,
+        L_in_tanks = Lin_total,
+        C_in_tanks = if (Qin_total > 0) Lin_total / Qin_total else NA_real_,
+        Q_in_flow = max(0, Qi_eff - hyd$Bypass),
+        L_in_flow = (max(0, Qi_eff - hyd$Bypass)) * Ci,
+        C_in_flow = if (max(0, Qi_eff - hyd$Bypass) > 0) Ci else NA_real_,
+        Q_in_recycle = RecycleQ,
+        L_in_recycle = RecycleM
+      ),
+      inputs_external = list(
+        # you can include these if you want; otherwise set to 0
+        L_rain = (inputs$Rain * constants$C_rain) * 0,
+        L_drydep = (constants$DryDepo) * 0,
+        L_seepin = 0
+      ),
+      outputs_external = list(
+        L_treated = L_treat,
+        L_rel1 = 0,
+        L_rel2 = 0,
+        L_bypass = L_byp,
+        L_seep_discharge = L_seep_dis
+      ),
+      transfers = list(
+        L_seep_recycle_out = L_seep_rec,
+        Q_seep_recycle_out = Q_seep_rec
+      ),
+      mechanisms = list(
+        L_uptake = 0, L_recycle = 0, L_sed = 0, L_direct = 0
+      ),
+      closure = {
+        Pin_total  <- Lin_total # watershed+recycle already rolled into Lin_total
+        Pout_total <- (L_treat + L_byp + L_seep_dis + L_seep_rec)
+        dP <- 0
+
+        Perr_total <- dP - (Pin_total - Pout_total)
+        Prel_total <- Perr_total / max(1e-12, max(Pin_total, Pout_total))
+
+        list(
+          Pin_total = Pin_total,
+          Pout_total = Pout_total,
+          Perr_total = Perr_total,
+          Prel_total = Prel_total,
+          Pin_external = Pin_total,
+          Pout_external = (L_treat + L_byp + L_seep_dis),
+          Perr_external = dP - (Pin_total - (L_treat + L_byp + L_seep_dis)),
+          Prel_external = (dP - (Pin_total - (L_treat + L_byp + L_seep_dis))) /
+            max(1e-12, max(Pin_total, (L_treat + L_byp + L_seep_dis)))
+        )
+      }
+    )
+
+    out <- list(
+      results = results,
       budgets = list(
-        water = list(
-          RainVol = hyd$RainVol, EtVol = hyd$EtVol, NetAtmo = hyd$NetAtmo,
-          WB_in = hyd$WB_in, WB_out = hyd$WB_out, WB_err = hyd$WB_err, WB_rel = hyd$WB_rel
-        ),
-        mass = NULL
+        water = water_budget,
+        mass = mass_budget
       ),
       meta = list(Date = inputs$Date, IsaNode = TRUE)
     )
   }else{
 
-  #  1) Hydrology with step series
-  hyd <- dmsta_flow_day_steps(V, inputs, params, Nsteps = Nsteps)
-  step_out <- hyd$steps
+    #  1) Hydrology with step series
+    hyd <- dmsta_flow_day_steps(V, inputs, params, Nsteps = Nsteps)
+    step_out <- hyd$steps
 
-  # 1b) Daily-average water level diagnostics (VBA-style Vavg*Dt sum)
-  V_cell_day <- sum(vapply(step_out, function(s) 0.5 * (s$Vo + s$V) * s$Dt, 0.0)) # hm3
-  A_cell <- params$A_cell
-  Z_avg <- if (A_cell > 0) V_cell_day / A_cell else NA_real_
-  Z_end <- if (A_cell > 0) hyd$V_end / A_cell else NA_real_
+    # 1b) Daily-average water level diagnostics (VBA-style Vavg*Dt sum)
+    V_cell_day <- sum(vapply(step_out, function(s) 0.5 * (s$Vo + s$V) * s$Dt, 0.0)) # hm3
+    A_cell <- params$A_cell
+    Z_avg <- if (A_cell > 0) V_cell_day / A_cell else NA_real_
+    Z_end <- if (A_cell > 0) hyd$V_end / A_cell else NA_real_
 
-  #  2) Ensure P state vectors match Ntanks
-  Nt <- tanks$Ntanks
-  if (length(P_state$M) != Nt || length(P_state$S) != Nt) {
-    stop("P_state$M and P_state$S must have length equal to tanks$Ntanks.")
-  }
-  M <- P_state$M
-  S <- P_state$S
+    #  2) Ensure P state vectors match Ntanks
+    Nt <- tanks$Ntanks
+    if (length(P_state$M) != Nt || length(P_state$S) != Nt) {
+      stop("P_state$M and P_state$S must have length equal to tanks$Ntanks.")
+    }
+    M <- P_state$M
+    S <- P_state$S
 
-  # P budget storage starts (optional)
-  M_start <- sum(M);
-  S_start <- sum(S);
-  P_start <- M_start + S_start
+    # P budget storage starts (optional)
+    M_start <- sum(M);
+    S_start <- sum(S);
+    P_start <- M_start + S_start
 
-  #  3) Daily accumulators (flows hm3, loads kg)
-  Q_treat <- L_treat <- 0
-  Q_r1    <- L_r1    <- 0
-  Q_r2    <- L_r2    <- 0
-  Q_byp   <- L_byp   <- 0
+    #  3) Daily accumulators (flows hm3, loads kg)
+    Q_treat <- L_treat <- 0
+    Q_r1    <- L_r1    <- 0
+    Q_r2    <- L_r2    <- 0
+    Q_byp   <- L_byp   <- 0
 
-  # optional seepage bookkeeping (matches DMSTA seepage conc cap pattern)
-  Q_seep_rec <- L_seep_rec <- 0
-  Q_seep_dis <- L_seep_dis <- 0
+    # optional seepage bookkeeping (matches DMSTA seepage conc cap pattern)
+    Q_seep_rec <- L_seep_rec <- 0
+    Q_seep_dis <- L_seep_dis <- 0
 
-  # P budget accumulators for budget
-  # treated inflow into tanks (includes recycle)
-  Q_in_tanks <- 0
-  L_in_tanks <- 0
+    # P budget accumulators for budget
+    # treated inflow into tanks (includes recycle)
+    Q_in_tanks <- 0
+    L_in_tanks <- 0
 
-  # split inflow into external flow part vs internal recycle transfer
-  Q_in_flow    <- 0
-  L_in_flow    <- 0
-  Q_in_recycle <- 0
-  L_in_recycle <- 0
+    # split inflow into external flow part vs internal recycle transfer
+    Q_in_flow    <- 0
+    L_in_flow    <- 0
+    Q_in_recycle <- 0
+    L_in_recycle <- 0
 
-  # internal mechanisms
-  L_uptake <- 0
-  L_recycle <- 0
-  L_sed <- 0
-  L_direct <- 0
+    # internal mechanisms
+    L_uptake <- 0
+    L_recycle <- 0
+    L_sed <- 0
+    L_direct <- 0
 
-  # convenience
-  jul <- julian_day(inputs$Date)
-  A_cell <- params$A_cell
+    # convenience
+    jul <- julian_day(inputs$Date)
+    A_cell <- params$A_cell
 
-  #  4) Substep loop
-  for (k in seq_along(step_out)) {
-    hs <- step_out[[k]]
-    Dt <- hs$Dt
+    #  4) Substep loop
+    for (k in seq_along(step_out)) {
+      hs <- step_out[[k]]
+      Dt <- hs$Dt
 
-    Vo <- hs$Vo
-    V1 <- hs$V
-    Vavg <- 0.5 * (Vo + V1)
+      Vo <- hs$Vo
+      V1 <- hs$V
+      Vavg <- 0.5 * (Vo + V1)
 
-    # hydrology rates for this substep
-    qout_total <- hs$Qout
-    byp_rate   <- hs$Bypass
-    seepout    <- hs$SeepOut
-    seepin     <- hs$SeepIn
+      # hydrology rates for this substep
+      qout_total <- hs$Qout
+      byp_rate   <- hs$Bypass
+      seepout    <- hs$SeepOut
+      seepin     <- hs$SeepIn
 
-    # treated/release split rates for this step
-    q_treated <- hs$Q_treated
-    q_rel1    <- hs$Q_rel1
-    q_rel2    <- hs$Q_rel2
+      # treated/release split rates for this step
+      q_treated <- hs$Q_treated
+      q_rel1    <- hs$Q_rel1
+      q_rel2    <- hs$Q_rel2
 
-    # inflow concentration & (cell-scaled) inflow flow rate
-    Ci <- inputs$Ci
-    Qi_eff <- hs$Qi_eff
+      # inflow concentration & (cell-scaled) inflow flow rate
+      Ci <- inputs$Ci
+      Qi_eff <- hs$Qi_eff
 
-    # inflow to tank system after bypass + recycle (matches VBA for Tank=1)
-    RecycleQ <- if (is.null(inputs$RecycleQ)) 0 else inputs$RecycleQ
-    RecycleM <- if (is.null(inputs$RecycleM)) 0 else inputs$RecycleM
+      # inflow to tank system after bypass + recycle (matches VBA for Tank=1)
+      RecycleQ <- if (is.null(inputs$RecycleQ)) 0 else inputs$RecycleQ
+      RecycleM <- if (is.null(inputs$RecycleM)) 0 else inputs$RecycleM
 
-    Qin_total <- Qi_eff - byp_rate + RecycleQ
-    if (!is.finite(Qin_total) || Qin_total < 0) Qin_total <- 0
+      Qin_total <- Qi_eff - byp_rate + RecycleQ
+      if (!is.finite(Qin_total) || Qin_total < 0) Qin_total <- 0
 
-    # bypass load uses inflow conc (VBA Mt(3)=Bypass*Ci)
-    Q_byp <- Q_byp + byp_rate * Dt
-    L_byp <- L_byp + (byp_rate * Ci) * Dt
+      # bypass load uses inflow conc (VBA Mt(3)=Bypass*Ci)
+      Q_byp <- Q_byp + byp_rate * Dt
+      L_byp <- L_byp + (byp_rate * Ci) * Dt
 
-    # P budget: treated inflow into tanks (optional)
-    q_in_flow_step <- max(0, Qi_eff - byp_rate)   # excludes recycle
-    l_in_flow_step <- q_in_flow_step * Ci         # kg/day
+      # P budget: treated inflow into tanks (optional)
+      q_in_flow_step <- max(0, Qi_eff - byp_rate)   # excludes recycle
+      l_in_flow_step <- q_in_flow_step * Ci         # kg/day
 
-    # totals integrated over day
-    Q_in_flow <- Q_in_flow + q_in_flow_step * Dt
-    L_in_flow <- L_in_flow + l_in_flow_step * Dt
+      # totals integrated over day
+      Q_in_flow <- Q_in_flow + q_in_flow_step * Dt
+      L_in_flow <- L_in_flow + l_in_flow_step * Dt
 
-    Q_in_recycle <- Q_in_recycle + RecycleQ * Dt
-    L_in_recycle <- L_in_recycle + RecycleM * Dt
+      Q_in_recycle <- Q_in_recycle + RecycleQ * Dt
+      L_in_recycle <- L_in_recycle + RecycleM * Dt
 
-    Q_in_tanks <- Q_in_tanks + Qin_total * Dt
-    L_in_tanks <- L_in_tanks + (l_in_flow_step + RecycleM) * Dt
+      Q_in_tanks <- Q_in_tanks + Qin_total * Dt
+      L_in_tanks <- L_in_tanks + (l_in_flow_step + RecycleM) * Dt
 
-    # routing between tanks
-    Qo_prev <- 0
-    Lo_prev <- 0
+      # routing between tanks
+      Qo_prev <- 0
+      Lo_prev <- 0
 
-    for (tk in seq_len(Nt)) {
-      A_tk <- tanks$A_Tank[tk]
-      Ftk  <- tanks$F_Tank[tk]
-      Fcum <- tanks$Fcum[tk]
+      for (tk in seq_len(Nt)) {
+        A_tk <- tanks$A_Tank[tk]
+        Ftk  <- tanks$F_Tank[tk]
+        Fcum <- tanks$Fcum[tk]
 
-      V_tank_avg <- Vavg * Ftk
-      Vdel <- (V1 - Vo) * Ftk
+        V_tank_avg <- Vavg * Ftk
+        Vdel <- (V1 - Vo) * Ftk
 
-      if (tk == 1) {
-        Qi_tank <- Qin_total
-        Li_tank <- (Qi_eff - byp_rate) * Ci + RecycleM
-      } else {
-        Qi_tank <- Qo_prev
-        Li_tank <- Lo_prev
-      }
+        if (tk == 1) {
+          Qi_tank <- Qin_total
+          Li_tank <- (Qi_eff - byp_rate) * Ci + RecycleM
+        } else {
+          Qi_tank <- Qo_prev
+          Li_tank <- Lo_prev
+        }
 
-      # DMSTA tank outflow interpolation (Qo_tank)
-      Qo_tank <- Qin_total * (1 - Fcum) + qout_total * Fcum
-      if (!is.finite(Qo_tank) || Qo_tank < 0) Qo_tank <- 0
+        # DMSTA tank outflow interpolation (Qo_tank)
+        Qo_tank <- Qin_total * (1 - Fcum) + qout_total * Fcum
+        if (!is.finite(Qo_tank) || Qo_tank < 0) Qo_tank <- 0
 
-      # Build drivers for derivative/RK4
-      # NOTE: dmsta_deriv_mass currently references 'ppar' and 'constants' from scope.
-      #       Ensure those are visible (globals) OR wrap dmsta_deriv_mass in a closure/module.
-      args_base <- list(drivers = list(
-        A_tank = A_tk,
-        A_cell = A_cell,
-        V_tank_avg = V_tank_avg,
-        Vdel = Vdel,
-        Qo_tank = Qo_tank,
-        Li_tank = Li_tank,
-        Rain = inputs$Rain,
-        Seepout = seepout,
-        Seepin  = seepin,
-        Z_plant = Z_plant,
-        julian  = jul
-      ))
+        # Build drivers for derivative/RK4
+        # NOTE: dmsta_deriv_mass currently references 'ppar' and 'constants' from scope.
+        #       Ensure those are visible (globals) OR wrap dmsta_deriv_mass in a closure/module.
+        args_base <- list(drivers = list(
+          A_tank = A_tk,
+          A_cell = A_cell,
+          V_tank_avg = V_tank_avg,
+          Vdel = Vdel,
+          Qo_tank = Qo_tank,
+          Li_tank = Li_tank,
+          Rain = inputs$Rain,
+          Seepout = seepout,
+          Seepin  = seepin,
+          Z_plant = Z_plant,
+          julian  = jul
+        ))
 
-      # Integrate M,S over this substep (RK4)
-      Mo <- M[tk]
-      So <- S[tk]
-      rk <- dmsta_rk4_P_step(M = Mo, S = So, args_base = args_base, Dt = Dt,
-                             ppar = ppar,constants = constants)
+        # Integrate M,S over this substep (RK4)
+        Mo <- M[tk]
+        So <- S[tk]
+        rk <- dmsta_rk4_P_step(M = Mo, S = So, args_base = args_base, Dt = Dt,
+                               ppar = ppar,constants = constants)
 
-      M[tk] <- rk$M_new
-      S[tk] <- rk$S_new
+        M[tk] <- rk$M_new
+        S[tk] <- rk$S_new
 
-      # P budget: mechanism flux totals (optional)
+        # P budget: mechanism flux totals (optional)
 
-      # rk$P_*_ts are mean rates per area in this Dt interval
-      L_uptake  <- L_uptake  + rk$P_uptake_ts  * A_tk * Dt
-      L_recycle <- L_recycle + rk$P_recycle_ts * A_tk * Dt
-      L_sed     <- L_sed     + rk$P_sed_ts     * A_tk * Dt
-      L_direct  <- L_direct  + rk$P_direct_ts  * A_tk * Dt
+        # rk$P_*_ts are mean rates per area in this Dt interval
+        L_uptake  <- L_uptake  + rk$P_uptake_ts  * A_tk * Dt
+        L_recycle <- L_recycle + rk$P_recycle_ts * A_tk * Dt
+        L_sed     <- L_sed     + rk$P_sed_ts     * A_tk * Dt
+        L_direct  <- L_direct  + rk$P_direct_ts  * A_tk * Dt
 
 
-      # VBA routes using Cavg = Mavg / V_tank (not instantaneous C)
-      Mavg <- 0.5 * (Mo + M[tk])
-      Cavg <- Mavg / max(V_tank_avg, 1e-12)
+        # VBA routes using Cavg = Mavg / V_tank (not instantaneous C)
+        Mavg <- 0.5 * (Mo + M[tk])
+        Cavg <- Mavg / max(V_tank_avg, 1e-12)
 
-      Lo_tank <- Qo_tank * Cavg
-      Qo_prev <- Qo_tank
-      Lo_prev <- Lo_tank
+        Lo_tank <- Qo_tank * Cavg
+        Qo_prev <- Qo_tank
+        Lo_prev <- Lo_tank
 
-      # last tank = cell outlet concentration for this substep
-      if (tk == Nt) {
-        # treated/release loads (kg) for this step
+        # last tank = cell outlet concentration for this substep
+        if (tk == Nt) {
+          # treated/release loads (kg) for this step
         Q_treat <- Q_treat + q_treated * Dt
         L_treat <- L_treat + (q_treated * Cavg) * Dt
 

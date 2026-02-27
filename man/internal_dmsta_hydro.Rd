@@ -23,6 +23,7 @@ dmsta_deriv_flow(
   Qi,
   Rain,
   Et,
+  Qr0,
   Zcontrol_t,
   Zcontrol_t_minus,
   Zcontrol_t_plus,

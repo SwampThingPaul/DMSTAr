@@ -4,7 +4,7 @@
 \alias{build_P_kinetics}
 \title{Build phosphorus kinetics parameters for a registered model}
 \usage{
-build_P_kinetics(mod_type, Dpy = 365.25, DutyCycle = 0.95, pparams, ...)
+build_P_kinetics(mod_type, Dpy = 365.25, DutyCycle = NULL, pparams, ...)
 }
 \arguments{
 \item{mod_type}{Character scalar. Model identifier (e.g., \code{"STA"}).}
@@ -46,9 +46,10 @@ The result is assigned class \code{"P_kinetics"} (prepended to any existing clas
 pparams <- list(
   C1000 = 1, Cstar = 0.2, Ks_per_yr = 0.5,
   Z1 = 10, Z2 = 30, Z3 = 60,
-  K2Coef1 = 0.1, Chalf = 0.2, SeasonalFactor = 1
+  K2Coef1 = 0.1, Chalf = 0.2, SeasonalFactor = 1,
+  DutyCycle = 0.95
 )
-pars <- build_P_kinetics("STA", Dpy = 365.25, DutyCycle = 0.95, pparams = pparams)
+pars <- build_P_kinetics("STA", Dpy = 365.25, pparams = pparams)
 pars$K1
 pars$PModel
 

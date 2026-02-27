@@ -136,7 +136,7 @@ dmsta_interp_zcontrol <- function(
 dmsta_deriv_flow <- function(
     V,                   # current volume [hm3]
     A_cell,              # area [km2]
-    Qi, Rain, Et,        # inflow [hm3/d], rain [m/d], ET [m/d]
+    Qi, Rain, Et, Qr0,       # inflow [hm3/d], rain [m/d], ET [m/d]
     Zcontrol_t, Zcontrol_t_minus, Zcontrol_t_plus,  # control depths [m]
     params,             # list of parameters (see below)
     step_index, nsteps,  # current sub-step index (1..nsteps), total nsteps
@@ -298,7 +298,7 @@ dmsta_deriv_flow <- function(
 dmsta_rk4_step <- function(V, args_base, step_index, Dt) {
 
   A_cell <- args_base$params$A_cell
-  Zrel   <- if (is.null(args_base$params$Zrelease)) 0 else args_base$params$Zrelease
+  Zrel   <- if (is.null(args_base$params$Zrelease)) 0 else args_base$params$Zrelease / 100
   Vmin   <- if (is.null(args_base$params$Vmin)) args_base$params$Zmin/100 * A_cell else args_base$params$Vmin
 
   Qr0 <- if (is.null(args_base$Qr0)) 0 else args_base$Qr0
