@@ -391,7 +391,8 @@ dmsta_flowP_day <- function(V, P_state, tanks, inputs, params,
     # node “outlet” concentration: inflow+recycle weighted (VBA effectively uses inflow conc)
     Qin_total <- Qi_eff - hyd$Bypass + RecycleQ
     Lin_total <- (Qi_eff - hyd$Bypass) * Ci + RecycleM
-    Cout <- if (Qin_total > 0) Lin_total / Qin_total else 0
+    # Cout <- if (Qin_total > 0) Lin_total / Qin_total else 0
+    Cout <- if (Qi_eff > 0) Ci else 0
 
     # assign all non-bypass outflow to “treated” stream in node mode
     Q_treat <- hyd$Qout

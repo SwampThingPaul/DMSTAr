@@ -8,3 +8,7 @@
 ^build\.R$
 ^data-raw$
 ^_workingfiles$
+^tools$
+
+^pkg_reference\.md$
+^pkg_reference\.txt$
