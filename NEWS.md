@@ -9,3 +9,6 @@
 ## 2026-02-27
 * Added node option for routing (i.e. inflow = outflow) when cell area = 0 km2
 * added `dmstar_default_params` function to build a default parameter list to be used with DMSTAr simulation functions
+
+## 2026-03-06
+* Added case networking functionality to the package. see `?dmsta_case_network` for more detail. 

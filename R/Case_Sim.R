@@ -906,6 +906,25 @@ dmsta_flowP_case <- function(
     tanks  <- st$tanks
     Pstate <- st$Pstate
 
+    ## Z0 patch when Zcontrol is present
+    zc1 <- series$Zcontrol[1] # expect meters (as this is the input)
+    if (is.finite(zc1) && zc1 != 0) {
+      for (ic in seq_len(ncell)) {
+        p <- cells[[ic]]$params
+        # Clamp to minimum depth (Zmin is stored in cm in params)
+        Z0_m <- max(zc1, p$Zmin / 100)
+        # Volume initialization consistent with chosen starting depth
+        V[ic] <- p$A_cell * Z0_m
+        # Rebuild initial P state so initial mass matches the new starting volume
+        Pstate[[ic]] <- dmsta_p_init_state(
+          tanks[[ic]],
+          Z_init_m    = Z0_m,
+          C_init_ppb  = p$C_init_ppb,
+          Y_init_mgm2 = p$Y_init_mgm2
+        )
+      }
+    }
+
     # Routed inflows (from upstream treated outflows + basin fractions)
     Qi_cell <- matrix(0.0, nrow=nday, ncol=ncell)
     Mi_cell <- matrix(0.0, nrow=nday, ncol=ncell)
@@ -922,16 +941,6 @@ dmsta_flowP_case <- function(
     for (nm in c("Q7","L7","Q3","L3","Q13","L13","Q14","L14","Q25","L25","Q26","L26","Q17","L17")) {
       case_out[[nm]][] <- 0.0
     }
-    ## Reset case hydrology totals for this iteration
-    # case_wb$RainVol_total[] <- NA_real_
-    # case_wb$EtVol_total[]   <- NA_real_
-    # case_wb$NetAtmo_total[] <- NA_real_
-    # case_wb$WB_in_total[]   <- NA_real_
-    # case_wb$WB_out_total[]  <- NA_real_
-    # case_wb$WB_err_total[]  <- NA_real_
-    # case_wb$WB_rel_total[]  <- NA_real_
-    # case_wb$V_total_end[]   <- NA_real_
-    # case_wb$dV_total[]      <- NA_real_
 
     case_wb[,!(names(case_wb)%in%c("Date"))] <- NA_real_
 

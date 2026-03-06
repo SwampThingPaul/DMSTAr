@@ -57,13 +57,14 @@ phosphorus modules that differ by model type but share the same raw parameter se
 \donttest{
 pparams <- list(
   # shared / STA
-  C1000 = 1000, Cstar = 100, Ks_per_yr = 1,
-  Z1 = 10, Z2 = 30, Z3 = 60,
+  C1000 = 22, Cstar = 3, Ks_per_yr = 16,
+  Z1 = 40, Z2 = 100, Z3 = 200,
   K2Coef1 = 0.1, Chalf = 50, SeasonalFactor = 1,
   # PSTA
-  Ytrans = 1, Ysigma = 1, C1000_2 = 1000, ks_2 = 1, zh_2 = 10,
+  Ytrans = 1, Ysigma = 1, C1000_2 = 50, ks_2 = 20, zh_2 = 10,
   # RES
-  k_depth_penalty = 0.5
+  k_depth_penalty = 0.5,
+  DutyCycle = 0.95
 )
 
 out <- build_P_kin_slots(

@@ -49,7 +49,8 @@ empty_P_pars <- function() {
     Ysigma = NA,
     Czero = 0,
     ks_2 = 0,
-    zh_2 = 0
+    zh_2 = 0,
+    K2Coef = 0
   )
 }
 
@@ -100,7 +101,7 @@ build_PSTA <- function(Dpy, DutyCycle, pparams, ... ) {
   pars$Ysigma <- ys00
   pars$Czero  <- 0
 
-  if (y00 > 0) {
+  if (isTRUE(y00 > 0)) {
     pars$C1000 <- c1000_2
     pars$Cstar <- cstar_2
     pars$Ks <- ks_2 / Dpy * DutyCycle

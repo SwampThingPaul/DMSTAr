@@ -163,7 +163,8 @@ required input column is <code>Qi</code>. Consider changing this to
 <span class="r-in"><span> Zinit <span class="op">=</span> <span class="fl">40</span>,  <span class="co"># cm; initial water column depth</span></span></span>
 <span class="r-in"><span> Qin_Frac <span class="op">=</span> <span class="fl">0.22</span>, <span class="co"># inflow_frac; fraction of basin flows going into this cell</span></span></span>
 <span class="r-in"><span> Zrelease <span class="op">=</span> <span class="fl">0</span>,   <span class="co"># cm; z_release; minimum depth for releases</span></span></span>
-<span class="r-in"><span> RecycleQ <span class="op">=</span> <span class="fl">0</span></span></span>
+<span class="r-in"><span> RecycleQ <span class="op">=</span> <span class="fl">0</span>,</span></span>
+<span class="r-in"><span> IsaNode <span class="op">=</span> <span class="cn">NULL</span></span></span>
 <span class="r-in"><span><span class="op">)</span></span></span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span> <span class="va">V_init</span> <span class="op">&lt;-</span> <span class="op">(</span><span class="fu"><a href="cm_to_m.html">cm_to_m</a></span><span class="op">(</span><span class="va">params</span><span class="op">$</span><span class="va">Zinit</span><span class="op">)</span> <span class="op">*</span> <span class="va">params</span><span class="op">$</span><span class="va">A_cell</span><span class="op">)</span></span></span>

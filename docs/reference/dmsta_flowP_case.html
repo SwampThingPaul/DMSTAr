@@ -50,7 +50,7 @@ per-cell DownCell indices (0 means terminal/out of system).
   <div class="col-md-9 contents">
     <div class="page-header">
     <h1>Run a multi-cell (network) DMSTA hydrology + phosphorus simulation</h1>
-    <small class="dont-index">Source: <a href="https://github.com/SwampThingPaul/DMSTAr/blob/HEAD/R/Network_routing.R" class="external-link"><code>R/Network_routing.R</code></a></small>
+    <small class="dont-index">Source: <a href="https://github.com/SwampThingPaul/DMSTAr/blob/HEAD/R/Case_Sim.R" class="external-link"><code>R/Case_Sim.R</code></a></small>
     <div class="hidden name"><code>dmsta_flowP_case.Rd</code></div>
     </div>
 
@@ -300,33 +300,33 @@ for lagged internal transfer (<code>Recycle</code>).</p></li>
 <span class="r-out co"><span class="r-pr">#&gt;</span> 5 1965-01-05    NA    NA    NA         NA      NA    NA      NA    NA     NA</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> 6 1965-01-06    NA    NA    NA         NA      NA    NA      NA    NA     NA</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>   WB_err WB_rel  Q_in_total L_in_total C_in_total Q_in_basin L_in_basin</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 1     NA     NA 0.003089905  0.1761246    57.0000         NA         NA</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 2     NA     NA 0.360959863 42.2410387   117.0242         NA         NA</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 3     NA     NA 0.103258709 10.7461664   104.0703         NA         NA</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 4     NA     NA 0.308473518 37.2145651   120.6410         NA         NA</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 5     NA     NA 0.356828856 43.1691394   120.9800         NA         NA</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 6     NA     NA 0.362274512 43.8170759   120.9499         NA         NA</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 1     NA     NA 0.003092278  0.1762599    57.0000         NA         NA</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 2     NA     NA 0.361237152 42.2734882   117.0242         NA         NA</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 3     NA     NA 0.103338032 10.7544216   104.0703         NA         NA</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 4     NA     NA 0.308710487 37.2431533   120.6410         NA         NA</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 5     NA     NA 0.357102971 43.2023019   120.9800         NA         NA</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 6     NA     NA 0.362552811 43.8507361   120.9499         NA         NA</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>   C_in_basin Q_in_upstream L_in_upstream C_in_upstream Q_in_treated</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 1         NA            NA            NA            NA 0.0006797791</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 2         NA            NA            NA            NA 0.0794111699</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 3         NA            NA            NA            NA 0.0227169159</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 4         NA            NA            NA            NA 0.0678641740</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 5         NA            NA            NA            NA 0.0785023483</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 6         NA            NA            NA            NA 0.0797003927</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 1         NA            NA            NA            NA 0.0006803013</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 2         NA            NA            NA            NA 0.0794721734</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 3         NA            NA            NA            NA 0.0227343670</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 4         NA            NA            NA            NA 0.0679163071</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 5         NA            NA            NA            NA 0.0785626536</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 6         NA            NA            NA            NA 0.0797616184</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>   L_in_treated C_in_treated Q_out_bypass L_out_bypass C_out_bypass</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 1   0.03874741      57.0000            0            0           NA</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 2   9.29302852     117.0242            0            0           NA</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 3   2.36415661     104.0703            0            0           NA</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 4   8.18720433     120.6410            0            0           NA</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 5   9.49721067     120.9800            0            0           NA</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 6   9.63975669     120.9499            0            0           NA</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 1   0.03877717      57.0000            0            0           NA</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 2   9.30016741     117.0242            0            0           NA</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 3   2.36597275     104.0703            0            0           NA</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 4   8.19349372     120.6410            0            0           NA</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 5   9.50450641     120.9800            0            0           NA</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 6   9.64716193     120.9499            0            0           NA</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>   Q_out_treated L_out_treated C_out_treated Q_out_seep_discharge</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 1    0.03885841     0.9055476      23.30378                    0</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 2    0.03737304     0.6525636      17.46081                    0</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 3    0.03601569     0.5852010      16.24850                    0</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 4    0.03494392     0.5610914      16.05691                    0</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 5    0.03444206     0.5528803      16.05247                    0</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 6    0.03453979     0.5542716      16.04734                    0</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 1    0.03885841     0.9055477      23.30378                    0</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 2    0.03737344     0.6525700      17.46079                    0</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 3    0.03601719     0.5852220      16.24841                    0</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 4    0.03494697     0.5611322      16.05668                    0</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 5    0.03444732     0.5529493      16.05203                    0</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 6    0.03454821     0.5543810      16.04659                    0</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>   L_out_seep_discharge C_out_seep_discharge Q_out_release1 L_out_release1</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> 1                    0                   NA              0              0</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> 2                    0                   NA              0              0</span>
@@ -342,48 +342,48 @@ for lagged internal transfer (<code>Recycle</code>).</p></li>
 <span class="r-out co"><span class="r-pr">#&gt;</span> 5             NA              0              0             NA              0</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> 6             NA              0              0             NA              0</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>   L_seep_recycle C_seep_recycle Q_out_total L_out_total C_out_total</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 1              0             NA  0.03885841   0.9055476    23.30378</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 2              0             NA  0.03737304   0.6525636    17.46081</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 3              0             NA  0.03601569   0.5852010    16.24850</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 4              0             NA  0.03494392   0.5610914    16.05691</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 5              0             NA  0.03444206   0.5528803    16.05247</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 6              0             NA  0.03453979   0.5542716    16.04734</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 1              0             NA  0.03885841   0.9055477    23.30378</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 2              0             NA  0.03737344   0.6525700    17.46079</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 3              0             NA  0.03601719   0.5852220    16.24841</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 4              0             NA  0.03494697   0.5611322    16.05668</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 5              0             NA  0.03444732   0.5529493    16.05203</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 6              0             NA  0.03454821   0.5543810    16.04659</span>
 <span class="r-in"><span>  <span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="va">out</span><span class="op">$</span><span class="va">results</span><span class="op">$</span><span class="va">cells</span><span class="op">[[</span><span class="fl">1</span><span class="op">]</span><span class="op">]</span><span class="op">)</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>         Date     V_end     Z_end     Z_avg V_cell_day RainVol EtVol NetAtmo</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 1 1965-01-01 0.8325185 0.3801454 0.3895632  0.8531433      NA    NA      NA</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 2 1965-01-02 0.8656477 0.3952729 0.3879137  0.8495310      NA    NA      NA</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 3 1965-01-03 0.8399281 0.3835288 0.3892405  0.8524367      NA    NA      NA</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 4 1965-01-04 0.8615453 0.3933997 0.3885984  0.8510304      NA    NA      NA</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 5 1965-01-05 0.8885323 0.4057225 0.3997427  0.8754364      NA    NA      NA</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 6 1965-01-06 0.9107816 0.4158820 0.4109643  0.9000119      NA    NA      NA</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 1 1965-01-01 0.8325189 0.3801456 0.3895633  0.8531436      NA    NA      NA</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 2 1965-01-02 0.8657040 0.3952986 0.3879270  0.8495602      NA    NA      NA</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 3 1965-01-03 0.8399914 0.3835577 0.3892678  0.8524966      NA    NA      NA</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 4 1965-01-04 0.8616463 0.3934458 0.3886362  0.8511132      NA    NA      NA</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 5 1965-01-05 0.8886708 0.4057858 0.3997977  0.8755569      NA    NA      NA</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 6 1965-01-06 0.9109497 0.4159588 0.4110347  0.9001659      NA    NA      NA</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>   WB_in WB_out WB_err WB_rel   Q_in_total L_in_total C_in_total   Q_in_basin</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 1    NA     NA     NA     NA 0.0006797791 0.03874741    57.0000 0.0006797791</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 2    NA     NA     NA     NA 0.0794111699 9.29302852   117.0242 0.0794111699</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 3    NA     NA     NA     NA 0.0227169159 2.36415661   104.0703 0.0227169159</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 4    NA     NA     NA     NA 0.0678641740 8.18720433   120.6410 0.0678641740</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 5    NA     NA     NA     NA 0.0785023483 9.49721067   120.9800 0.0785023483</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 6    NA     NA     NA     NA 0.0797003927 9.63975669   120.9499 0.0797003927</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 1    NA     NA     NA     NA 0.0006803013 0.03877717    57.0000 0.0006803013</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 2    NA     NA     NA     NA 0.0794721734 9.30016741   117.0242 0.0794721734</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 3    NA     NA     NA     NA 0.0227343670 2.36597275   104.0703 0.0227343670</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 4    NA     NA     NA     NA 0.0679163071 8.19349372   120.6410 0.0679163071</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 5    NA     NA     NA     NA 0.0785626536 9.50450641   120.9800 0.0785626536</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 6    NA     NA     NA     NA 0.0797616184 9.64716193   120.9499 0.0797616184</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>   L_in_basin C_in_basin Q_in_upstream L_in_upstream C_in_upstream Q_in_treated</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 1 0.03874741    57.0000             0             0             0 0.0006797791</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 2 9.29302852   117.0242             0             0             0 0.0794111699</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 3 2.36415661   104.0703             0             0             0 0.0227169159</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 4 8.18720433   120.6410             0             0             0 0.0678641740</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 5 9.49721067   120.9800             0             0             0 0.0785023483</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 6 9.63975669   120.9499             0             0             0 0.0797003927</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 1 0.03877717    57.0000             0             0             0 0.0006803013</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 2 9.30016741   117.0242             0             0             0 0.0794721734</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 3 2.36597275   104.0703             0             0             0 0.0227343670</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 4 8.19349372   120.6410             0             0             0 0.0679163071</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 5 9.50450641   120.9800             0             0             0 0.0785626536</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 6 9.64716193   120.9499             0             0             0 0.0797616184</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>   L_in_treated C_in_treated Q_out_bypass L_out_bypass C_out_bypass</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 1   0.03874741      57.0000            0            0           NA</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 2   9.29302852     117.0242            0            0           NA</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 3   2.36415661     104.0703            0            0           NA</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 4   8.18720433     120.6410            0            0           NA</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 5   9.49721067     120.9800            0            0           NA</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 6   9.63975669     120.9499            0            0           NA</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 1   0.03877717      57.0000            0            0           NA</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 2   9.30016741     117.0242            0            0           NA</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 3   2.36597275     104.0703            0            0           NA</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 4   8.19349372     120.6410            0            0           NA</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 5   9.50450641     120.9800            0            0           NA</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 6   9.64716193     120.9499            0            0           NA</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>   Q_out_treated L_out_treated C_out_treated Q_out_seep_discharge</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 1    0.03437223      1.896199      55.16661                    0</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 2    0.03512879      2.775465      79.00826                    0</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 3    0.03559209      2.948497      82.84134                    0</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 4    0.03536027      2.986134      84.44883                    0</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 5    0.03960158      3.294177      83.18296                    0</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 6    0.04423098      3.623698      81.92670                    0</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 1    0.03437226      1.896201      55.16661                    0</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 2    0.03513372      2.775812      79.00706                    0</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 3    0.03560208      2.949142      82.83622                    0</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 4    0.03537407      2.987011      84.44069                    0</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 5    0.03962344      3.295610      83.17325                    0</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 6    0.04426130      3.626046      81.92362                    0</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>   L_out_seep_discharge C_out_seep_discharge Q_out_release1 L_out_release1</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> 1                    0                   NA              0              0</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> 2                    0                   NA              0              0</span>
@@ -399,48 +399,48 @@ for lagged internal transfer (<code>Recycle</code>).</p></li>
 <span class="r-out co"><span class="r-pr">#&gt;</span> 5             NA              0              0             NA              0</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> 6             NA              0              0             NA              0</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>   L_seep_recycle C_seep_recycle Q_out_total L_out_total C_out_total</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 1              0             NA  0.03437223    1.896199    55.16661</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 2              0             NA  0.03512879    2.775465    79.00826</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 3              0             NA  0.03559209    2.948497    82.84134</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 4              0             NA  0.03536027    2.986134    84.44883</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 5              0             NA  0.03960158    3.294177    83.18296</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 6              0             NA  0.04423098    3.623698    81.92670</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 1              0             NA  0.03437226    1.896201    55.16661</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 2              0             NA  0.03513372    2.775812    79.00706</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 3              0             NA  0.03560208    2.949142    82.83622</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 4              0             NA  0.03537407    2.987011    84.44069</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 5              0             NA  0.03962344    3.295610    83.17325</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 6              0             NA  0.04426130    3.626046    81.92362</span>
 <span class="r-in"><span>  <span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="va">out</span><span class="op">$</span><span class="va">results</span><span class="op">$</span><span class="va">cells</span><span class="op">[[</span><span class="fl">2</span><span class="op">]</span><span class="op">]</span><span class="op">)</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>         Date     V_end     Z_end     Z_avg V_cell_day RainVol EtVol NetAtmo</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> 1 1965-01-01 0.8671037 0.3959378 0.3979118  0.8714269      NA    NA      NA</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 2 1965-01-02 0.8590717 0.3922702 0.3940539  0.8629781      NA    NA      NA</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 3 1965-01-03 0.8512040 0.3886776 0.3904262  0.8550334      NA    NA      NA</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 4 1965-01-04 0.8461331 0.3863621 0.3874898  0.8486027      NA    NA      NA</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 5 1965-01-05 0.8449756 0.3858336 0.3860911  0.8455395      NA    NA      NA</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 6 1965-01-06 0.8472364 0.3868660 0.3863631  0.8461351      NA    NA      NA</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 2 1965-01-02 0.8590763 0.3922723 0.3940550  0.8629805      NA    NA      NA</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 3 1965-01-03 0.8512170 0.3886836 0.3904303  0.8550423      NA    NA      NA</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 4 1965-01-04 0.8461568 0.3863730 0.3874983  0.8486212      NA    NA      NA</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 5 1965-01-05 0.8450159 0.3858520 0.3861058  0.8455717      NA    NA      NA</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 6 1965-01-06 0.8472986 0.3868943 0.3863866  0.8461866      NA    NA      NA</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>   WB_in WB_out WB_err WB_rel Q_in_total L_in_total C_in_total Q_in_basin</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 1    NA     NA     NA     NA 0.03437223   1.896199   55.16661          0</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 2    NA     NA     NA     NA 0.03512879   2.775465   79.00826          0</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 3    NA     NA     NA     NA 0.03559209   2.948497   82.84134          0</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 4    NA     NA     NA     NA 0.03536027   2.986134   84.44883          0</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 5    NA     NA     NA     NA 0.03960158   3.294177   83.18296          0</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 6    NA     NA     NA     NA 0.04423098   3.623698   81.92670          0</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 1    NA     NA     NA     NA 0.03437226   1.896201   55.16661          0</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 2    NA     NA     NA     NA 0.03513372   2.775812   79.00706          0</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 3    NA     NA     NA     NA 0.03560208   2.949142   82.83622          0</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 4    NA     NA     NA     NA 0.03537407   2.987011   84.44069          0</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 5    NA     NA     NA     NA 0.03962344   3.295610   83.17325          0</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 6    NA     NA     NA     NA 0.04426130   3.626046   81.92362          0</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>   L_in_basin C_in_basin Q_in_upstream L_in_upstream C_in_upstream Q_in_treated</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 1          0          0    0.03437223      1.896199      55.16661   0.03437223</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 2          0          0    0.03512879      2.775465      79.00826   0.03512879</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 3          0          0    0.03559209      2.948497      82.84134   0.03559209</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 4          0          0    0.03536027      2.986134      84.44883   0.03536027</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 5          0          0    0.03960158      3.294177      83.18296   0.03960158</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 6          0          0    0.04423098      3.623698      81.92670   0.04423098</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 1          0          0    0.03437226      1.896201      55.16661   0.03437226</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 2          0          0    0.03513372      2.775812      79.00706   0.03513372</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 3          0          0    0.03560208      2.949142      82.83622   0.03560208</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 4          0          0    0.03537407      2.987011      84.44069   0.03537407</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 5          0          0    0.03962344      3.295610      83.17325   0.03962344</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 6          0          0    0.04426130      3.626046      81.92362   0.04426130</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>   L_in_treated C_in_treated Q_out_bypass L_out_bypass C_out_bypass</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 1     1.896199     55.16661            0            0           NA</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 2     2.775465     79.00826            0            0           NA</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 3     2.948497     82.84134            0            0           NA</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 4     2.986134     84.44883            0            0           NA</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 5     3.294177     83.18296            0            0           NA</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 6     3.623698     81.92670            0            0           NA</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 1     1.896201     55.16661            0            0           NA</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 2     2.775812     79.00706            0            0           NA</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 3     2.949142     82.83622            0            0           NA</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 4     2.987011     84.44069            0            0           NA</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 5     3.295610     83.17325            0            0           NA</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 6     3.626046     81.92362            0            0           NA</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>   Q_out_treated L_out_treated C_out_treated Q_out_seep_discharge</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 1    0.03885841     0.9055476      23.30378                    0</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 2    0.03737304     0.6525636      17.46081                    0</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 3    0.03601569     0.5852010      16.24850                    0</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 4    0.03494392     0.5610914      16.05691                    0</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 5    0.03444206     0.5528803      16.05247                    0</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 6    0.03453979     0.5542716      16.04734                    0</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 1    0.03885841     0.9055477      23.30378                    0</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 2    0.03737344     0.6525700      17.46079                    0</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 3    0.03601719     0.5852220      16.24841                    0</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 4    0.03494697     0.5611322      16.05668                    0</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 5    0.03444732     0.5529493      16.05203                    0</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 6    0.03454821     0.5543810      16.04659                    0</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>   L_out_seep_discharge C_out_seep_discharge Q_out_release1 L_out_release1</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> 1                    0                   NA              0              0</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> 2                    0                   NA              0              0</span>
@@ -456,12 +456,12 @@ for lagged internal transfer (<code>Recycle</code>).</p></li>
 <span class="r-out co"><span class="r-pr">#&gt;</span> 5             NA              0              0             NA              0</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> 6             NA              0              0             NA              0</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>   L_seep_recycle C_seep_recycle Q_out_total L_out_total C_out_total</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 1              0             NA  0.03885841   0.9055476    23.30378</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 2              0             NA  0.03737304   0.6525636    17.46081</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 3              0             NA  0.03601569   0.5852010    16.24850</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 4              0             NA  0.03494392   0.5610914    16.05691</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 5              0             NA  0.03444206   0.5528803    16.05247</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 6              0             NA  0.03453979   0.5542716    16.04734</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 1              0             NA  0.03885841   0.9055477    23.30378</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 2              0             NA  0.03737344   0.6525700    17.46079</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 3              0             NA  0.03601719   0.5852220    16.24841</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 4              0             NA  0.03494697   0.5611322    16.05668</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 5              0             NA  0.03444732   0.5529493    16.05203</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 6              0             NA  0.03454821   0.5543810    16.04659</span>
 <span class="r-in"><span></span></span>
 </code></pre></div>
     </div>

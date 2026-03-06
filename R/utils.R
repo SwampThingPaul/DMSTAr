@@ -37,10 +37,11 @@ fw <- function(L, Q){
 #' @export
 
 cfs_to_hm3d <- function(x) {
-  m3_per_ft3  <- 0.3048^3
-  m3_per_day  <- m3_per_ft3 * 86400
-  hm3_per_day <- m3_per_day / 1e6
-  x * hm3_per_day
+  # m3_per_ft3  <- 0.3048^3
+  # m3_per_day  <- m3_per_ft3 * 86400
+  # hm3_per_day <- m3_per_day / 1e6
+  # x * hm3_per_day
+  x * 0.002448455 # consistent with VBA
 }
 
 

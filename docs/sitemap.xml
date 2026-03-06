@@ -31,10 +31,16 @@
     <loc>/reference/cm_to_m.html</loc>
   </url>
   <url>
+    <loc>/reference/dmstar_default_params.html</loc>
+  </url>
+  <url>
     <loc>/reference/dmsta_build_tanks.html</loc>
   </url>
   <url>
     <loc>/reference/dmsta_cals.html</loc>
+  </url>
+  <url>
+    <loc>/reference/dmsta_case_network.html</loc>
   </url>
   <url>
     <loc>/reference/dmsta_flowP_case.html</loc>

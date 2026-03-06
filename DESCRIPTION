@@ -2,7 +2,7 @@ Package: DMSTAr
 Type: Package
 Title: Dynamic Model for Stormwater Treatment Areas in R
 Version: 0.1.0
-Date: 2026-02-11
+Date: 2026-03-06
 Authors@R: c(person("Paul", "Julian",role=c("aut","cre"),
             email="pjulian@evergladesfoundation.org"))
 Maintainer: Paul Julian <pjulian@evergladesfoundation.org>
@@ -14,8 +14,11 @@ Description: Performs treatment wetland modeling consistent with the original
 License: MIT + file LICENSE
 Encoding: UTF-8
 LazyData: true
+Imports:
+    stats,
+    utils
 Depends: 
-    R (>= 2.10)
+    R (>= 4.1.0)
 Suggests: 
     testthat (>= 3.0.0)
 Config/testthat/edition: 3

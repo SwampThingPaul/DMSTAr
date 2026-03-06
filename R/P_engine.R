@@ -105,16 +105,11 @@ dmsta_deriv_mass <- function(state, drivers,ppar,constants) {
   # depth and concentration modifiers for each module (1..3)
   Fz <- fC <- c(1, 1, 1)
   for (k in 1:3) {
-    if (ppar$Z_1[k] > 0 && zZ < ppar$Z_1[k]) Fz[k] <- zZ / ppar$Z_1[k]
-    # Robust to NA
-    # z1 <- ppar$Z_1[k]
-    # if (is.finite(z1) && z1 > 0 && is.finite(zZ) && zZ < z1) {
-    #   Fz[k] <- zZ / z1
-    # } else {
-    #   Fz[k] <- 1
-    # }
+    if (isTRUE(ppar$Z_1[k] > 0 && zZ < ppar$Z_1[k])){
+      Fz[k] <- zZ / ppar$Z_1[k] # Fz is a list of 1 so no else Fz[k] <- 1
+    }
 
-    if (ppar$Chalf[k] > 0) {
+    if (isTRUE(ppar$Chalf[k] > 0)) {
       fC[k] <- ppar$Chalf[k] / (ppar$Chalf[k] + min(C, constants$Cmax))
     } else {
       fC[k] <- 1
@@ -154,7 +149,7 @@ dmsta_deriv_mass <- function(state, drivers,ppar,constants) {
     k3A <- Ftrans * ppar$K3[1]                 + (1 - Ftrans) * ppar$K3[2]
 
     # reservoir depth penalty blend using Z_plant
-    if (ppar$Z_3[1] > 0 && drivers$Z_plant > ppar$Z_2[1]) {
+    if (isTRUE(ppar$Z_3[1] > 0 && drivers$Z_plant > ppar$Z_2[1])) {
       if (drivers$Z_plant >= ppar$Z_3[1]) {
         fres <- 1
       } else {
@@ -391,12 +386,13 @@ dmsta_flowP_day <- function(V, P_state, tanks, inputs, params,
     # node “outlet” concentration: inflow+recycle weighted (VBA effectively uses inflow conc)
     Qin_total <- Qi_eff - hyd$Bypass + RecycleQ
     Lin_total <- (Qi_eff - hyd$Bypass) * Ci + RecycleM
-    # Cout <- if (Qin_total > 0) Lin_total / Qin_total else 0
-    Cout <- if (Qi_eff > 0) Ci else 0
+    Cout <- if (Qin_total > 0) Lin_total / Qin_total else 0
+    # Cout <- if (Qi_eff > 0) Ci else 0
 
     # assign all non-bypass outflow to “treated” stream in node mode
     Q_treat <- hyd$Qout
-    L_treat <- Q_treat * Cout
+    # L_treat <- Q_treat * Cout
+    L_treat <- Q_treat * Ci
     Q_byp <- hyd$Bypass
     L_byp <- Q_byp * Ci
 
@@ -688,7 +684,7 @@ dmsta_flowP_day <- function(V, P_state, tanks, inputs, params,
 
 
         # VBA routes using Cavg = Mavg / V_tank (not instantaneous C)
-        Mavg <- 0.5 * (Mo + M[tk])
+        Mavg <- (Mo + M[tk]) / 2
         Cavg <- Mavg / max(V_tank_avg, 1e-12)
 
         Lo_tank <- Qo_tank * Cavg
@@ -1137,19 +1133,24 @@ dmsta_flowP_series <- function(
     )
   }
 
+  Z0_m <- if (is.finite(series$Zcontrol[1]) && series$Zcontrol[1] != 0) {
+    series$Zcontrol[1]
+  } else {
+    params$Zinit / 100
+  }
+  Z0_m <- max(Z0_m, params$Zmin / 100)
+
   #  initial volume
   if (is.null(V_init)) {
-    Z_init_m <- (params$Zinit / 100)
-    V_init <- params$A_cell * Z_init_m
+    V_init <- params$A_cell * Z0_m
   }
   V <- V_init
 
   #  initial P state
   if (is.null(init_P_state)) {
-    Z_init_m <- (params$Zinit / 100)
     init_P_state <- dmsta_p_init_state(
       tanks,
-      Z_init_m = Z_init_m,
+      Z_init_m = Z0_m,
       C_init_ppb = params$C_init_ppb,
       Y_init_mgm2 = params$Y_init_mgm2
     )

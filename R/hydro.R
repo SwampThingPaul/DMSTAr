@@ -305,46 +305,43 @@ dmsta_rk4_step <- function(V, args_base, step_index, Dt) {
   Qr1 <- if (is.null(args_base$Qr1)) 0 else args_base$Qr1
   Qr2 <- if (is.null(args_base$Qr2)) 0 else args_base$Qr2
 
+
+  allow_release <- !(A_cell > 0 && V <= Zrel * A_cell)
+  Qrelease_const <- if (allow_release) (Qr1 + Qr2) else 0
+
   ##  RK stage 1
-  Qrelease1 <- if (A_cell > 0 && V <= Zrel * A_cell) 0 else (Qr1 + Qr2)
-
+  # Qrelease1 <- if (A_cell > 0 && V <= Zrel * A_cell) 0 else (Qr1 + Qr2)
   s1 <- do.call(dmsta_deriv_flow,
-                c(list(V = V, step_frac = 0.0, Ddt = Dt,
+                c(list(V = V, step_frac = 0.0, Ddt = 0.5 * Dt,
                        step_index = step_index,
-                       Qrelease = Qrelease1),
+                       Qrelease = Qrelease_const),
                   args_base))
-
   V2 <- V + s1$dvdt * 0.5 * Dt
 
   ##  RK stage 2
-  Qrelease2 <- if (A_cell > 0 && V2 <= Zrel * A_cell) 0 else (Qr1 + Qr2)
-
+  # Qrelease2 <- if (A_cell > 0 && V2 <= Zrel * A_cell) 0 else (Qr1 + Qr2)
   s2 <- do.call(dmsta_deriv_flow,
-                c(list(V = V2, step_frac = 0.5, Ddt = Dt,
+                c(list(V = V2, step_frac = 0.5, Ddt = 0.5 * Dt,
                        step_index = step_index,
-                       Qrelease = Qrelease2),
+                       Qrelease = Qrelease_const),
                   args_base))
-
   V3 <- V + s2$dvdt * 0.5 * Dt
 
   ##  RK stage 3
-  Qrelease3 <- if (A_cell > 0 && V3 <= Zrel * A_cell) 0 else (Qr1 + Qr2)
-
+  # Qrelease3 <- if (A_cell > 0 && V3 <= Zrel * A_cell) 0 else (Qr1 + Qr2)
   s3 <- do.call(dmsta_deriv_flow,
                 c(list(V = V3, step_frac = 0.5, Ddt = Dt,
                        step_index = step_index,
-                       Qrelease = Qrelease3),
+                       Qrelease = Qrelease_const),
                   args_base))
-
   V4 <- V + s3$dvdt * Dt
 
   ##  RK stage 4
-  Qrelease4 <- if (A_cell > 0 && V4 <= Zrel * A_cell) 0 else (Qr1 + Qr2)
-
+  # Qrelease4 <- if (A_cell > 0 && V4 <= Zrel * A_cell) 0 else (Qr1 + Qr2)
   s4 <- do.call(dmsta_deriv_flow,
                 c(list(V = V4, step_frac = 1.0, Ddt = Dt,
                        step_index = step_index,
-                       Qrelease = Qrelease4),
+                       Qrelease = Qrelease_const),
                   args_base))
 
   ##  RK combine
@@ -360,7 +357,7 @@ dmsta_rk4_step <- function(V, args_base, step_index, Dt) {
   V_new <- max(V + dv * Dt, Vmin)
 
   ##  release splitting (use instantaneous end-of-step outflow)
-  q_end <- s4$Qout
+  q_end <- qout # s4$Qout
   Sspec <- Qr0 + Qr1 + Qr2
 
   if (q_end > Sspec && q_end > 0) {

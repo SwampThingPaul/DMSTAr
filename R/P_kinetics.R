@@ -42,14 +42,17 @@ compute_DMSTA_kvals <- function(C1000, Cstar, Ks) { # internal function
   # }
   # default
   K1 <- K2 <- K3 <- 0
-  PModel <- NA_integer_
+  PModel <- 1
 
   # PModel 2: special / transformed kinetics
   if (!is.na(Cstar) && Cstar < 0) {
 
     G <- -Cstar
 
-    if (G > 0 && Ks > 0 && C1000 > 0) {
+    # NA-safe guard: if any are NA, this becomes FALSE and skips
+    if (!is.na(G) && !is.na(Ks) && !is.na(C1000) &&
+        G > 0 && Ks > 0 && C1000 > 0) {
+
       K1 <- Ks / G
       K3 <- Ks * C1000 / 1000
       K2 <- (1 - G) / G * K3
@@ -60,7 +63,8 @@ compute_DMSTA_kvals <- function(C1000, Cstar, Ks) { # internal function
   }
 
   # PModel 1: standard Module 1
-  if (C1000 > 0 && Ks > 0 && Cstar > 0) {
+  if (!is.na(C1000) && !is.na(Ks) && !is.na(Cstar) &&
+      C1000 > 0 && Ks > 0 && Cstar > 0) {
 
     # faithful translation of VB logic
     f <- max(1, C1000 - Cstar) / 1000
@@ -69,7 +73,7 @@ compute_DMSTA_kvals <- function(C1000, Cstar, Ks) { # internal function
     K1 <- K3 / Cstar
     K2 <- (K3 * K1) / Ks
 
-    PModel <- 1
+    # PModel <- 1 # no need to specify as it is default
   }
 
   list(K1 = K1, K2 = K2, K3 = K3, PModel = PModel)
@@ -180,13 +184,14 @@ build_P_kinetics <- function(mod_type, Dpy = 365.25, DutyCycle = NULL, pparams, 
 #' \donttest{
 #' pparams <- list(
 #'   # shared / STA
-#'   C1000 = 1000, Cstar = 100, Ks_per_yr = 1,
-#'   Z1 = 10, Z2 = 30, Z3 = 60,
+#'   C1000 = 22, Cstar = 3, Ks_per_yr = 16,
+#'   Z1 = 40, Z2 = 100, Z3 = 200,
 #'   K2Coef1 = 0.1, Chalf = 50, SeasonalFactor = 1,
 #'   # PSTA
-#'   Ytrans = 1, Ysigma = 1, C1000_2 = 1000, ks_2 = 1, zh_2 = 10,
+#'   Ytrans = 1, Ysigma = 1, C1000_2 = 50, ks_2 = 20, zh_2 = 10,
 #'   # RES
-#'   k_depth_penalty = 0.5
+#'   k_depth_penalty = 0.5,
+#'   DutyCycle = 0.95
 #' )
 #'
 #' out <- build_P_kin_slots(
