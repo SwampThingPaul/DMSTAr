@@ -1,6 +1,9 @@
 pandoc: 2.19.2
 pkgdown: 2.0.7
 pkgdown_sha: ~
-articles: {}
-last_built: 2026-03-06T13:54Z
+articles:
+  Getting_Started: Getting_Started.html
+  kHLR_relationships: kHLR_relationships.html
+  phosphorus-kinetics: phosphorus-kinetics.html
+last_built: 2026-03-11T15:01Z
 

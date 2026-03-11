@@ -12,3 +12,6 @@
 
 ## 2026-03-06
 * Added case networking functionality to the package. see `?dmsta_case_network` for more detail. 
+
+## 2026-03-10
+* "Getting Started with DMSTAr", "Phosphorus Kinetics in DMSTAr" and "k-HLR relationships" vignettes added

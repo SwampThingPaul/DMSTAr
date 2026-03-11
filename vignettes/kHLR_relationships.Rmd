@@ -1,0 +1,402 @@
+---
+title: "k-HLR relationships"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{k-HLR relationships}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>",
+  echo = TRUE
+)
+```
+
+
+```{r setup, include=FALSE,warning = FALSE}
+library(knitr)
+library(kableExtra)
+
+```
+
+<!-- https://wwwalker.net/dmsta1/doc/theory/pcycle.htm  good background -->
+
+The purpose of this vignette is to explain a way to derive "equivalent"k-HLR relationships that let you translate between Dynamic DMSTA-style P model parameters (ie. $K_1$, $K_2$, $K_3$,$C_0$ and $C_1$), and the familar $k-C^*$/N-tank-in-series design relationships used for screening and sizing of treatment wetalnds. 
+
+DMSTA was conceptualized as a dynamic extension of a steady state settling rate model. In practise, DMSTA maintains dynamic water balance, hydraulic routing and P cycling routines. Generally, P removal is proportional to the product of water column P and available P storage in vegetation and sediment. Meanwhile, P recylcing is described mathmatically as a quadratic to the liable ppol. Finally P removal to permanent burial is 1st order from libile storage. 
+
+DMSTA has three key rate constants, $K_1$, $K_2$ and $K_3$ that scale P biogeochemistry represented by the model (removal, recycle and burial). These arethe principal fitting parameters for calibration to observed data. These parameters were linearly transformed to a diffrent parameter space from $K$, $C_0$ and $C_1$. 
+
+  * $K$ = net settling rate at steady state (m/yr)
+  * $C_0$ = water column concentration at zero labile storage ($\mu g \ L^{-1}$)
+  * $C_1$ = water column concentration when labile storage is at 1 $g \ m^{-2}$ ($\mu g \ L^{-1}$)
+  
+Typically, $K$ is estimated by fitting a model to a concentration time-series, $C_0$ and $C_1$ are estimated from the storage and concentration relationship for a given wetlands and/or vegetative community. 
+  
+<br>
+
+## The Models:
+
+1. The $NKC^*$ Model: A generalized tank-in-series outflow model represented as
+
+$$C_{out} = \frac{C_{in} - C^{*}}{(1 + \frac{k}{N \cdot HLR})^{N}} + C^*$$
+```{r, echo=FALSE}
+data.frame(
+  Variable = c("$Q$","$A$","$HLR$","$C_{in}$,$C_{out}$","$C^*$","$k$","$N$"),
+  Definition = c("Flow","Area","Hydraulic Looading Rate $HLR = Q/A$",
+                 "Inflow/Outflow Concentration","Background concentration",
+                 "areal net settling (removal velocity)",
+                 "Number of tanks in series"),
+  Units = c(
+    "$\\mathrm{m^{3}\\ y^{-1}}$",
+    "$\\mathrm{m^{2}}$","$\\mathrm{m\\ y^{-1}}$",
+    "$\\mathrm{mg\\ m^{-3}\\ or \\ \\mu g\\ L^{-1}}$",
+    "$\\mathrm{mg\\ m^{-3}\\ or \\ \\mu g\\ L^{-1}}$",
+    "$\\mathrm{m\\ y^{-1}}$","unitless"
+  )
+)|>
+  kable(
+  
+  caption = "Model variables",
+  align = "llc"
+)|>
+  kable_styling(
+    full_width = FALSE
+  )
+
+
+```
+
+When $N = 1$ it indicates a fully mixed tank (conservative), meanwhile $N = 3 - 5$ is the common STA design range. 
+
+Using equation above, here are some useful limited cases and/or simplifications of the model.
+
+  * $N = 1$ (single Continuously Stirred Tank Reactor [CSTR])
+  
+$$C_{out} = C^{*} + \frac{C_{in} - C^{*}}{1 + \frac{k}{N \cdot HLR}}$$
+ 
+  * $N \to\infty$ (plug-flow limit)
+  
+$$C_{out} = C^{*} + (C_{in} - C^{*})e^{-k / HLR}$$
+
+<br>
+
+Using the tank in series equation, here is the inverse relationship   
+
+<br>
+
+#### **Solve for required HLR (*given target $C_{out}$*)**
+  
+  Rearrange the $NKC^*$ formula:
+  
+  $$\bigg( 1 + \frac{k}{N \cdot HLR} \bigg)^N = \frac{C_{in} - C^*}{C_{out} - C^{*}} $$
+  $$HLR = \frac{k/N}{\big( \frac{C_{in} - C^*}{C_{out} - C^{*}} \big)^{1/N} -1}$$
+ Then area for a specified flow $Q$ is:
+ 
+ $$A = \frac{Q}{HLR}$$
+**Domain constraints:** you need $C_{out} > C^{*}$ and $C_{in} > C^{*}$. If $C_{out} \le C^{*}$, the outflow is exceeding the assumed background concentration.
+
+<br> 
+
+#### **Solve for k (given observed $C_{in}$,$C_{out}$ and $HLR$)**
+
+$$k = N \cdot HLR \bigg[ \bigg( \frac{C_{in} - C^{*}}{C_{out} - C^{*}} \bigg)^{1/N} -1 \bigg]$$
+This is the equivalent settling velocity ($m \ yr^{-1}$) implied by observed performance (at the chosen $N$ and $C^{*8*}).
+
+* $N = 1$ (single Continuously Stirred Tank Reactor [CSTR])
+
+$$k = HLR \cdot \bigg( \frac{C_{in}-C^{*}}{C_{out}-C^{*}} -1 \bigg)$$
+
+* $N \to\infty$ (plug-flow limit)
+
+$$k = HLR \cdot ln\bigg( \frac{C_{in}-C^{*}}{C_{out}-C^{*}} \bigg)$$
+
+This is often the method to estimate the upper bounds of $k$ from observed annual data. 
+
+<br>
+ 
+ 2. DMSTA Model: Conceptually represented as  
+ 
+```{r DMSTA plot, echo = FALSE,fig.width = 6.5,fig.height = 7,fig.align="center"}
+par(mar = c(0.5,0.5,0.5,0.5))
+layout(matrix(1:2,1,2),widths = c(0.2,1))
+plot(0:1,0:1,type="n",ann=F,axes=F)
+text(0.1, 0.95, "One CSTR at Steady-State", adj = c(0, 1),
+     font = 3, cex = 1.1,xpd=NA)
+text(0.1, 0.89, "Unit Area Storage & Fluxes", adj = c(0, 1),
+     font = 3, cex = 0.9,xpd=NA)
+text(0.1, 0.85, "Concs in mg/m3", adj = c(0, 1),
+     font = 3, cex = 0.8,xpd=NA)
+text(0.1, 0.82,  "Fluxes in mg/m2-yr", adj = c(0, 1),
+     font = 3, cex = 0.8,xpd=NA)
+text(0.1, 0.79, "Storage in mg/m2", adj = c(0, 1),
+     font = 3, cex = 0.8,xpd=NA)
+
+plot.new()
+plot.window(xlim = c(0, 10), ylim = c(0, 9), asp = 1)
+wc <- list(x1 = 3.2, x2 = 9.2, y1 = 6.1, y2 = 8.5)
+rect(wc$x1, wc$y1, wc$x2, wc$y2, col = "#C8F7F7", border = "black", lwd = 1)
+
+text((wc$x1+wc$x2)/2, 7.9, "Water Column", cex = 1.0, font = 2)
+text((wc$x1+wc$x2)/2, 7.35, "Mass = M", cex = 0.95, font = 2)
+text((wc$x1+wc$x2)/2, 6.85, "Conc = C = M / Z", cex = 0.95, font = 2)
+
+# Biomass box
+bio <- list(x1 = 3.2, x2 = 9.2, y1 = 2.2, y2 = 4.6)
+rect(bio$x1, bio$y1, bio$x2, bio$y2, col = "#CFF7C8", border = "black", lwd = 1)
+
+text((bio$x1+bio$x2)/2, 3.8, "Biomass P Storage", cex = 1.0, font = 2)
+text((bio$x1+bio$x2)/2, 3.25, "S", cex = 1.0, font = 2)
+
+# --- Arrows & labels ---
+# Inflow L -> into water column (left)
+arrows(1.4, 7.3, wc$x1, 7.3, length = 0.1, lwd = 1)
+text(2.25, 7.55, "L", cex = 1.1, font = 2)
+
+# Outflow Q C -> out of water column (right)
+arrows(wc$x2, 7.3, 10.5, 7.3, length = 0.1, lwd = 1,xpd=NA)
+text(10, 7.55, "Q C", cex = 1.0, font = 2)
+
+# Downward arrow: water column -> biomass (uptake)
+arrows(5.0, wc$y1, 5.0, bio$y2, length = 0.1, lwd = 1)
+# Label left of the downward arrow: Fz K1 S C
+text(3.05, 5.35, expression(F[z]~K[1]~S~C), adj = c(0, 0.5),
+     cex = 0.95, font = 2)
+
+# Upward arrow: biomass -> water column (recycle)
+arrows(7.4, bio$y2, 7.4, wc$y1, length = 0.1, lwd = 1)
+# Label to the right: K2 S^2
+text(8.25, 5.35, expression(K[2]~S^2), adj = c(0, 0.5),
+     cex = 0.95, font = 2)
+
+# Downward arrow: biomass -> sink/burial (K3 S)
+arrows((bio$x1+bio$x2)/2, bio$y1, (bio$x1+bio$x2)/2, 1.0, length = 0.1, lwd = 1)
+text(7.0, 1.55, expression(K[3]~S), cex = 0.95, font = 2)
+
+# Fz definition under the left flux label
+text(0, 4.4, expression(F[z] == Min(1,~Z/Z[x])),
+     adj = c(0, 0.5), cex = 0.95, font = 2)
+
+```
+
+```{r, echo=FALSE}
+params <- data.frame(
+  Symbol = c("M", "S", "Z", "L", "Q", "K1", "K2", "K3"),
+  Description = c(
+    "Water column P storage",
+    "Biomass P storage",
+    "Mean water depth",
+    "External P load",
+    "Outflow rate",
+    "Maximum uptake rate",
+    "Recycle rate",
+    "Burial rate"
+  ),
+  Units = c(
+    "$\\mathrm{mg\\ m^{-2}}$", 
+    "$\\mathrm{mg\\ m^{-2}}$",
+    "$m$",
+    "$\\mathrm{mg\\ m^{-2}\\ yr^{-1}}$",
+    "$\\mathrm{m\\ yr^{-1}}$",
+    "$\\mathrm{m^{3}\\ mg^{-1}\\ yr^{-1}}$",
+    "$\\mathrm{m^{2}\\ mg^{-1}\\ yr^{-1}}$",
+    "$\\mathrm{yr^{-1}}$"
+  )
+)
+
+kable(
+  params,
+  caption = "DMSTA State Variables and Parameters",
+  align = "lll"
+)|>
+  kable_styling(
+    full_width = FALSE
+  )|>
+  pack_rows("State Variables",     start_row = 1, end_row = 3) |>
+  pack_rows("Driving Variables",   start_row = 4, end_row = 5) |>
+  pack_rows("Parameter Variables", start_row = 6, end_row = 8)
+
+```
+
+
+```{r, echo=FALSE}
+
+data.frame(Compartment = c("Storage:","Overall:", "Solution for C:","Solution for S:"),
+           Equation = c(
+             "$K1 \\cdot C = K2 \\cdot S + K3$",
+             "$L - Q \\cdot C = K3 \\cdot S$",
+             "$C = \\frac{(K2 \\cdot L + K3^{2})}{K3 \\cdot K1 + Q \\cdot K2}$",
+             "$S = \\frac{(K1 \\cdot C - K3)}{K2}$")
+           )|>
+  kable(
+    caption = "Steady-State Mass Balances 1 CSTR &  Fz = 1",
+  align = "lc"
+  )|>
+  kable_styling(
+    full_width = FALSE
+  )
+
+
+```
+
+Whereas the steady-state DMSTA solution is equivalent to a simple $KC^{*}$ model with $C^{*} = C_0$ and $K$ is interpreted as a net settling rate ($m \ yr^{-1}$). Therefore, for "equivalent design model" purposes $C^{*} \equiv C_{0}$ and $k \equiv K$. This means that the DMSTAs calibrated ($K$ and $C_{0}$) can be subsituted directly into the $NKC^{*}$ model. 
+
+Where 
+$$C = \frac{(L + K \cdot C_{0})}{(K + Q)}$$
+
+$$S = 1000 \cdot \frac{C-C_0}{C1 - C_0}$$ 
+
+```{r DMSTA plot2, echo = FALSE,out.width = "50%",fig.align="center"}
+par(mar=c(0,0,0,0),oma = c(0.1,0.1,0.1,0.1))
+plot.new()
+plot(0:1,0:1,xlim = c(0, 1), ylim = c(0,1), ann=F,axes=F,type="n")
+wc <- list(x1 = 0.2, x2 = 0.8, y1 = 0.4, y2 = 0.8)
+rect(wc$x1, wc$y1, wc$x2, wc$y2, col = "#C8F7F7", border = "black", lwd = 1)
+
+text(wc$x1+(wc$x2-wc$x1)/2,
+     wc$y1+(wc$y2-wc$y1)/2,
+     "C", cex = 0.95, font = 2)
+a1 <- list(x0 = 0, y0=wc$y1+(wc$y2-wc$y1)/2,
+           x1 = wc$x1, y1 = wc$y1+(wc$y2-wc$y1)/2)
+with(a1,arrows(x0,y0, x1,y1, length = 0.1, lwd = 1))
+text(a1$x0+(a1$x1-a1$x0)/2, a1$y0, "L", cex = 1, font = 2,pos=3,offset = 0.25)
+
+a2 <- list(x0 =  wc$x2, y0 = wc$y1+(wc$y2-wc$y1)/2,
+           x1 = 1, y1 = wc$y1+(wc$y2-wc$y1)/2)
+with(a2,arrows(x0,y0, x1,y1, length = 0.1, lwd = 1))
+text(a2$x0+(a2$x1-a2$x0)/2, a2$y0, "Q C", cex = 1.0, font = 2,pos=3,offset = 0.25)
+
+a3 <- list(x0 = wc$x1+(wc$x2-wc$x1)/2,y0 = wc$y1,
+           x1 = wc$x1+(wc$x2-wc$x1)/2, y1 = wc$y1*0.75)
+with(a3,arrows(x0,y0, x1,y1, length = 0.1, lwd = 1))
+text(a3$x0, a3$y1, "K (C - C0)", cex = 1, font = 2,pos=1,offset = 0.25)
+
+```
+
+Where, 
+
+$$K = \frac{K2 \cdot K1}{K2}$$
+
+Therefore, given ($K$,$C_0$,$C_1$), ($K1$, $K2$, $K3$) can be estimated: 
+
+$$K3 = K \cdot \frac{C_{1} - C_{0}}{1000}$$
+
+$$K1 = \frac{K3}{C_0}$$
+
+$$K_2 = \frac{K3 \cdot K1}{K}$$
+
+Given  ($K1$, $K2$, $K3$),  ($K$,$C_0$,$C_1$) can be estimated:
+
+$$C_{0} = \frac{K_3}{K_1}$$
+
+$$K = \frac{K_1 \cdot K_3}{K_2}$$
+
+$$ C_1 = \frac{1000 \cdot K_{2} + K_{3}}{K_{1}}$$
+
+### Helpful R Code 
+To see these equation in practice here are some simple R functions and examples. 
+```{r}
+# Forward NKC* (tanks-in-series) prediction
+nkc_out <- function(Cin, k, HLR, N = 1, Cstar) {
+  Cstar + (Cin - Cstar) / (1 + k / (N * HLR))^N
+}
+
+# Solve for HLR given target Cout
+nkc_hlr <- function(Cin, Cout, k, N = 1, Cstar) {
+  r <- (Cin - Cstar) / (Cout - Cstar)
+  (k / N) / (r^(1/N) - 1)
+}
+
+# Solve for k given observed Cin/Cout and HLR
+nkc_k <- function(Cin, Cout, HLR, N = 1, Cstar) {
+  if (any(Cout <= Cstar))
+    stop("Cout must be greater than Cstar")
+  
+  r <- (Cin - Cstar) / (Cout - Cstar)
+  N * HLR * (r^(1/N) - 1)
+}
+
+# DMSTA parameter translations 
+dmsta_KC_to_K123 <- function(K, C0, C1) {
+  K3 <- K * (C1 - C0) / 1000
+  K1 <- K3 / C0
+  K2 <- K3 * K1 / K
+  list(K1 = K1, K2 = K2, K3 = K3)
+}
+
+dmsta_K123_to_KC <- function(K1, K2, K3) {
+  C0 <- K3 / K1
+  K  <- (K1 * K3) / K2
+  C1 <- (1000 * K2 + K3) / K1
+  list(K = K, C0 = C0, C1 = C1)
+}
+
+# Estimate k from plug and flow
+estimate_k_plug <- function(
+  Cin, Cout,
+  HLR,
+  Cstar
+) {
+  if (any(Cout <= Cstar))
+    stop("Cout must be greater than Cstar")
+
+  HLR * log( (Cin - Cstar) / (Cout - Cstar) )
+}
+
+```
+
+```{r,include = FALSE,eval = FALSE}
+## Estimate k from CSTR
+estimate_k_CSTR <- function(
+  Cin, Cout,
+  HLR,
+  N = 1,
+  Cstar
+) {
+  if (any(Cout <= Cstar))
+    stop("Cout must be greater than Cstar")
+
+  N * HLR * (( (Cin - Cstar) / (Cout - Cstar) )^(1/N) - 1)
+}
+
+```
+
+
+```{r}
+## Example Data
+Cin <-  122
+Cout <- 17
+k  <-  66.5
+HLR <- 9.5
+Cstar <- 2
+
+K <- 16.8
+C0 <- 2
+C1 <- 22
+
+K1 <- 0.168
+K2 <- 0.00336
+K3 <- 0.336
+
+# Estimated Cout given Cin, k, & HLR
+nkc_out(Cin, k, HLR, N = 1, Cstar)
+
+# Estimated HLR given Cin, Cout & k
+nkc_hlr(Cin,Cout,k,N = 1,Cstar)
+
+# vs more tanks
+nkc_hlr(Cin,Cout,k,N = 3,Cstar)
+
+## Estimate k 
+nkc_k(Cin,Cout,HLR,1,Cstar)
+
+# estimate model parameters
+dmsta_KC_to_K123(K,C0,C1)
+
+dmsta_K123_to_KC(K1,K2,K3)
+```
+
+<br>

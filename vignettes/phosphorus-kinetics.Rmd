@@ -1,0 +1,203 @@
+---
+title: "Phosphorus Kinetics in DMSTAr"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Phosphorus Kinetics in DMSTAr}
+  %\VignetteEncoding{UTF-8}
+  %\VignetteEngine{knitr::rmarkdown}
+editor_options: 
+  chunk_output_type: console
+---
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>"
+)
+```
+
+```{r setup,echo = FALSE}
+library(DMSTAr)
+```
+
+## Summary
+
+This vignette documents the DMSTA-style phosphorus kinetics available in DMSTAr: how kinetic parameters are constructed, what the coefficients mean, how tank-in-series settings interact with kinetics, and how to customize kinetics in a reproducible R workflow.
+
+This vignette focuses on *within-case* phosphorus dynamics. Network routing and hydrology setup are covered in `vignette("Getting Started with DMSTAr")`.
+
+## Introduction
+
+DMSTAr implements a modular version of DMSTA-style phosphorus dynamics. The goal is to keep the scientific intent clear (what the parameters mean) while supporting extensible implementation (how users provide parameters).
+
+## Background
+
+### Conceptual Structure
+
+DMSTA represents phosphorus cycling with two storages:
+
+-   water-column concentration/state (C)
+
+-   labile biomass/sediment storage (S)
+
+Three internal fluxes are represented with rate coefficients:
+
+-   removal (K1), recycle (K2), burial (K3)
+
+Core internal flux forms (conceptually) are:
+
+-   $Removal \propto K1 \cdot F_{c}(C) \cdot F_{z}(z) \cdot C \cdot S$
+
+-   $Recycle \propto K2 \cdot S^{2}$
+
+-   $Burial \propto K3 \cdot S$
+
+Where
+
+-   $K1$, $K2$, $K3$ = removal, recycling and burial rate coefficients
+
+-   C = water-column P concentration
+
+-   S = liable P Storage
+
+-   $F_{c}$ and $F_{z}$ = efficiency modifiers
+
+#### Concentration-dependent scale factor ($F_{c}$)
+
+$F_{c}$ limits removal efficiency at low water column P concentration. DMSTA, at its core, assumes that biological and physicochemical uptake processes become less efficient as C approaches background levels. Therefore, $F_{c}$ represents declining phosphorus uptake efficiency as water‑column concentrations approach low‑P conditions. Ultimately, this factor prevents the model from unrealistically removing phosphorus at full strength when concentrations are already very low.
+
+In practice, $F_{c}$ is governed by the parameter "C2" also called Chalf. It is defined as the concentration at which removal efficiency is \~50% of the maximum. Conceptually, at high concentrations, $F_{c} \approx 1$, whereas at low concentrations, $F_{c}$ is effectively 0.
+
+<br>
+
+```{r Fc calc, echo = FALSE,fig.align = "center",fig.cap = "Graphical representation of $F_c$.",fig.width = 6.5,fig.height = 4}
+## DMSTA uses Michaelis- Menten / half saturation
+
+
+Fc <- function(C, Chalf) {
+  C / (C + Chalf)
+}
+
+
+C  <- seq(0, 200, by = 10)  # TP concentration (µg/L)
+Chalf <- 50                 # typical DMSTA value
+Fc_dat <- data.frame(C = C,
+                     Fc = Fc(C, Chalf))
+par(mar=c(2,3,1,1.5),oma = c(2,2,0.5,0.5))
+ylim.val <- c(0,1);by.y <- 0.2;ymaj <- seq(ylim.val[1],ylim.val[2],by.y)
+xlim.val <- c(0,200);by.x <- 50;xmaj <- seq(xlim.val[1],xlim.val[2],by.x)
+
+plot(Fc~C, Fc_dat,type = "n",ylim=ylim.val,xlim=xlim.val,las=1,ann=F)
+abline(h=ymaj,v=xmaj,lty=3,col="grey",lwd=0.5)
+lines(Fc~C, Fc_dat,lwd=2)
+abline(h = c(0, 1), lty = 2,lwd=2,col="red")
+mtext(side=3,adj=0.01,expression("Concentration-dependent scale factor " * F[c]))
+mtext(side=1,line=2.5,expression("Water-column TP conc. ("*mu*"g"~"L"^"-1"*")"))
+mtext(side=2,line=2.75,expression(F[c]),cex=1.25)
+```
+
+
+<br>
+
+#### Depth Dependent scale factor ($F_{z}$)
+
+$F_{z}$ adjusts removal efficiency based on water depth. Phosphorus removal processes in STAs are most effective over a preferred depth range. Very shallow or very deep water reduces contact with vegetation, periphyton, and sediments. $F_z$ encodes that assumption without adding new state variables accounting for the reducted P removal efficiency below optimal water depths.
+
+In DMSTA (and `DMSTAr`), $F_z$ is controlled by three depth parameters, depth of maximum or saturated uptake ($Z1$), lower penalty depth ($Z2$) and upper penalty depth ($Z3$). Conceptually, depth near $Z1$, $F_z \approx 1$. However, when depth is $<Z2$ or $>Z3$ $F_z <1$.
+
+<br>
+
+```{r Fz calc, echo = FALSE,fig.align = "center",fig.cap = "Graphical representation of $F_z$.",fig.width = 6.5,fig.height = 4}
+Fz <- function(z, Z1, Z2, Z3) {
+  # Based on DMSTA2 calibration
+  ifelse(
+    z < Z1, z / Z1,
+    ifelse(
+      z <= Z2, 1,
+      ifelse(
+        z < Z3, (Z3 - z) / (Z3 - Z2),
+        0
+      )
+    )
+  )
+}
+
+z  <- seq(0, 250, by = 1)  # water depth (cm)
+
+Z1 <- 40    # saturated uptake depth
+Z2 <- 100   # lower penalty depth
+Z3 <- 200   # upper penalty depth
+
+Fz_dat <- data.frame(Z = z,
+                     Fz = Fz(z, Z1, Z2, Z3))
+
+par(mar=c(2,3,1,1.5),oma = c(2,2,0.5,0.5))
+ylim.val <- c(0,1);by.y <- 0.2;ymaj <- seq(ylim.val[1],ylim.val[2],by.y)
+xlim.val <- c(0,200);by.x <- 50;xmaj <- seq(xlim.val[1],xlim.val[2],by.x)
+
+plot(Fz~Z, Fz_dat,type = "n",ylim=ylim.val,xlim=xlim.val,las=1,ann=F)
+abline(h=ymaj,v=xmaj,lty=3,col="grey",lwd=0.5)
+lines(Fz~Z, Fz_dat, lwd=2)
+abline(h = c(0, 1), lty = 2,lwd=2,col="red")
+mtext(side=3,adj=0.01,expression("Depth-dependent scale factor " * F[z]))
+mtext(side=1,line=2.5,"Water Depth (cm)")
+mtext(side=2,line=2.75,expression(F[z]),cex=1.25)
+
+# Fz_dat$Fz_EAV <- with(Fz_dat,pmin(1,Z/40)); #DMSTA1 
+# lines(Fz_EAV~Z, Fz_dat,lty=2 ,lwd=2,col="blue")
+```
+
+<br>
+
+<!-- ### Tanks-in-series -->
+
+<!-- Tanks-in-series (TIS) also referred to as completely stirred tank reactor (CSTR) is a series of complete-mix reactors in series. These models can be used to capture important features of wetland detention time distribution. -->
+
+<!-- Within a cell, the model is solved across a tanks-in-series representation. Outflow from tank `i` becomes inflow to tank `i+1`; the final tank represents the cell discharge concentration. -->
+
+## Parameterization
+
+In `DMSTAr`, phosphorus kinetics are created using a model-type builder (e.g. "STA", "PSTA", "RES"). Builders return a standardized set of raw parameters (including at least `C1000`, `Cstar`, `Ks`), and DMSTAr derives $K1$, $K2$ and $K3$ plus a model indicator PModel.
+
+`DMSTAr`, consistent with DMSTA, supports two internal formulations
+
+-   PModel 1: standard model
+
+-   PModel 2: special case, triggered when `Cstar` \< 0
+
+Phosphorus kinetics are calculated from a series of functions, some internal to the package but can be called using `DMSTAr:::`. Here is an example of a function to calculate the various K values and identifies which PModel is used in downstream analytical processes
+
+```{r Pmodel1}
+DMSTAr:::compute_DMSTA_kvals(C1000 = 22, Cstar = 3, Ks = 16)
+
+```
+
+When `Cstar` \< 0, PModel 2 methodology is used to estimate K value
+
+```{r PModel2}
+DMSTAr:::compute_DMSTA_kvals(C1000 = 22, Cstar = -3, Ks = 16)
+
+```
+
+Similar to DMSTA, `DMSTAr` calculates kinetic variables into three slots to perform P simulations depending on what models are applied. To build the necessary kinetics, `build_P_kin_slots` is used where parameters and model types are supplied. Currently the default models are `STA`, `PSTA` and `RES` but there is functionality to change the model types in the three slot configuration. Currently the function includes a `Dpy` argument which is a factor to convert per day to pre year. It is possible in the this argument will be moved into the function as a default.
+
+```{r kinetics}
+pparams <- list(
+  # shared / STA
+  C1000 = 22, Cstar = 3, Ks_per_yr = 16,
+  Z1 = 40, Z2 = 100, Z3 = 200,
+  K2Coef1 = 0.1, Chalf = 50, SeasonalFactor = 1,
+  # PSTA
+  Ytrans = 1, Ysigma = 1, C1000_2 = 50, ks_2 = 20, zh_2 = 10,
+  # RES
+  k_depth_penalty = 0.5,
+  DutyCycle = 0.95
+)
+
+kin_out <- build_P_kin_slots(
+  mods = c("STA", "PSTA", "RES"),
+  pparams = pparams,
+  Dpy = 365.25
+)
+kin_out
+```
