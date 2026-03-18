@@ -24,11 +24,11 @@ library(kableExtra)
 
 <!-- https://wwwalker.net/dmsta1/doc/theory/pcycle.htm  good background -->
 
-The purpose of this vignette is to explain a way to derive "equivalent"k-HLR relationships that let you translate between Dynamic DMSTA-style P model parameters (ie. $K_1$, $K_2$, $K_3$,$C_0$ and $C_1$), and the familar $k-C^*$/N-tank-in-series design relationships used for screening and sizing of treatment wetalnds. 
+The purpose of this vignette is to explain a way to derive "equivalent"k-HLR relationships that let you translate between Dynamic DMSTA-style P model parameters (ie. $K_1$, $K_2$, $K_3$,$C_0$ and $C_1$), and the familiar $k-C^*$/N-tank-in-series design relationships used for screening and sizing of treatment wetlands. 
 
-DMSTA was conceptualized as a dynamic extension of a steady state settling rate model. In practise, DMSTA maintains dynamic water balance, hydraulic routing and P cycling routines. Generally, P removal is proportional to the product of water column P and available P storage in vegetation and sediment. Meanwhile, P recylcing is described mathmatically as a quadratic to the liable ppol. Finally P removal to permanent burial is 1st order from libile storage. 
+DMSTA was conceptualized as a dynamic extension of a steady state settling rate model. In practice, DMSTA maintains dynamic water balance, hydraulic routing and P cycling routines. Generally, P removal is proportional to the product of water column P and available P storage in vegetation and sediment. Meanwhile, P recycling is described mathematically as a quadratic to the liable pool. Finally P removal to permanent burial is 1st order from labile storage. 
 
-DMSTA has three key rate constants, $K_1$, $K_2$ and $K_3$ that scale P biogeochemistry represented by the model (removal, recycle and burial). These arethe principal fitting parameters for calibration to observed data. These parameters were linearly transformed to a diffrent parameter space from $K$, $C_0$ and $C_1$. 
+DMSTA has three key rate constants, $K_1$, $K_2$ and $K_3$ that scale P biogeochemistry represented by the model (removal, recycle and burial). These are the principal fitting parameters for calibration to observed data. These parameters were linearly transformed to a different parameter space from $K$, $C_0$ and $C_1$. 
 
   * $K$ = net settling rate at steady state (m/yr)
   * $C_0$ = water column concentration at zero labile storage ($\mu g \ L^{-1}$)
