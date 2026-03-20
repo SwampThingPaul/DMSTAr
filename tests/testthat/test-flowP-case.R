@@ -14,6 +14,9 @@ test_that("dmsta_flowP_case runs for a minimal 2-cell network and returns expect
     Rain     = rep(0, 5),                # m/day
     Et       = rep(0.005, 5),            # m/day
     Zcontrol = rep(1, 5),                # m
+    Qr0 = rep(0,5),
+    Qr1 = rep(0,5),
+    Qr2 = rep(0,5),
     stringsAsFactors = FALSE
   )
 
@@ -149,7 +152,6 @@ test_that("dmsta_flowP_case runs for a minimal 2-cell network and returns expect
     "Date",
     "V_end", "Z_avg",
     "RainVol", "EtVol", "NetAtmo",
-    "WB_in", "WB_out", "WB_err", "WB_rel",
     "Q_in_total", "L_in_total", "C_in_total",
     "Q_out_total", "L_out_total", "C_out_total"
   )

@@ -5,6 +5,9 @@ test_that("dmsta_flow_series returns expected structure and class", {
     Qi = c(1, 1, 1),
     Rain = c(0, 0, 0),
     Et = c(0.005, 0.005, 0.005),
+    Qr0 = 0,
+    Qr1 = 0,
+    Qr2 = 0,
     Zcontrol = c(1, 1, 1)
   )
 

@@ -8,6 +8,9 @@ test_that("dmsta_flowP_series runs and returns expected structure", {
     Rain     = rep(0, 5),               # m/day
     Et       = rep(0.005, 5),           # m/day
     Zcontrol = rep(1, 5),               # m
+    Qr0 = rep(0, 5),
+    Qr1 = rep(0, 5),
+    Qr2 = rep(0, 5),
     stringsAsFactors = FALSE
   )
 
@@ -29,6 +32,7 @@ test_that("dmsta_flowP_series runs and returns expected structure", {
     Zweir  = 100,         # cm
     Q_zmin = 0,           # cm
     Width  = 1,
+    Zrelease = 0,
     Bypass_elev   = 0,    # cm
     Seepout_Rate  = 0,
     Seepout_Elev  = 0,    # cm

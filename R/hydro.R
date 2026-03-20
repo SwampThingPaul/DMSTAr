@@ -137,13 +137,13 @@ dmsta_interp_zcontrol <- function(
 dmsta_deriv_flow <- function(
     V,                   # current volume [hm3]
     A_cell,              # area [km2]
-    Qi, Rain, Et, Qr0,       # inflow [hm3/d], rain [m/d], ET [m/d]
+    Qi, Rain, Et, Qr0,Qr1,Qr2,       # inflow [hm3/d], rain [m/d], ET [m/d]
     Zcontrol_t, Zcontrol_t_minus, Zcontrol_t_plus,  # control depths [m]
     params,             # list of parameters (see below)
     step_index, nsteps,  # current sub-step index (1..nsteps), total nsteps
     step_frac,          # fraction of step in RK4 staging: 0,0.5,0.5,1
     Ddt,                 # effective sub-step duration [day]; RK4 uses 0.5*Dt for stages 2-3
-    Qrelease = 0,        # optional release [hm3/d]
+    # Qrelease = 0,        # optional release [hm3/d]
     RecycleQ = 0,         # optional recycle inflow [hm3/d]
     has_depth_constraint = FALSE,  # <-- depth series present
     ...
@@ -174,6 +174,31 @@ dmsta_deriv_flow <- function(
   force_Q_out <- isTRUE(params$force_Q_out)
 
   Qr_0 <- if (is.null(Qr0) || !is.finite(Qr0)) 0 else as.numeric(Qr0)
+  Qr1 <- if (is.null(Qr1) || !is.finite(Qr1)) 0 else as.numeric(Qr1)
+  Qr2 <- if (is.null(Qr2) || !is.finite(Qr2)) 0 else as.numeric(Qr2)
+
+  # DMSTA: Zrelease and Zmin are stored in cm; comparisons use meters
+  Zrel_cm <- params$Zrelease
+  if (!is.finite(Zrel_cm)) Zrel_cm <- 0
+
+  Zmin_cm <- params$Zmin
+  if (!is.finite(Zmin_cm)) Zmin_cm <- 0
+
+  # DMSTA convention: do not allow Zrelease below Zmin
+  if (Zrel_cm < Zmin_cm) Zrel_cm <- Zmin_cm
+
+  Zrel <- Zrel_cm / 100
+
+  ## VBA-equivalent release gating
+  if (!is.null(A_cell) && A_cell > 0 && V <= Zrel * A_cell) {
+    QrU1 <- 0
+    QrU2 <- 0
+  } else {
+    QrU1 <- Qr1
+    QrU2 <- Qr2
+  }
+  Qrelease <- QrU1 + QrU2
+
 
   ##   derived state
   Z <- if (A > 0) V / A else 0
@@ -276,6 +301,8 @@ dmsta_deriv_flow <- function(
     dvdt    = dvdt,
     Qo      = Qo,
     Qout    = Qot,
+    QrU1    = QrU1,
+    QrU2    = QrU2,
     Etest   = Etest,
     Seepout = Seepout,
     Seepin  = Seepin,
@@ -319,39 +346,38 @@ dmsta_deriv_flow <- function(
 dmsta_rk4_step <- function(V, args_base, step_index, Dt) {
   A_cell <- args_base$params$A_cell
 
-  # DMSTA: Zrelease and Zmin are stored in cm; comparisons use meters
-  Zrel_cm <- args_base$params$Zrelease
-  if (!is.finite(Zrel_cm)) Zrel_cm <- 0
-
+  # # DMSTA: Zrelease and Zmin are stored in cm; comparisons use meters
+  # Zrel_cm <- args_base$params$Zrelease
+  # if (!is.finite(Zrel_cm)) Zrel_cm <- 0
+  #
   Zmin_cm <- args_base$params$Zmin
   if (!is.finite(Zmin_cm)) Zmin_cm <- 0
-
-  # DMSTA convention: do not allow Zrelease below Zmin
-  if (Zrel_cm < Zmin_cm) Zrel_cm <- Zmin_cm
-
-  Zrel <- Zrel_cm / 100
+  #
+  # # DMSTA convention: do not allow Zrelease below Zmin
+  # if (Zrel_cm < Zmin_cm) Zrel_cm <- Zmin_cm
+  #
+  # Zrel <- Zrel_cm / 100
 
   Vmin <- if (is.null(args_base$params$Vmin)) (Zmin_cm / 100) * A_cell else args_base$params$Vmin
 
-  # DMSTA release gating uses Vo (start-of-step volume), not mid-step
-  allow_release <- !(A_cell > 0 && V <= Zrel * A_cell)
+  # DMSTA release gating uses volume at the start of EACH sub-step (Vo)
+  # allow_release <- !(A_cell > 0 && V <= Zrel * A_cell)
 
   Qr0 <- if (is.null(args_base$Qr0)) 0 else args_base$Qr0
   Qr1 <- if (is.null(args_base$Qr1)) 0 else args_base$Qr1
   Qr2 <- if (is.null(args_base$Qr2)) 0 else args_base$Qr2
 
   QrU0 <- Qr0
-  QrU1 <- if (allow_release) Qr1 else 0
-  QrU2 <- if (allow_release) Qr2 else 0
-  Qrelease_const <- QrU1 + QrU2
+  # QrU1 <- if (allow_release) Qr1 else 0
+  # QrU2 <- if (allow_release) Qr2 else 0
+  # Qrelease_const <- QrU1 + QrU2
 
   s1 <- do.call(
     dmsta_deriv_flow,
     c(list(V = V,
            step_frac = 0,
            Ddt = 0.5 * Dt,
-           step_index = step_index,
-           Qrelease = Qrelease_const), args_base)
+           step_index = step_index), args_base)
   )
   V2 <- V + s1$dvdt * Dt / 2
 
@@ -360,8 +386,7 @@ dmsta_rk4_step <- function(V, args_base, step_index, Dt) {
     c(list(V = V2,
            step_frac = 0.5,
            Ddt = 0.5 * Dt,
-           step_index = step_index,
-           Qrelease = Qrelease_const), args_base)
+           step_index = step_index), args_base)
   )
   V3 <- V + s2$dvdt * Dt / 2
 
@@ -370,8 +395,7 @@ dmsta_rk4_step <- function(V, args_base, step_index, Dt) {
     c(list(V = V3,
            step_frac = 0.5,
            Ddt = Dt,
-           step_index = step_index,
-           Qrelease = Qrelease_const), args_base)
+           step_index = step_index), args_base)
   )
   V4 <- V + s3$dvdt * Dt
 
@@ -380,8 +404,7 @@ dmsta_rk4_step <- function(V, args_base, step_index, Dt) {
     c(list(V = V4,
            step_frac = 1,
            Ddt = Dt,
-           step_index = step_index,
-           Qrelease = Qrelease_const), args_base)
+           step_index = step_index), args_base)
   )
 
   dv     <- (s1$dvdt     + 2 * s2$dvdt     + 2 * s3$dvdt     + s4$dvdt)     / 6
@@ -405,14 +428,17 @@ dmsta_rk4_step <- function(V, args_base, step_index, Dt) {
 
   # DMSTA fraction split uses QrU0/QrU1/QrU2 (gated releases)
   q_end <- qout
-  Sspec <- QrU0 + QrU1 + QrU2
+  # Sspec <- QrU0 + QrU1 + QrU2
+  QrU1_end <- s4$QrU1
+  QrU2_end <- s4$QrU2
+  Sspec <- QrU0 + QrU1_end + QrU2_end
 
   if (q_end > Sspec && q_end > 0) {
-    f1 <- QrU1 / q_end
-    f2 <- QrU2 / q_end
+    f1 <- QrU1_end / q_end
+    f2 <- QrU2_end / q_end
   } else if (Sspec > 0) {
-    f1 <- QrU1 / Sspec
-    f2 <- QrU2 / Sspec
+    f1 <- QrU1_end / Sspec
+    f2 <- QrU2_end / Sspec
   } else {
     f1 <- 0
     f2 <- 0

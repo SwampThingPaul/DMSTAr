@@ -24,6 +24,8 @@ dmsta_deriv_flow(
   Rain,
   Et,
   Qr0,
+  Qr1,
+  Qr2,
   Zcontrol_t,
   Zcontrol_t_minus,
   Zcontrol_t_plus,
@@ -32,7 +34,6 @@ dmsta_deriv_flow(
   nsteps,
   step_frac,
   Ddt,
-  Qrelease = 0,
   RecycleQ = 0,
   has_depth_constraint = FALSE,
   ...
@@ -81,8 +82,6 @@ dmsta_flow_day_steps(V, inputs, params, Nsteps = 4L)
 
 \item{Ddt}{Numeric. Effective RK stage duration (days).}
 
-\item{Qrelease}{Numeric scalar. Optional release rate (hm^3/day).}
-
 \item{RecycleQ}{Numeric scalar. Optional recycle inflow (hm^3/day).}
 
 \item{has_depth_constraint}{Logical. Whether a depth-control series is present.}
@@ -99,6 +98,8 @@ release components (\code{Qr0}, \code{Qr1}, \code{Qr2}), and flags.}
 \item{inputs}{Named list of forcings; see \code{dmsta_flow_day()}.}
 
 \item{Nsteps}{Integer. Number of sub-steps per day.}
+
+\item{Qrelease}{Numeric scalar. Optional release rate (hm^3/day).}
 }
 \value{
 Numeric scalar interpolated control depth for the within-day time point.
