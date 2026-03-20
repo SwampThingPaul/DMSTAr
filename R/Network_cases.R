@@ -455,6 +455,7 @@ run_network_of_cases <- function(cases,
                                  outlet_count = 5L,
                                  verbose = TRUE,
                                  check_route = FALSE,
+                                 Nsteps_case = NULL,
                                  ...) {
 
   case_names <- names(cases)
@@ -506,6 +507,25 @@ run_network_of_cases <- function(cases,
     stringsAsFactors = FALSE
   )
 
+  # resolve Nsteps per case
+  dots <- list(...)
+  nsteps_default <- if (!is.null(dots$Nsteps)) as.integer(dots$Nsteps) else 4L
+  dots$Nsteps <- NULL  # avoid duplicates / override issues
+
+  resolve_nsteps <- function(case_id) {
+    # allow scalar
+    if (is.null(Nsteps_case)) return(nsteps_default)
+    if (length(Nsteps_case) == 1L && is.null(names(Nsteps_case))) return(as.integer(Nsteps_case))
+
+    # allow named vector or list
+    if (!is.null(names(Nsteps_case)) && case_id %in% names(Nsteps_case)) {
+      return(as.integer(Nsteps_case[[case_id]]))
+    }
+
+    # fallback
+    nsteps_default
+  }
+
   # Run cases in downstream order
   for (cn in exec_order) {
     cd <- cases[[cn]]
@@ -548,8 +568,10 @@ run_network_of_cases <- function(cases,
     series_run$Qi <- Qin
     series_run$Ci <- Cin
 
+    nsteps_i <- resolve_nsteps(cn)
+
     ## To check the process
-    if (verbose) message("Running CASE: ", cn)
+    if (verbose) message("Running CASE: ", cn, " (Nsteps=", nsteps_i, ")")
 
     if (verbose) {
       message(sprintf(
@@ -562,7 +584,10 @@ run_network_of_cases <- function(cases,
     }
 
     # Run the case simulation
-    res <- dmsta_flowP_case(series = series_run, cells = cd$cells, ...)
+    res <- do.call(
+      dmsta_flowP_case,
+      c(list(series = series_run, cells = cd$cells, Nsteps = nsteps_i),dots)
+    )
     case_results[[cn]] <- res
 
     df <- extract_df(res)

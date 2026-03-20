@@ -206,6 +206,10 @@ dmsta_make_cell <- function(label, params, ttankS, DownCell = 0L, Qin_Frac = 0,
                             RecycleIndex = NULL, SplitterFrac = NULL) {
   if (is.null(RecycleIndex)) RecycleIndex <- NA_integer_
 
+  if (is.null(params$Zrelease) || !is.finite(params$Zrelease)) {
+    params$Zrelease <- 0
+  }
+
   # build per-cell ppar (3 kinetic modules)
   ppar <- build_P_kin_slots(
     mods     = c("STA","PSTA","RES"),
@@ -338,10 +342,10 @@ dmsta_case_components <- function(
 
   ## map fields that differ between cell vs case
   # State / water levels
-  V_end      <- get_first(c("V_end", "V_total_end"))
-  Z_end      <- get("Z_end")      # case typically won't have this; stays NA
-  Z_avg      <- get("Z_avg")
-  V_cell_day <- get("V_cell_day") # case typically won't have this; stays NA
+  V_end <- get_first(c("V_end", "V_total_end"))
+  Z_end <- get_first(c("Z_total_end", "Z_end"))
+  Z_avg <- get_first(c("Z_total_avg", "Z_avg"))
+  V_cell_day <- get_first(c("V_cell_day", "V_cell_day_total"))
 
   # Atmospheric totals
   RainVol <- get_first(c("RainVol", "RainVol_total"))
@@ -349,10 +353,10 @@ dmsta_case_components <- function(
   NetAtmo <- get_first(c("NetAtmo", "NetAtmo_total"))
 
   # Water budget totals
-  WB_in  <- get_first(c("WB_in",  "WB_in_total"))
-  WB_out <- get_first(c("WB_out", "WB_out_total"))
-  WB_err <- get_first(c("WB_err", "WB_err_total"))
-  WB_rel <- get_first(c("WB_rel", "WB_rel_total"))
+  # WB_in  <- get_first(c("WB_in",  "WB_in_total"))
+  # WB_out <- get_first(c("WB_out", "WB_out_total"))
+  # WB_err <- get_first(c("WB_err", "WB_err_total"))
+  # WB_rel <- get_first(c("WB_rel", "WB_rel_total"))
 
   # Inflow totals (cell has Qin/Lin/Cin; case has Qin/Lin/Cin too)
   Q_in_total <- get("Qin")
@@ -401,6 +405,8 @@ dmsta_case_components <- function(
     V_end      = V_end,
     Z_end      = Z_end,
     Z_avg      = Z_avg,
+    Z_end_cm   = m_to_cm(Z_end),
+    Z_avg_cm   = m_to_cm(Z_avg),
     V_cell_day = V_cell_day,
 
     # atmospheric
@@ -409,10 +415,10 @@ dmsta_case_components <- function(
     NetAtmo = NetAtmo,
 
     # water budget
-    WB_in  = WB_in,
-    WB_out = WB_out,
-    WB_err = WB_err,
-    WB_rel = WB_rel,
+    # WB_in  = WB_in,
+    # WB_out = WB_out,
+    # WB_err = WB_err,
+    # WB_rel = WB_rel,
 
     # inflow totals and decomposition
     Q_in_total = Q_in_total,
@@ -705,6 +711,9 @@ dmsta_flowP_case <- function(
   ncell <- length(cells)
   nday  <- nrow(series)
 
+  A_cells <- vapply(cells, function(cd) cd$params$A_cell, numeric(1))
+  A_total <- sum(A_cells[is.finite(A_cells) & A_cells > 0], na.rm = TRUE)
+
   # Identify splitter (0 if none)
   spl_idx <- which(vapply(cells, function(x) identical(toupper(x$label), "SPLITTER"), logical(1)))
   spl_idx <- if (length(spl_idx) == 0) 0L else spl_idx[1]
@@ -720,99 +729,77 @@ dmsta_flowP_case <- function(
   }
 
   # Output templates
-  ## Internal functions
   make_cell_df <- function() {
-    df <- data.frame(
+    data.frame(
       Date = as.Date(series$Date),
-      # Water level
+      # volume and water level
       V_end = NA_real_,
       Z_end = NA_real_, Z_avg = NA_real_,
       V_cell_day = NA_real_,
-      # Total inflow to cell before bypass (basin + upstream routed treated outflow)
+      # total inflow to cell before bypass
       Qin = NA_real_,  Cin = NA_real_,  Lin = NA_real_,
-      # Components of Qin
+      # components of Qin
       Qin_basin = NA_real_, Cin_basin = NA_real_, Lin_basin = NA_real_,
       Qin_up    = NA_real_, Cin_up    = NA_real_, Lin_up    = NA_real_,
-      # Stream 7: into cell (treated inflow = Qin - bypass; excludes recycle)
+      # Term 7: stream in, flow into cell (treated inflow = Qin - bypass; exclude recycle)
       Q7 = NA_real_,  C7 = NA_real_,  L7 = NA_real_,
       # Term 3: bypass
       Q3 = NA_real_,  C3 = NA_real_,  L3 = NA_real_,
       # Term 13: treated outflow (routed downstream; terminal only to out-of-system)
       Q13 = NA_real_, C13 = NA_real_, L13 = NA_real_,
-      # Term 14: seepage discharged out-of-system
+      # Term 14: seppage discharge out of system
       Q14 = NA_real_, C14 = NA_real_, L14 = NA_real_,
-      # Term 25/26: releases (out-of-system)
+      # Term 25/26: release 1 and 2 out of system
       Q25 = NA_real_, C25 = NA_real_, L25 = NA_real_,
       Q26 = NA_real_, C26 = NA_real_, L26 = NA_real_,
-      # Term 17-style: seep recycle bookkeeping (lagged +1 day)
+      # Term 17: seepage recycling bookkeeping (lagged +1 day)
       Q17 = NA_real_, C17 = NA_real_, L17 = NA_real_,
-
       stringsAsFactors = FALSE
     )
-
-    df
   }
-  make_cell_wb_df <- function(){
+  make_cell_wb_df <- function() {
     data.frame(
       Date = as.Date(series$Date),
-      # Atmospheric
       RainVol = NA_real_, EtVol = NA_real_, NetAtmo = NA_real_,
-      # Water Budget components
       WB_in  = NA_real_, WB_out = NA_real_,
       WB_err = NA_real_, WB_rel = NA_real_,
-
       stringsAsFactors = FALSE
     )
   }
-  make_cell_mb_df <- function(){
+  make_cell_mb_df <- function() {
     data.frame(
-      # Compact P budget summaries for this cell/day
       Date = as.Date(series$Date),
-      # storage change
       dP = NA_real_,
-      # closures (total and external)
       Pin_total = NA_real_, Pout_total = NA_real_, Perr_total = NA_real_, Prel_total = NA_real_,
       Pin_external = NA_real_, Pout_external = NA_real_, Perr_external = NA_real_, Prel_external = NA_real_,
-      # tank inflow totals
       Q_in_tanks = NA_real_, L_in_tanks = NA_real_, C_in_tanks = NA_real_,
-      # external inputs (kg)
       L_rain = NA_real_, L_drydep = NA_real_, L_seepin = NA_real_,
-      # external outputs (kg)
       L_treated = NA_real_, L_rel1 = NA_real_, L_rel2 = NA_real_,
       L_bypass = NA_real_, L_seep_discharge = NA_real_,
-      # internal transfer (seep recycle)
       L_seep_recycle_out = NA_real_,
-      # mechanisms
       L_uptake = NA_real_, L_recycle = NA_real_, L_sed = NA_real_, L_direct = NA_real_,
       stringsAsFactors = FALSE
     )
   }
-
   make_case_df <- function() {
     data.frame(
       Date = as.Date(series$Date),
-      ## Boundary inflow (watershed)
       Qin = series$Qi,
       Cin = NA_real_,
       Lin = series$Qi * series$Ci,
-      ## For auditing: aggregated DMSTA-style terms (out-of-system + terminal)
-      Q7  = NA_real_, C7  = NA_real_, L7  = NA_real_,  # audit-style "into cells" (basin minus bypass)
-      Q3  = NA_real_, C3  = NA_real_, L3  = NA_real_,  # bypass
-      Q13 = NA_real_, C13 = NA_real_, L13 = NA_real_,  # terminal treated outflow
-      Q14 = NA_real_, C14 = NA_real_, L14 = NA_real_,  # seep discharge out of system
-      Q25 = NA_real_, C25 = NA_real_, L25 = NA_real_,  # release 1 out of system
-      Q26 = NA_real_, C26 = NA_real_, L26 = NA_real_,  # release 2 out of system
-      Q17 = NA_real_, C17 = NA_real_, L17 = NA_real_,  # seep recycle bookkeeping (optional)
-
+      Q7  = NA_real_, C7  = NA_real_, L7  = NA_real_,
+      Q3  = NA_real_, C3  = NA_real_, L3  = NA_real_,
+      Q13 = NA_real_, C13 = NA_real_, L13 = NA_real_,
+      Q14 = NA_real_, C14 = NA_real_, L14 = NA_real_,
+      Q25 = NA_real_, C25 = NA_real_, L25 = NA_real_,
+      Q26 = NA_real_, C26 = NA_real_, L26 = NA_real_,
+      Q17 = NA_real_, C17 = NA_real_, L17 = NA_real_,
       stringsAsFactors = FALSE
-
     )
   }
-
-  make_case_wb_df <- function(){
+  make_case_wb_df <- function() {
     data.frame(
       Date = as.Date(series$Date),
-      ## Case totals of hydrology diagnostics (sum across cells)
       RainVol_total = NA_real_,
       EtVol_total   = NA_real_,
       NetAtmo_total = NA_real_,
@@ -822,37 +809,32 @@ dmsta_flowP_case <- function(
       WB_rel_total  = NA_real_,
       V_total_end   = NA_real_,
       dV_total      = NA_real_,
+      Z_total_end   = NA_real_,
+      Z_total_avg   = NA_real_,
       stringsAsFactors = FALSE
     )
   }
-
-  make_case_mb_df <- function(){
+  make_case_mb_df <- function() {
     data.frame(
       Date = as.Date(series$Date),
-      # external inputs (kg)
       P_in_watershed = NA_real_,
       P_in_rain_total = NA_real_,
       P_in_drydep_total = NA_real_,
       P_in_seepin_total = NA_real_,
       P_in_external = NA_real_,
-      # external outputs (kg)
       P_out_bypass = NA_real_,
       P_out_terminal_treated = NA_real_,
       P_out_releases = NA_real_,
       P_out_seep_discharge = NA_real_,
       P_out_external = NA_real_,
-      # internal lagged-transfer transit storage
       P_transit_start = NA_real_,
       P_transit_end   = NA_real_,
       dP_transit      = NA_real_,
-      # storage in cells
       P_cells_start = NA_real_,
       P_cells_end   = NA_real_,
       dP_cells      = NA_real_,
-      # closure
       P_err_case = NA_real_,
       P_rel_case = NA_real_,
-      # summed mechanisms (informative)
       P_mech_uptake_total = NA_real_,
       P_mech_recycle_total = NA_real_,
       P_mech_sed_total = NA_real_,
@@ -861,33 +843,26 @@ dmsta_flowP_case <- function(
     )
   }
 
-  cell_out <- NULL
-  cell_wb <- NULL
-  cell_mb <- NULL
+  cell_out <- cell_wb <- cell_mb <- NULL
   if (return_cell_series) {
     cell_out <- vector("list", ncell)
-    cell_wb <- vector("list", ncell)
-    cell_mb <- vector("list", ncell)
-    for (ic in seq_len(ncell)){
-      cell_out[[ic]]  <- make_cell_df()
-      cell_wb[[ic]]   <- make_cell_wb_df()
-      cell_mb[[ic]]   <- make_cell_mb_df()
+    cell_wb  <- vector("list", ncell)
+    cell_mb  <- vector("list", ncell)
+    for (ic in seq_len(ncell)) {
+      cell_out[[ic]] <- make_cell_df()
+      cell_wb[[ic]]  <- make_cell_wb_df()
+      cell_mb[[ic]]  <- make_cell_mb_df()
     }
   }
 
-  # Case-level outputs:
-  # - raw watershed inflow (Stream 0 in DMSTA network reporting style)
-  # - out-of-system streams (3, 13 terminal, 14, 25, 26)
-  # - plus an aggregated Stream 7 = sum over cells of (Qin_basin - bypass) [audit-style]
   case_out <- make_case_df()
-  case_wb <- make_case_wb_df()
-  case_mb <- make_case_mb_df()
+  case_wb  <- make_case_wb_df()
+  case_mb  <- make_case_mb_df()
 
   case_out$Qin <- series$Qi
   case_out$Lin <- series$Qi * series$Ci
   case_out$Cin <- ifelse(case_out$Qin > 0, case_out$Lin / case_out$Qin, 0)
 
-  # Initialize to 0 for additive streams
   for (nm in c("Q7","L7","Q3","L3","Q13","L13","Q14","L14","Q25","L25","Q26","L26","Q17","L17")) {
     case_out[[nm]] <- 0.0
   }
@@ -897,57 +872,63 @@ dmsta_flowP_case <- function(
   iterations_used <- 0L
   prev_totalL <- NA_real_
 
-  # Iteration loop (usually max_iter=1)
+  # series-level flags (HydroIndex presence style); ## DMSTA HydroIndex(2)
+  has_Qr0_series <- any(is.finite(series$Qr0) & series$Qr0 != 0)
+  has_Qr1_series <- any(is.finite(series$Qr1) & series$Qr1 != 0) ## DMSTA HydroIndex(3)
+  has_Qr2_series <- any(is.finite(series$Qr2) & series$Qr2 != 0) ## DMSTA HydroIndex(4)
+
+  ## DMSTA HydroIndex(1)
+  has_depth_constraint_series <- any(is.finite(series$Zcontrol) & series$Zcontrol != 0)
+
+  # Iteration loop
   for (iter in seq_len(max_iter)) {
 
-    # Initialize states
+    # Initialize states (base)
     st     <- dmsta_init_case_state(cells)
     V      <- st$V
     tanks  <- st$tanks
     Pstate <- st$Pstate
 
-    ## Z0 patch when Zcontrol is present
-    zc1 <- series$Zcontrol[1] # expect meters (as this is the input)
-    if (is.finite(zc1) && zc1 != 0) {
-      for (ic in seq_len(ncell)) {
-        p <- cells[[ic]]$params
-        # Clamp to minimum depth (Zmin is stored in cm in params)
+    # Initialize V and Pstate ONCE per iteration (DMSTA Initialize)
+    for (ic in seq_len(ncell)) {
+      p <- cells[[ic]]$params
+
+      p$force_Q_out <- has_Qr0_series
+
+      if (isTRUE(has_depth_constraint_series)) {
+        zc1 <- series$Zcontrol[1]   # meters
+        if (!is.finite(zc1)) zc1 <- 0
         Z0_m <- max(zc1, p$Zmin / 100)
-        # Volume initialization consistent with chosen starting depth
-        V[ic] <- p$A_cell * Z0_m
-        # Rebuild initial P state so initial mass matches the new starting volume
-        Pstate[[ic]] <- dmsta_p_init_state(
-          tanks[[ic]],
-          Z_init_m    = Z0_m,
-          C_init_ppb  = p$C_init_ppb,
-          Y_init_mgm2 = p$Y_init_mgm2
-        )
+      } else {
+        Z0_m <- max(p$Zinit / 100, p$Zmin / 100)
       }
+
+      V[ic] <- p$A_cell * Z0_m
+      Pstate[[ic]] <- dmsta_p_init_state(
+        tanks[[ic]],
+        Z_init_m    = Z0_m,
+        C_init_ppb  = p$C_init_ppb,
+        Y_init_mgm2 = p$Y_init_mgm2
+      )
     }
 
-    # Routed inflows (from upstream treated outflows + basin fractions)
+    # Routed inflows
     Qi_cell <- matrix(0.0, nrow=nday, ncol=ncell)
     Mi_cell <- matrix(0.0, nrow=nday, ncol=ncell)
-
-    # For diagnostics: track basin portion added to each cell each day
     Qi_basin_mat <- matrix(0.0, nrow=nday, ncol=ncell)
     Mi_basin_mat <- matrix(0.0, nrow=nday, ncol=ncell)
 
-    # Lagged seep recycle arrays (day+1 like VBA)
+    # Lagged seep recycle arrays
     QRecycle <- matrix(0.0, nrow=nday+1L, ncol=ncell)
     MRecycle <- matrix(0.0, nrow=nday+1L, ncol=ncell)
 
-    # Reset additive case terms for this iter
     for (nm in c("Q7","L7","Q3","L3","Q13","L13","Q14","L14","Q25","L25","Q26","L26","Q17","L17")) {
       case_out[[nm]][] <- 0.0
     }
-
     case_wb[,!(names(case_wb)%in%c("Date"))] <- NA_real_
-
-    ## Reset case mass totals for this iteration
     case_mb[,!(names(case_mb)%in%c("Date"))] <- NA_real_
 
-    # Rolling depth history per cell for Z_plant
+    # Rolling depth history per cell for Z_plant (seed from initialized V)
     Z_hist <- matrix(0.0, nrow=nday, ncol=ncell)
     for (ic in seq_len(ncell)) {
       Z_hist[1, ic] <- V[ic] / cells[[ic]]$params$A_cell
@@ -955,36 +936,30 @@ dmsta_flowP_case <- function(
 
     # Daily loop
     for (day in seq_len(nday)) {
-      ## Total storage at start of day (for case-level WB)
+
       V_start_total <- sum(V)
 
-      ## Total P in cells at start of day (for case-level P)
-      P_cells_start <- 0.0
       P_cells_start <- sum(vapply(Pstate, function(ps) sum(ps$M) + sum(ps$S), 0.0))
-
-      ## Transit reservoir (lagged internal transfer) at start/end of day (kg)
       P_transit_start <- sum(MRecycle[day, ])
-      P_transit_end   <- sum(MRecycle[day + 1L, ])  # will be updated as we fill MRecycle[day+1,]
+      P_transit_end   <- sum(MRecycle[day + 1L, ])
 
-      ## Per-day case accumulators (sum of cell diagnostics)
       RainVol_total <- 0.0
       EtVol_total   <- 0.0
       NetAtmo_total <- 0.0
       WB_in_total   <- 0.0
       WB_out_total  <- 0.0
+      V_cell_day_total <- 0.0
 
-      ## Case-level P external input accumulators (kg)
       P_in_rain_total   <- 0.0
       P_in_drydep_total <- 0.0
       P_in_seepin_total <- 0.0
 
-      ## Case-level P mechanism totals (kg)
       P_mech_uptake_total  <- 0.0
       P_mech_recycle_total <- 0.0
       P_mech_sed_total     <- 0.0
       P_mech_direct_total  <- 0.0
 
-      # Add basin inflows to each cell accumulator (only before/at splitter like VBA Update)
+      # Add basin inflows (pre-splitter)
       for (ic in seq_len(ncell)) {
         cd <- cells[[ic]]
         basin_ok <- (spl_idx == 0L) || (ic <= spl_idx)
@@ -999,27 +974,26 @@ dmsta_flowP_case <- function(
         Mi_basin_mat[day, ic] <- Mi_basin_mat[day, ic] + Lin_basin
       }
 
-      # Simulate each cell in order
+      # Simulate each cell
       for (ic in seq_len(ncell)) {
         cd <- cells[[ic]]
         p  <- cd$params
 
-        # Inflow to cell from basin + upstream routing (pre-bypass, excludes seep recycle)
+        # IMPORTANT: DO NOT reinitialize V/Pstate here
+
         Qin_total <- Qi_cell[day, ic]
         Lin_total <- Mi_cell[day, ic]
         Cin_total <- if (Qin_total > 0) Lin_total / Qin_total else 0.0
 
-        # Basin component diagnostics
         Qin_basin <- Qi_basin_mat[day, ic]
         Lin_basin <- Mi_basin_mat[day, ic]
         Cin_basin <- if (Qin_basin > 0) Lin_basin / Qin_basin else 0.0
 
-        # Upstream routed component = total - basin
         Qin_up <- max(0.0, Qin_total - Qin_basin)
         Lin_up <- Lin_total - Lin_basin
         Cin_up <- if (Qin_up > 0) Lin_up / Qin_up else 0.0
 
-        # Lagged seep recycle into this cell (from other cells whose RecycleIndex == ic)
+        # Lagged seep recycle into this cell
         RecycleQ <- 0.0
         RecycleM <- 0.0
         for (j in seq_len(ncell)) {
@@ -1029,7 +1003,6 @@ dmsta_flowP_case <- function(
           }
         }
 
-        # Zcontrol neighbors
         nz <- neighbors_zcontrol(day, series$Zcontrol)
 
         day_inputs <- list(
@@ -1041,10 +1014,18 @@ dmsta_flowP_case <- function(
           Zcontrol = nz$today,
           Zcontrol_prev = nz$prev_day,
           Zcontrol_next = nz$nxt,
-          has_depth_constraint = is.finite(nz$today) && nz$today != 0,
-          Qr0 = if ("Qr0" %in% names(series)) series$Qr0[day] else 0,
-          Qr1 = if ("Qr1" %in% names(series)) series$Qr1[day] else 0,
-          Qr2 = if ("Qr2" %in% names(series)) series$Qr2[day] else 0,
+
+          # pass SERIES-LEVEL flags
+          has_depth_constraint = has_depth_constraint_series,
+          # has_Qr0_series = has_Qr0_series,
+          # has_Qr1_series = has_Qr1_series,
+          # has_Qr2_series = has_Qr2_series,
+          Qr0 = if (has_Qr0_series) series$Qr0[day] else 0,
+          Qr1 = if (has_Qr1_series) series$Qr1[day] else 0,
+          Qr2 = if (has_Qr2_series) series$Qr2[day] else 0,
+          # Qr0 = series$Qr0[day],
+          # Qr1 = series$Qr1[day],
+          # Qr2 = series$Qr2[day],
           RecycleQ = RecycleQ,
           RecycleM = RecycleM
         )
@@ -1054,11 +1035,10 @@ dmsta_flowP_case <- function(
         i0 <- max(1L, day - N_plant + 1L)
         Z_plant <- mean(Z_hist[i0:day, ic])
 
-        #  PATCH: wrapper already allocates basin inflow; prevent engine from multiplying by Qin_Frac again
+        # wrapper already allocates basin inflow; prevent double multiply
         p_run <- p
         p_run$Qin_Frac <- 1.0
 
-        # Run coupled day model
         res <- dmsta_flowP_day(
           V = V[ic],
           P_state = Pstate[[ic]],
@@ -1076,18 +1056,18 @@ dmsta_flowP_case <- function(
         Pstate[[ic]] <- res$results$P_state_end
         Z_hist[day, ic] <- V[ic] / p$A_cell
 
-        ## Accumulate case hydrology totals from cell diagnostics
         RainVol_total <- RainVol_total + res$budgets$water$RainVol
         EtVol_total   <- EtVol_total   + res$budgets$water$EtVol
         NetAtmo_total <- NetAtmo_total + res$budgets$water$NetAtmo
         WB_in_total   <- WB_in_total   + res$budgets$water$WB_in
         WB_out_total  <- WB_out_total  + res$budgets$water$WB_out
+        V_cell_day_total <- V_cell_day_total + res$results$V_cell_day
 
         # DMSTA-style terms
         # Term 3: bypass
-        Q3 <- res$results$Bypass
-        L3 <- res$results$P$loads$bypass
-        C3 <- res$results$P$conc$C_bypass
+        Q3  <- res$results$Bypass
+        L3  <- res$results$P$loads$bypass
+        C3  <- res$results$P$conc$C_bypass
 
         # Stream 7: into cell (treated inflow excluding bypass; excludes recycle)
         # (Matches the concept of "Qt(1)-Qt(3)" for Tank 1 inflow excluding bypass.)
@@ -1119,8 +1099,6 @@ dmsta_flowP_case <- function(
         L17 <- res$results$P$loads$seep_recycle
         C17 <- res$results$P$conc$C_seep_recycle
 
-        ## P budget totals (optional)
-        pb <- NULL
         pb <- res$budgets$mass
         if (is.null(pb) || is.null(pb$storage) || is.null(pb$closure)) {
           stop("dmsta_flowP_day() did not return a valid P_budget.")
@@ -1137,20 +1115,17 @@ dmsta_flowP_case <- function(
         P_mech_sed_total     <- P_mech_sed_total     + pb$mechanisms$L_sed
         P_mech_direct_total  <- P_mech_direct_total  + pb$mechanisms$L_direct
 
-
         # Store per-cell series
         if (return_cell_series) {
-          co <- cell_out[[ic]]
+          co   <- cell_out[[ic]]
           c_wb <- cell_wb[[ic]]
           c_mb <- cell_mb[[ic]]
 
-          ## state / level
           co$V_end[day]      <- res$results$V_end
           co$Z_end[day]      <- res$results$Z_end
           co$Z_avg[day]      <- res$results$Z_avg
           co$V_cell_day[day] <- res$results$V_cell_day
 
-          ## inflow decomposition
           co$Qin[day] <- Qin_total
           co$Lin[day] <- Lin_total
           co$Cin[day] <- Cin_total
@@ -1163,7 +1138,6 @@ dmsta_flowP_case <- function(
           co$Lin_up[day] <- Lin_up
           co$Cin_up[day] <- Cin_up
 
-          ## terms
           co$Q7[day] <- Q7;   co$L7[day] <- L7;   co$C7[day] <- C7
           co$Q3[day] <- Q3;   co$L3[day] <- L3;   co$C3[day] <- C3
           co$Q13[day] <- Q13; co$L13[day] <- L13; co$C13[day] <- C13
@@ -1175,7 +1149,6 @@ dmsta_flowP_case <- function(
             co$Q17[day] <- Q17; co$L17[day] <- L17; co$C17[day] <- C17
           }
 
-          ## hydrology diagnostics
           c_wb$RainVol[day] <- res$budgets$water$RainVol
           c_wb$EtVol[day]   <- res$budgets$water$EtVol
           c_wb$NetAtmo[day] <- res$budgets$water$NetAtmo
@@ -1184,40 +1157,31 @@ dmsta_flowP_case <- function(
           c_wb$WB_err[day]  <- res$budgets$water$WB_err
           c_wb$WB_rel[day]  <- res$budgets$water$WB_rel
 
-          # P budget summaries
           c_mb$dP[day] <- pb$storage$dP
-
           c_mb$Pin_external[day] <- pb$closure$Pin_external
           c_mb$Pout_external[day] <- pb$closure$Pout_external
           c_mb$Perr_external[day] <- pb$closure$Perr_external
           c_mb$Prel_external[day] <- pb$closure$Prel_external
-
           c_mb$Pin_total[day] <- pb$closure$Pin_total
           c_mb$Pout_total[day] <- pb$closure$Pout_total
           c_mb$Perr_total[day] <- pb$closure$Perr_total
           c_mb$Prel_total[day] <- pb$closure$Prel_total
-
           c_mb$Q_in_tanks[day] <- pb$inflow_tanks$Q_in_tanks
           c_mb$L_in_tanks[day] <- pb$inflow_tanks$L_in_tanks
           c_mb$C_in_tanks[day] <- pb$inflow_tanks$C_in_tanks
-
-          c_mb$L_rain[day]   <- pb$inputs_external$L_rain
+          c_mb$L_rain[day] <- pb$inputs_external$L_rain
           c_mb$L_drydep[day] <- pb$inputs_external$L_drydep
           c_mb$L_seepin[day] <- pb$inputs_external$L_seepin
-
-          c_mb$L_treated[day]  <- pb$outputs_external$L_treated
-          c_mb$L_rel1[day]     <- pb$outputs_external$L_rel1
-          c_mb$L_rel2[day]     <- pb$outputs_external$L_rel2
-          c_mb$L_bypass[day]   <- pb$outputs_external$L_bypass
+          c_mb$L_treated[day] <- pb$outputs_external$L_treated
+          c_mb$L_rel1[day] <- pb$outputs_external$L_rel1
+          c_mb$L_rel2[day] <- pb$outputs_external$L_rel2
+          c_mb$L_bypass[day] <- pb$outputs_external$L_bypass
           c_mb$L_seep_discharge[day] <- pb$outputs_external$L_seep_discharge
-
           c_mb$L_seep_recycle_out[day] <- pb$transfers$L_seep_recycle_out
-
-          c_mb$L_uptake[day]  <- pb$mechanisms$L_uptake
+          c_mb$L_uptake[day] <- pb$mechanisms$L_uptake
           c_mb$L_recycle[day] <- pb$mechanisms$L_recycle
-          c_mb$L_sed[day]     <- pb$mechanisms$L_sed
-          c_mb$L_direct[day]  <- pb$mechanisms$L_direct
-
+          c_mb$L_sed[day] <- pb$mechanisms$L_sed
+          c_mb$L_direct[day] <- pb$mechanisms$L_direct
 
           cell_out[[ic]] <- co
           cell_wb[[ic]]  <- c_wb
@@ -1229,11 +1193,9 @@ dmsta_flowP_case <- function(
         # Accumulate "into cell" (Stream 7) using basin portion minus bypass (audit-style)
         # This mirrors the DMSTA "into cell" concept of external treated inflow (Qt(43)-Qt(3)),
         # but we clip at 0 for physical interpretability.
-
         case_out$Q7[day] <- case_out$Q7[day] + max(0.0, Qin_basin - Q3)
         case_out$L7[day] <- case_out$L7[day] + max(0.0, Qin_basin - Q3) * Cin_total
 
-        # Out-of-system streams always accumulate
         case_out$Q3[day]  <- case_out$Q3[day]  + Q3
         case_out$L3[day]  <- case_out$L3[day]  + L3
         case_out$Q25[day] <- case_out$Q25[day] + Q25
@@ -1242,18 +1204,14 @@ dmsta_flowP_case <- function(
         case_out$L26[day] <- case_out$L26[day] + L26
         case_out$Q14[day] <- case_out$Q14[day] + Q14
         case_out$L14[day] <- case_out$L14[day] + L14
-
         if (keep_Q17) {
           case_out$Q17[day] <- case_out$Q17[day] + Q17
           case_out$L17[day] <- case_out$L17[day] + L17
         }
 
-
-        # ROUTING: DMSTA-style routes Term 13 only (treated outflow)
         if (spl_idx > 0L && ic == spl_idx) {
           frac <- cd$SplitterFrac
           if (is.null(frac)) stop("Splitter cell must provide SplitterFrac.")
-
           if (!is.null(names(frac))) {
             for (nm in names(frac)) {
               j <- as.integer(nm)
@@ -1287,7 +1245,9 @@ dmsta_flowP_case <- function(
         # Seep recycle arrays (lagged by 1 day)
         QRecycle[day + 1L, ic] <- Q17
         MRecycle[day + 1L, ic] <- L17
-      } ## end cell loop
+
+
+      } # end cell loop
 
       ## Finish case-level diagnostics for the day
       ## Concentrations for case terms
@@ -1300,80 +1260,70 @@ dmsta_flowP_case <- function(
       if (keep_Q17) case_out$C17[day] <- fw(case_out$L17[day], case_out$Q17[day])
 
       ## Case-level hydrology totals
-      V_end_total <- sum(V)
+      V_end_total <- sum(V, na.rm = TRUE)
       dV_total <- V_end_total - V_start_total
-
       ## Case-level WB based on summing cell budgets (internal routed treated flows cancel)
       WB_err_total <- dV_total - (WB_in_total - WB_out_total)
       WB_rel_total <- WB_err_total / max(1e-12, max(WB_in_total, WB_out_total))
-
       # case-level water budget
       case_wb$RainVol_total[day] <- RainVol_total
       case_wb$EtVol_total[day]   <- EtVol_total
       case_wb$NetAtmo_total[day] <- NetAtmo_total
-      case_wb$WB_in_total[day]  <- WB_in_total
-      case_wb$WB_out_total[day] <- WB_out_total
-      case_wb$WB_err_total[day] <- WB_err_total
-      case_wb$WB_rel_total[day] <- WB_rel_total
-      case_wb$V_total_end[day] <- V_end_total
-      case_wb$dV_total[day]    <- dV_total
+      case_wb$WB_in_total[day]   <- WB_in_total
+      case_wb$WB_out_total[day]  <- WB_out_total
+      case_wb$WB_err_total[day]  <- WB_err_total
+      case_wb$WB_rel_total[day]  <- WB_rel_total
+      case_wb$V_total_end[day]   <- V_end_total
+      case_wb$dV_total[day]      <- dV_total
+      case_wb$Z_total_end[day]   <- if (A_total > 0) V_end_total / A_total else NA_real_
+      case_wb$Z_total_avg[day]   <- if (A_total > 0) V_cell_day_total / A_total else NA_real_
 
-      ## Case-level external P budget (optional)
+      ## Case-level external P budget
       # Update transit end now that MRecycle[day+1,] is fully assigned
       P_transit_end <- sum(MRecycle[day + 1L, ])
       dP_transit <- P_transit_end - P_transit_start
-
       # P in cells at end of day
       P_cells_end <- sum(vapply(Pstate, function(ps) sum(ps$M) + sum(ps$S), 0.0))
       dP_cells <- P_cells_end - P_cells_start
-
       # External P inputs (kg): watershed + rain + drydep + seepin
       P_in_watershed <- series$Qi[day] * series$Ci[day]
       P_in_external <- P_in_watershed + P_in_rain_total + P_in_drydep_total + P_in_seepin_total
-
       # External P outputs (kg): bypass + terminal treated + releases + seep discharge
       P_out_bypass <- case_out$L3[day]
       P_out_terminal_treated <- case_out$L13[day]
       P_out_releases <- case_out$L25[day] + case_out$L26[day]
       P_out_seep_discharge <- case_out$L14[day]
       P_out_external <- P_out_bypass + P_out_terminal_treated + P_out_releases + P_out_seep_discharge
-
       # Closure includes transit (internal lagged transfer reservoir)
       P_err_case <- (dP_cells + dP_transit) - (P_in_external - P_out_external)
       P_rel_case <- P_err_case / max(1e-12, max(P_in_external, P_out_external))
-
       # Store case P terms
       case_mb$P_in_watershed[day] <- P_in_watershed
       case_mb$P_in_rain_total[day] <- P_in_rain_total
       case_mb$P_in_drydep_total[day] <- P_in_drydep_total
       case_mb$P_in_seepin_total[day] <- P_in_seepin_total
       case_mb$P_in_external[day] <- P_in_external
-
       case_mb$P_out_bypass[day] <- P_out_bypass
       case_mb$P_out_terminal_treated[day] <- P_out_terminal_treated
       case_mb$P_out_releases[day] <- P_out_releases
       case_mb$P_out_seep_discharge[day] <- P_out_seep_discharge
       case_mb$P_out_external[day] <- P_out_external
-
       case_mb$P_transit_start[day] <- P_transit_start
-      case_mb$P_transit_end[day]   <- P_transit_end
-      case_mb$dP_transit[day]      <- dP_transit
-
+      case_mb$P_transit_end[day] <- P_transit_end
+      case_mb$dP_transit[day] <- dP_transit
       case_mb$P_cells_start[day] <- P_cells_start
-      case_mb$P_cells_end[day]   <- P_cells_end
-      case_mb$dP_cells[day]      <- dP_cells
-
+      case_mb$P_cells_end[day] <- P_cells_end
+      case_mb$dP_cells[day] <- dP_cells
       case_mb$P_err_case[day] <- P_err_case
       case_mb$P_rel_case[day] <- P_rel_case
-
-      case_mb$P_mech_uptake_total[day]  <- P_mech_uptake_total
+      case_mb$P_mech_uptake_total[day] <- P_mech_uptake_total
       case_mb$P_mech_recycle_total[day] <- P_mech_recycle_total
-      case_mb$P_mech_sed_total[day]     <- P_mech_sed_total
-      case_mb$P_mech_direct_total[day]  <- P_mech_direct_total
+      case_mb$P_mech_sed_total[day] <- P_mech_sed_total
+      case_mb$P_mech_direct_total[day] <- P_mech_direct_total
 
-    } ## end day loop
+    } # end day loop
 
-    # Convergence metric: total discharged load (3+13+14+25+26)
+    # Convergence metric
     totalL <- sum(case_out$L3 + case_out$L13 + case_out$L14 + case_out$L25 + case_out$L26, na.rm = TRUE)
     conv_test <- if (!is.na(prev_totalL) && prev_totalL > 0) abs(totalL - prev_totalL) / prev_totalL else NA_real_
 
@@ -1385,25 +1335,37 @@ dmsta_flowP_case <- function(
       break
     }
     prev_totalL <- totalL
-  } ## end iteration loop
+  } # end iteration loop
 
-  ## Drop Q17 if requested
+  # Drop Q17 if requested
   if (!keep_Q17) {
     drop_cols <- c("Q17","C17","L17")
-    case_out <- case_out[ , setdiff(names(case_out), drop_cols), drop=FALSE]
+    case_out <- case_out[, setdiff(names(case_out), drop_cols), drop=FALSE]
     if (return_cell_series) {
-      cell_out <- lapply(cell_out, function(df) df[ , setdiff(names(df), drop_cols), drop=FALSE])
+      cell_out <- lapply(cell_out, function(df) df[, setdiff(names(df), drop_cols), drop=FALSE])
     }
   }
 
-  ## quick reformat/rename columns
-  case_out <- dmsta_case_components(case_out,
-                                    keep_Q17 = keep_Q17,
-                                    keep_P = TRUE,
-                                    ...)
-  cell_out <- lapply(cell_out, dmsta_case_components, keep_Q17 = keep_Q17,keep_P = TRUE, ...)
+  ## Build case-level results from raw pieces (case_out + budgets)
+  stopifnot(all(as.Date(case_out$Date) == as.Date(case_wb$Date)))
+  if (!is.null(case_mb)) stopifnot(all(as.Date(case_out$Date) == as.Date(case_mb$Date)))
 
-  # Meta
+  case_raw <- cbind(
+    case_out,
+    case_wb[, setdiff(names(case_wb), "Date"), drop = FALSE]
+  )
+
+  case_std <- dmsta_case_components(
+    case_raw,
+    keep_Q17 = keep_Q17,
+    keep_P   = TRUE,
+    ...
+  )
+
+  if (return_cell_series && !is.null(cell_out)) {
+    cell_out <- lapply(cell_out, dmsta_case_components, keep_Q17 = keep_Q17, keep_P = TRUE, ...)
+  }
+
   meta <- list(
     convergence = list(
       converged = converged,
@@ -1420,7 +1382,7 @@ dmsta_flowP_case <- function(
 
   out <- list(
     results = list(
-      case  = case_out,
+      case  = case_std,
       cells = cell_out
     ),
     budgets = list(
@@ -1431,7 +1393,7 @@ dmsta_flowP_case <- function(
       mass = list(
         case  = case_mb,
         cells = cell_mb,
-        transit = NULL  # optional if you build a transit df later
+        transit = NULL
       )
     ),
     meta = meta

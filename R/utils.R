@@ -473,6 +473,10 @@ dmstar_default_params <- function(MT = FALSE,
     })
   }
 
+  if (is.null(param_temp$Zrelease) || !is.finite(param_temp$Zrelease)) {
+    param_temp$Zrelease <- 0
+  }
+
 
   dots <- list(...)
   # enforce that extras are named (prevents accidental positional args)

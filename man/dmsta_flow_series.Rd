@@ -4,7 +4,7 @@
 \alias{dmsta_flow_series}
 \title{Run a DMSTA hydrology simulation over a time series}
 \usage{
-dmsta_flow_series(V_init, series, params, Nsteps = 4L)
+dmsta_flow_series(V_init = NULL, series, params, Nsteps = 4L)
 }
 \arguments{
 \item{V_init}{Numeric scalar. Initial volume at the start of the series (e.g., hm^3).}

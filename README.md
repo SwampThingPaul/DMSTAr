@@ -15,6 +15,9 @@ webpage](https://wwwalker.net/dmsta/) and relevant publications below.
   Environmental Science and Technology 41:430–446. doi:
   10.1080/10643389.2010.531225
 
+This package was developed from information presented in `dmsta2e.xlsm`
+version of the DMSTA model.
+
 Disclaimer from the original DMSTA file -
 
 **DISCLAIMER**

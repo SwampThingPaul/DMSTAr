@@ -31,6 +31,7 @@ run_network_of_cases(
   outlet_count = 5L,
   verbose = TRUE,
   check_route = FALSE,
+  Nsteps_case = NULL,
   ...
 )
 }

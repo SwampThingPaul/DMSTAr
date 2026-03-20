@@ -694,183 +694,183 @@ dmsta_flowP_day <- function(V, P_state, tanks, inputs, params,
         # last tank = cell outlet concentration for this substep
         if (tk == Nt) {
           # treated/release loads (kg) for this step
-        Q_treat <- Q_treat + q_treated * Dt
-        L_treat <- L_treat + (q_treated * Cavg) * Dt
+          Q_treat <- Q_treat + q_treated * Dt
+          L_treat <- L_treat + (q_treated * Cavg) * Dt
 
-        Q_r1 <- Q_r1 + q_rel1 * Dt
-        L_r1 <- L_r1 + (q_rel1 * Cavg) * Dt
+          Q_r1 <- Q_r1 + q_rel1 * Dt
+          L_r1 <- L_r1 + (q_rel1 * Cavg) * Dt
 
-        Q_r2 <- Q_r2 + q_rel2 * Dt
-        L_r2 <- L_r2 + (q_rel2 * Cavg) * Dt
+          Q_r2 <- Q_r2 + q_rel2 * Dt
+          L_r2 <- L_r2 + (q_rel2 * Cavg) * Dt
 
-        # optional seepage recycle/discharge bookkeeping w/ conc cap
-        seepC <- Cavg
-        if (!is.null(constants$seepout_conc_max) &&
-            constants$seepout_conc_max > 0 &&
-            seepC > constants$seepout_conc_max) {
-          seepC <- constants$seepout_conc_max
+          # optional seepage recycle/discharge bookkeeping w/ conc cap
+          seepC <- Cavg
+          if (!is.null(constants$seepout_conc_max) &&
+              constants$seepout_conc_max > 0 &&
+              seepC > constants$seepout_conc_max) {
+            seepC <- constants$seepout_conc_max
+          }
+
+          f_rec <- if (is.null(constants$fseep_recycle)) 0 else constants$fseep_recycle
+          f_out <- if (is.null(constants$fseep_out)) 0 else constants$fseep_out
+
+          Qsr <- seepout * f_rec
+          Qsd <- seepout * f_out
+
+          Q_seep_rec <- Q_seep_rec + Qsr * Dt
+          L_seep_rec <- L_seep_rec + (Qsr * seepC) * Dt
+
+          Q_seep_dis <- Q_seep_dis + Qsd * Dt
+          L_seep_dis <- L_seep_dis + (Qsd * seepC) * Dt
         }
+      } # tank loop
+    } # substep loop
 
-        f_rec <- if (is.null(constants$fseep_recycle)) 0 else constants$fseep_recycle
-        f_out <- if (is.null(constants$fseep_out)) 0 else constants$fseep_out
+    # P budget: day-level atmospheric + seep inputs and storage end (optional)
+    mass_budget <- NULL
+    M_end <- sum(M); S_end <- sum(S); P_end <- M_end + S_end
+    dM <- M_end - M_start
+    dS <- S_end - S_start
+    dP <- P_end - P_start
 
-        Qsr <- seepout * f_rec
-        Qsd <- seepout * f_out
+    # external (non-transfer) inputs to tanks are L_in_flow (treated inflow excluding recycle)
+    # plus atmospheric + seep-in inputs (apply to the whole cell area)
+    L_rain   <- (inputs$Rain * constants$C_rain) * A_cell
+    L_drydep <- (constants$DryDepo) * A_cell
+    L_seepin <- hyd$SeepIn * constants$seepin_conc
 
-        Q_seep_rec <- Q_seep_rec + Qsr * Dt
-        L_seep_rec <- L_seep_rec + (Qsr * seepC) * Dt
+    # define outflows:
+    L_out_external <- L_treat + L_r1 + L_r2 + L_byp + L_seep_dis
+    L_out_transfer <- L_seep_rec  # internal transfer stream
+    L_in_external  <- L_in_flow + L_rain + L_drydep + L_seepin
+    L_in_transfer  <- L_in_recycle
 
-        Q_seep_dis <- Q_seep_dis + Qsd * Dt
-        L_seep_dis <- L_seep_dis + (Qsd * seepC) * Dt
-      }
-    } # tank loop
-  } # substep loop
+    # closures:
+    # total closure includes transfers
+    Pin_total  <- L_in_external + L_in_transfer
+    Pout_total <- L_out_external + L_out_transfer
+    Perr_total <- dP - (Pin_total - Pout_total)
+    Prel_total <- Perr_total / max(1e-12, max(Pin_total, Pout_total))
 
-  # P budget: day-level atmospheric + seep inputs and storage end (optional)
-  mass_budget <- NULL
-  M_end <- sum(M); S_end <- sum(S); P_end <- M_end + S_end
-  dM <- M_end - M_start
-  dS <- S_end - S_start
-  dP <- P_end - P_start
+    # external-only closure (will not close if transfers exist and you don't track transit)
+    Perr_external <- dP - (L_in_external - L_out_external)
+    Prel_external <- Perr_external / max(1e-12, max(L_in_external, L_out_external))
 
-  # external (non-transfer) inputs to tanks are L_in_flow (treated inflow excluding recycle)
-  # plus atmospheric + seep-in inputs (apply to the whole cell area)
-  L_rain   <- (inputs$Rain * constants$C_rain) * A_cell
-  L_drydep <- (constants$DryDepo) * A_cell
-  L_seepin <- hyd$SeepIn * constants$seepin_conc
-
-  # define outflows:
-  L_out_external <- L_treat + L_r1 + L_r2 + L_byp + L_seep_dis
-  L_out_transfer <- L_seep_rec  # internal transfer stream
-  L_in_external  <- L_in_flow + L_rain + L_drydep + L_seepin
-  L_in_transfer  <- L_in_recycle
-
-  # closures:
-  # total closure includes transfers
-  Pin_total  <- L_in_external + L_in_transfer
-  Pout_total <- L_out_external + L_out_transfer
-  Perr_total <- dP - (Pin_total - Pout_total)
-  Prel_total <- Perr_total / max(1e-12, max(Pin_total, Pout_total))
-
-  # external-only closure (will not close if transfers exist and you don't track transit)
-  Perr_external <- dP - (L_in_external - L_out_external)
-  Prel_external <- Perr_external / max(1e-12, max(L_in_external, L_out_external))
-
-  mass_budget <- list(
-    storage = list(
-      M_start = M_start, S_start = S_start, P_start = P_start,
-      M_end   = M_end,   S_end   = S_end,   P_end   = P_end,
-      dM = dM, dS = dS, dP = dP
-    ),
-    inflow_tanks = list(
-      Q_in_tanks = Q_in_tanks,
-      L_in_tanks = L_in_tanks,
-      C_in_tanks = fw(L_in_tanks, Q_in_tanks),
-      Q_in_flow  = Q_in_flow,
-      L_in_flow  = L_in_flow,
-      C_in_flow  = fw(L_in_flow, Q_in_flow),
-      Q_in_recycle = Q_in_recycle,
-      L_in_recycle = L_in_recycle
-    ),
-    inputs_external = list(
-      L_rain = L_rain, L_drydep = L_drydep, L_seepin = L_seepin
-    ),
-    outputs_external = list(
-      L_treated = L_treat, L_rel1 = L_r1, L_rel2 = L_r2,
-      L_bypass = L_byp, L_seep_discharge = L_seep_dis
-    ),
-    transfers = list(
-      L_seep_recycle_out = L_seep_rec,
-      Q_seep_recycle_out = Q_seep_rec
-    ),
-    mechanisms = list(
-      L_uptake = L_uptake, L_recycle = L_recycle,
-      L_sed = L_sed, L_direct = L_direct
-    ),
-    closure = list(
-      Pin_total = Pin_total, Pout_total = Pout_total,
-      Perr_total = Perr_total, Prel_total = Prel_total,
-      Pin_external = L_in_external, Pout_external = L_out_external,
-      Perr_external = Perr_external, Prel_external = Prel_external
-    )
-  )
-
-  #  5) Return combined hydro + P day outputs
-  # WATER budget
-  water_budget <- list(
-    RainVol = hyd$RainVol,
-    EtVol   = hyd$EtVol,
-    NetAtmo = hyd$NetAtmo,
-    WB_in   = hyd$WB_in,
-    WB_out  = hyd$WB_out,
-    WB_err  = hyd$WB_err,
-    WB_rel  = hyd$WB_rel
-  )
-
-  # RESULTS
-  results <- list(
-    # state / levels
-    V_end      = hyd$V_end,
-    Z_end      = Z_end,
-    Z_avg      = Z_avg,
-    V_cell_day = V_cell_day,
-    Qin        = hyd$Qin,
-
-    # hydrology totals
-    Qout      = hyd$Qout,
-    Q_treated = hyd$Q_treated,
-    Q_rel1    = hyd$Q_rel1,
-    Q_rel2    = hyd$Q_rel2,
-    SeepOut   = hyd$SeepOut,
-    SeepIn    = hyd$SeepIn,
-    Bypass    = hyd$Bypass,
-
-    # P outputs (daily totals)
-    P = list(
-      flows = list(
-        treated = Q_treat, rel1 = Q_r1, rel2 = Q_r2, bypass = Q_byp,
-        seep_recycle = Q_seep_rec, seep_discharge = Q_seep_dis
+    mass_budget <- list(
+      storage = list(
+        M_start = M_start, S_start = S_start, P_start = P_start,
+        M_end   = M_end,   S_end   = S_end,   P_end   = P_end,
+        dM = dM, dS = dS, dP = dP
       ),
-      loads = list(
-        treated = L_treat, rel1 = L_r1, rel2 = L_r2, bypass = L_byp,
-        seep_recycle = L_seep_rec, seep_discharge = L_seep_dis
+      inflow_tanks = list(
+        Q_in_tanks = Q_in_tanks,
+        L_in_tanks = L_in_tanks,
+        C_in_tanks = fw(L_in_tanks, Q_in_tanks),
+        Q_in_flow  = Q_in_flow,
+        L_in_flow  = L_in_flow,
+        C_in_flow  = fw(L_in_flow, Q_in_flow),
+        Q_in_recycle = Q_in_recycle,
+        L_in_recycle = L_in_recycle
       ),
-      conc = list(
-        C_treated = fw(L_treat, Q_treat),
-        C_rel1    = fw(L_r1, Q_r1),
-        C_rel2    = fw(L_r2, Q_r2),
-        C_out     = fw(L_treat + L_r1 + L_r2, Q_treat + Q_r1 + Q_r2),
-        C_bypass  = fw(L_byp, Q_byp),
-        C_seep_recycle   = fw(L_seep_rec, Q_seep_rec),
-        C_seep_discharge = fw(L_seep_dis, Q_seep_dis)
+      inputs_external = list(
+        L_rain = L_rain, L_drydep = L_drydep, L_seepin = L_seepin
+      ),
+      outputs_external = list(
+        L_treated = L_treat, L_rel1 = L_r1, L_rel2 = L_r2,
+        L_bypass = L_byp, L_seep_discharge = L_seep_dis
+      ),
+      transfers = list(
+        L_seep_recycle_out = L_seep_rec,
+        Q_seep_recycle_out = Q_seep_rec
+      ),
+      mechanisms = list(
+        L_uptake = L_uptake, L_recycle = L_recycle,
+        L_sed = L_sed, L_direct = L_direct
+      ),
+      closure = list(
+        Pin_total = Pin_total, Pout_total = Pout_total,
+        Perr_total = Perr_total, Prel_total = Prel_total,
+        Pin_external = L_in_external, Pout_external = L_out_external,
+        Perr_external = Perr_external, Prel_external = Prel_external
       )
-    ),
+    )
 
-    # updated P state
-    P_state_end = list(M = M, S = S)
-  )
+    #  5) Return combined hydro + P day outputs
+    # WATER budget
+    water_budget <- list(
+      RainVol = hyd$RainVol,
+      EtVol   = hyd$EtVol,
+      NetAtmo = hyd$NetAtmo,
+      WB_in   = hyd$WB_in,
+      WB_out  = hyd$WB_out,
+      WB_err  = hyd$WB_err,
+      WB_rel  = hyd$WB_rel
+    )
 
-  # META
-  meta <- list(
-    Date   = inputs$Date,
-    V_start = V,
-    V_end   = hyd$V_end,
-    A_cell  = A_cell,
-    Nsteps  = Nsteps,
-    Z_plant = Z_plant,
-    steps   = hyd$steps,       # keep for debugging/coupling
-    inputs_used = inputs,
-    params_used = params
-  )
+    # RESULTS
+    results <- list(
+      # state / levels
+      V_end      = hyd$V_end,
+      Z_end      = Z_end,
+      Z_avg      = Z_avg,
+      V_cell_day = V_cell_day,
+      Qin        = hyd$Qin,
 
-  out <- list(
-    results = results,
-    budgets = list(
-      water = water_budget,
-      mass  = mass_budget
-    ),
-    meta = meta
-  )
+      # hydrology totals
+      Qout      = hyd$Qout,
+      Q_treated = hyd$Q_treated,
+      Q_rel1    = hyd$Q_rel1,
+      Q_rel2    = hyd$Q_rel2,
+      SeepOut   = hyd$SeepOut,
+      SeepIn    = hyd$SeepIn,
+      Bypass    = hyd$Bypass,
+
+      # P outputs (daily totals)
+      P = list(
+        flows = list(
+          treated = Q_treat, rel1 = Q_r1, rel2 = Q_r2, bypass = Q_byp,
+          seep_recycle = Q_seep_rec, seep_discharge = Q_seep_dis
+        ),
+        loads = list(
+          treated = L_treat, rel1 = L_r1, rel2 = L_r2, bypass = L_byp,
+          seep_recycle = L_seep_rec, seep_discharge = L_seep_dis
+        ),
+        conc = list(
+          C_treated = fw(L_treat, Q_treat),
+          C_rel1    = fw(L_r1, Q_r1),
+          C_rel2    = fw(L_r2, Q_r2),
+          C_out     = fw(L_treat + L_r1 + L_r2, Q_treat + Q_r1 + Q_r2),
+          C_bypass  = fw(L_byp, Q_byp),
+          C_seep_recycle   = fw(L_seep_rec, Q_seep_rec),
+          C_seep_discharge = fw(L_seep_dis, Q_seep_dis)
+        )
+      ),
+
+      # updated P state
+      P_state_end = list(M = M, S = S)
+    )
+
+    # META
+    meta <- list(
+      Date   = inputs$Date,
+      V_start = V,
+      V_end   = hyd$V_end,
+      A_cell  = A_cell,
+      Nsteps  = Nsteps,
+      Z_plant = Z_plant,
+      steps   = hyd$steps,       # keep for debugging/coupling
+      inputs_used = inputs,
+      params_used = params
+    )
+
+    out <- list(
+      results = results,
+      budgets = list(
+        water = water_budget,
+        mass  = mass_budget
+      ),
+      meta = meta
+    )
   }
 
   out
@@ -1090,8 +1090,7 @@ dmsta_flowP_series <- function(
     init_P_state = NULL,  # optional initial P state list(M,S); else uses params C_init_ppb/Y_init_mgm2
     return_steps = FALSE  # if TRUE, store hydrology substep list per day (big)
 ) {
-
-  #  basic checks
+  # basic checks
   if (!is.data.frame(series)) stop("'series' must be a data.frame.")
   req <- c("Date", "Qi", "Ci", "Rain", "Et", "Zcontrol")
   miss <- setdiff(req, names(series))
@@ -1103,12 +1102,12 @@ dmsta_flowP_series <- function(
   # Merge params + pparams if provided
   if (!is.null(pparams)) params <- modifyList(params, pparams)
 
-  #  build tanks once
+  # build tanks once
   if (is.null(tanks)) {
     tanks <- dmsta_build_tanks(params$A_cell, ttankS)
   }
 
-  #  build kinetics ppar once (3 modules STA/PSTA/RES)
+  # build kinetics ppar once (3 modules STA/PSTA/RES)
   if (is.null(ppar)) {
     ppar <- build_P_kin_slots(
       mods = c("STA", "PSTA", "RES"),
@@ -1120,33 +1119,72 @@ dmsta_flowP_series <- function(
     validate_P_paramsK(ppar)
   }
 
-  #  constants (match what dmsta_deriv_mass expects)
+  # constants (match what dmsta_deriv_mass expects)
   if (is.null(constants)) {
+    # handle common naming variants
+    seepin_conc_val <- 0
+    if (!is.null(params$Seepin_Conc)) seepin_conc_val <- params$Seepin_Conc
+    if (!is.null(params$seepin_conc)) seepin_conc_val <- params$seepin_conc
+
     constants <- list(
       Cmax = if (is.null(params$Cmax)) 2000 else params$Cmax,
       C_rain = if (is.null(params$C_rain)) 0 else params$C_rain,
       DryDepo = if (is.null(params$DryDepo)) 0 else (params$DryDepo / 365.25),  # mg/m2-day
-      seepin_conc = if (!is.null(params$Seepin_Conc)) params$Seepin_Conc else 0,
+      seepin_conc = seepin_conc_val,
       seepout_conc_max = if (!is.null(params$seepage_c)) params$seepage_c else 0,
       fseep_recycle = if (!is.null(params$fseep_recycle)) params$fseep_recycle else 0,
       fseep_out = if (!is.null(params$fseep_out)) params$fseep_out else 0
     )
   }
 
-  Z0_m <- if (is.finite(series$Zcontrol[1]) && series$Zcontrol[1] != 0) {
-    series$Zcontrol[1]
+  # DMSTA-faithful "presence-based" flags (HydroIndex-style intent)
+  # has_depth_constraint is a SERIES-LEVEL flag, not per-day.
+  has_Qr0_series <- if (!is.null(series$has_Qr0_series)) {
+    isTRUE(series$has_Qr0_series)
   } else {
-    params$Zinit / 100
+    # conservative fallback for standalone calls (single day)
+    is.finite(series$Qr0) && series$Qr0 != 0
   }
-  Z0_m <- max(Z0_m, params$Zmin / 100)
+  has_Qr1_series <- is.finite(series$Qr1) && series$Qr1 != 0 ## DMSTA HydroIndex(3)
+  has_Qr2_series <- is.finite(series$Qr2) && series$Qr2 != 0 ## DMSTA HydroIndex(4)
 
-  #  initial volume
+  has_depth_constraint_series <- if (!is.null(series$has_depth_constraint)) {
+    isTRUE(series$has_depth_constraint)
+  } else {
+    # conservative fallback for standalone calls (single day)
+    is.finite(series$Zcontrol) && series$Zcontrol != 0
+  }
+
+
+  # Initial depth Z0_m and volume V_init
+  # DMSTA logic: if depth constraint series is present -> init from Zcontrol(1)
+  # else init from Zinit. Always clamp to Zmin.
+  Zmin_m <- params$Zmin / 100
+
+  # Determine Z0_m depending on depth-constraint presence
+  if (isTRUE(has_depth_constraint_series)) {
+    zc1 <- series$Zcontrol[1]   # meters
+    if (!is.finite(zc1)) zc1 <- 0
+    Z0_m <- max(zc1, Zmin_m)
+  } else {
+    Z0_m <- max(params$Zinit / 100, Zmin_m)
+  }
+
+  # If V_init is provided, use it; but ensure Z0_m used for init_P_state matches V_init.
   if (is.null(V_init)) {
     V_init <- params$A_cell * Z0_m
+  } else {
+    # reconcile Z0_m with provided V_init for consistent P initialization
+    if (is.finite(params$A_cell) && params$A_cell > 0) {
+      Z0_m <- max(V_init / params$A_cell, Zmin_m)
+    } else {
+      Z0_m <- Zmin_m
+    }
   }
+
   V <- V_init
 
-  #  initial P state
+  # initial P state
   if (is.null(init_P_state)) {
     init_P_state <- dmsta_p_init_state(
       tanks,
@@ -1157,37 +1195,27 @@ dmsta_flowP_series <- function(
   }
   P_state <- init_P_state
 
-  #  rolling depth history for Z_plant
+  # rolling depth history for Z_plant
   Z_hist <- numeric(n)
-  # initialize with starting depth
-  Z_hist[1] <- V / params$A_cell
+  Z_hist[1] <- if (is.finite(params$A_cell) && params$A_cell > 0) V / params$A_cell else NA_real_
 
-  # RESULTS table (primary outputs)
+  # RESULTS table
   results_df <- data.frame(
     Date = as.Date(series$Date),
-
-    # state/levels
     V_end = NA_real_, Z_end = NA_real_, Z_avg = NA_real_, V_cell_day = NA_real_,
-
-    # hydrology
     Qin = NA_real_,
     Qout = NA_real_, Q_treated = NA_real_, Q_rel1 = NA_real_, Q_rel2 = NA_real_,
     SeepOut = NA_real_, SeepIn = NA_real_, Bypass = NA_real_,
-
-    # P concentrations (ppb)
     Cin = series$Ci,
     C_out = NA_real_, C_treated = NA_real_, C_rel1 = NA_real_, C_rel2 = NA_real_, C_bypass = NA_real_,
     C_seep_recycle = NA_real_, C_seep_discharge = NA_real_,
-
-    # P loads (kg)
     Lin = series$Qi * series$Ci,
     L_out = NA_real_, L_treated = NA_real_, L_rel1 = NA_real_, L_rel2 = NA_real_, L_bypass = NA_real_,
     L_seep_recycle = NA_real_, L_seep_discharge = NA_real_,
-
     stringsAsFactors = FALSE
   )
 
-  # WATER budget table (separate)
+  # WATER budget table
   water_df <- data.frame(
     Date = as.Date(series$Date),
     RainVol = NA_real_, EtVol = NA_real_, NetAtmo = NA_real_,
@@ -1195,36 +1223,17 @@ dmsta_flowP_series <- function(
     stringsAsFactors = FALSE
   )
 
-  # MASS budget table (separate; optional)
-  # We'll store a summary row per day; optionally a full list column
-  mass_df <- NULL
-  mass_list <- NULL
-
+  # MASS budget table
   mass_df <- data.frame(
     Date = as.Date(series$Date),
-
-    # storage change
     dP = NA_real_,
-
-    # closures (total and external)
     Pin_total = NA_real_, Pout_total = NA_real_, Perr_total = NA_real_, Prel_total = NA_real_,
     Pin_external = NA_real_, Pout_external = NA_real_, Perr_external = NA_real_, Prel_external = NA_real_,
-
-    # tank inflow totals
     Q_in_tanks = NA_real_, L_in_tanks = NA_real_, C_in_tanks = NA_real_,
-
-    # external inputs (kg)
     L_rain = NA_real_, L_drydep = NA_real_, L_seepin = NA_real_,
-
-    # external outputs (kg)
     L_treated = NA_real_, L_rel1 = NA_real_, L_rel2 = NA_real_, L_bypass = NA_real_, L_seep_discharge = NA_real_,
-
-    # internal transfer (seep recycle)
     L_seep_recycle_out = NA_real_,
-
-    # mechanisms
     L_uptake = NA_real_, L_recycle = NA_real_, L_sed = NA_real_, L_direct = NA_real_,
-
     stringsAsFactors = FALSE
   )
 
@@ -1234,16 +1243,33 @@ dmsta_flowP_series <- function(
     steps_store <- NULL
   }
 
-  #  main day loop
+  # main day loop
   for (i in seq_len(n)) {
+
     day_inputs <- as.list(series[i, ])
 
-    # Zcontrol neighbors
+    # Zcontrol neighbors (robust to different field names from neighbors_zcontrol)
     nz <- neighbors_zcontrol(i, series$Zcontrol)
+
+    # some implementations return prev or prev_day; nxt or next
+    prev_val <- if (!is.null(nz$prev_day)) nz$prev_day else nz$prev
+    nxt_val  <- if (!is.null(nz$nxt)) nz$nxt else nz$nxt
+
     day_inputs$Zcontrol      <- nz$today
-    day_inputs$Zcontrol_prev <- nz$prev
-    day_inputs$Zcontrol_next <- nz$nxt
-    day_inputs$has_depth_constraint <- is.finite(day_inputs$Zcontrol) && day_inputs$Zcontrol != 0
+    day_inputs$Zcontrol_prev <- prev_val
+    day_inputs$Zcontrol_next <- nxt_val
+
+    # DMSTA-faithful: pass SERIES-LEVEL flags (no per-day toggling)
+    day_inputs$has_depth_constraint <- has_depth_constraint_series
+    day_inputs$has_Qr0_series <- has_Qr0_series
+    day_inputs$has_Qr1_series <- has_Qr1_series
+    day_inputs$has_Qr2_series <- has_Qr2_series
+
+
+    # Mask release components if not present (DMSTA HydroIndex behavior)
+    day_inputs$Qr0 <- if (has_Qr0_series) day_inputs$Qr0 else 0
+    day_inputs$Qr1 <- if (has_Qr1_series) day_inputs$Qr1 else 0
+    day_inputs$Qr2 <- if (has_Qr2_series) day_inputs$Qr2 else 0
 
     # ensure optional fields exist
     if (is.null(day_inputs$RecycleQ)) day_inputs$RecycleQ <- 0
@@ -1252,10 +1278,10 @@ dmsta_flowP_series <- function(
     if (is.null(day_inputs$Qr1)) day_inputs$Qr1 <- 0
     if (is.null(day_inputs$Qr2)) day_inputs$Qr2 <- 0
 
-    # compute Z_plant (rolling mean depth)
-    if (i > 1) Z_hist[i] <- V / params$A_cell
+    # rolling mean depth for Z_plant
+    if (i > 1) Z_hist[i] <- if (params$A_cell > 0) V / params$A_cell else NA_real_
     i0 <- max(1L, i - N_plant + 1L)
-    Z_plant <- mean(Z_hist[i0:i])
+    Z_plant <- mean(Z_hist[i0:i], na.rm = TRUE)
 
     # run coupled day
     res <- dmsta_flowP_day(
@@ -1274,8 +1300,8 @@ dmsta_flowP_series <- function(
     V <- res$results$V_end
     P_state <- res$results$P_state_end
 
-    # store depth history for next day
-    Z_hist[i] <- V / params$A_cell
+    # store depth history
+    Z_hist[i] <- if (params$A_cell > 0) V / params$A_cell else NA_real_
 
     # fill RESULTS
     results_df$V_end[i] <- res$results$V_end
@@ -1292,20 +1318,19 @@ dmsta_flowP_series <- function(
     results_df$SeepIn[i]    <- res$results$SeepIn
     results_df$Bypass[i]    <- res$results$Bypass
 
-    # P outputs
-    results_df$C_out[i]          <- res$results$P$conc$C_out
-    results_df$C_treated[i]      <- res$results$P$conc$C_treated
-    results_df$C_rel1[i]         <- res$results$P$conc$C_rel1
-    results_df$C_rel2[i]         <- res$results$P$conc$C_rel2
-    results_df$C_bypass[i]       <- res$results$P$conc$C_bypass
-    results_df$C_seep_recycle[i] <- res$results$P$conc$C_seep_recycle
+    results_df$C_out[i]            <- res$results$P$conc$C_out
+    results_df$C_treated[i]        <- res$results$P$conc$C_treated
+    results_df$C_rel1[i]           <- res$results$P$conc$C_rel1
+    results_df$C_rel2[i]           <- res$results$P$conc$C_rel2
+    results_df$C_bypass[i]         <- res$results$P$conc$C_bypass
+    results_df$C_seep_recycle[i]   <- res$results$P$conc$C_seep_recycle
     results_df$C_seep_discharge[i] <- res$results$P$conc$C_seep_discharge
 
-    results_df$L_treated[i]      <- res$results$P$loads$treated
-    results_df$L_rel1[i]         <- res$results$P$loads$rel1
-    results_df$L_rel2[i]         <- res$results$P$loads$rel2
-    results_df$L_bypass[i]       <- res$results$P$loads$bypass
-    results_df$L_seep_recycle[i] <- res$results$P$loads$seep_recycle
+    results_df$L_treated[i]        <- res$results$P$loads$treated
+    results_df$L_rel1[i]           <- res$results$P$loads$rel1
+    results_df$L_rel2[i]           <- res$results$P$loads$rel2
+    results_df$L_bypass[i]         <- res$results$P$loads$bypass
+    results_df$L_seep_recycle[i]   <- res$results$P$loads$seep_recycle
     results_df$L_seep_discharge[i] <- res$results$P$loads$seep_discharge
     results_df$L_out[i] <- res$results$P$loads$treated + res$results$P$loads$rel1 + res$results$P$loads$rel2
 
@@ -1320,8 +1345,6 @@ dmsta_flowP_series <- function(
 
     # fill MASS budgets
     mb <- res$budgets$mass
-
-    # mb can be NULL if caller asked FALSE or something went wrong
     if (!is.null(mb)) {
       mass_df$dP[i] <- mb$storage$dP
 
@@ -1355,8 +1378,6 @@ dmsta_flowP_series <- function(
       mass_df$L_recycle[i] <- mb$mechanisms$L_recycle
       mass_df$L_sed[i]     <- mb$mechanisms$L_sed
       mass_df$L_direct[i]  <- mb$mechanisms$L_direct
-
-
     }
 
     if (return_steps) steps_store[[i]] <- res$steps
@@ -1370,7 +1391,9 @@ dmsta_flowP_series <- function(
     ppar = ppar,
     constants = constants,
     Nsteps = Nsteps,
-    N_plant = N_plant
+    N_plant = N_plant,
+    has_depth_constraint_series = has_depth_constraint_series,
+    has_Qr0_series = has_Qr0_series
   )
   if (return_steps) meta$steps <- steps_store
 
@@ -1378,12 +1401,9 @@ dmsta_flowP_series <- function(
     results = results_df,
     budgets = list(
       water = water_df,
-      mass  = mass_df
-    ),
+      mass = mass_df),
     meta = meta
   )
-
   class(out) <- c("dmsta_result", "list")
   out
-
 }
