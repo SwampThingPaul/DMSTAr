@@ -5,6 +5,7 @@
 \alias{dmsta_interp_zcontrol}
 \alias{dmsta_deriv_flow}
 \alias{dmsta_rk4_step}
+\alias{dmsta_euler_step}
 \alias{dmsta_flow_day}
 \alias{dmsta_flow_day_steps}
 \title{DMSTA hydrology engine (internal)}
@@ -41,7 +42,9 @@ dmsta_deriv_flow(
 
 dmsta_rk4_step(V, args_base, step_index, Dt)
 
-dmsta_flow_day(V, inputs, params, Nsteps = 4)
+dmsta_euler_step(V, args_base, Dt = 1)
+
+dmsta_flow_day(V, inputs, params, method = c("RK4", "Euler"), Nsteps = 4L)
 
 dmsta_flow_day_steps(V, inputs, params, Nsteps = 4L)
 }
@@ -93,9 +96,11 @@ dmsta_flow_day_steps(V, inputs, params, Nsteps = 4L)
 \code{Zcontrol_t}, neighbor control depths, \code{params}, \code{nsteps},
 release components (\code{Qr0}, \code{Qr1}, \code{Qr2}), and flags.}
 
-\item{Dt}{Numeric scalar. Sub-step duration in days (\code{1/nsteps}).}
+\item{Dt}{Numeric scalar. Step duration in days. Default is \code{1.0}.}
 
 \item{inputs}{Named list of forcings; see \code{dmsta_flow_day()}.}
+
+\item{method}{Text. Names of integrator used \code{RK4} (consistent with dmsta2e) or \code{Euler} (consistent with dmsta2c)}
 
 \item{Nsteps}{Integer. Number of sub-steps per day.}
 
@@ -125,6 +130,17 @@ A named list with elements:
 \item{Etest_ts}{Stage-averaged ET rate used.}
 \item{Q_treated_ts}{Portion of outflow assigned to the treated component.}
 \item{Q_rel1_ts, Q_rel2_ts}{Portions of outflow assigned to release components.}
+}
+
+A named list with elements:
+\describe{
+\item{V_new}{Updated volume after the Euler step.}
+\item{Qout_ts}{Instantaneous total outflow rate (including releases).}
+\item{SeepOut_ts, SeepIn_ts}{Instantaneous seepage rates.}
+\item{Bypass_ts}{Instantaneous bypass rate.}
+\item{Etest_ts}{Instantaneous ET rate used.}
+\item{Q_treated_ts}{Portion of outflow assigned to the treated component (\code{Qo}).}
+\item{Q_rel1_ts, Q_rel2_ts}{Portions of outflow assigned to release components (\code{QrU1}, \code{QrU2}).}
 }
 
 A structured list with components:
@@ -162,6 +178,9 @@ change in volume (\code{dvdt}).
 Internal helper that performs one Runge-Kutta 4th order (RK4) sub-step for
 hydrologic volume using \code{dmsta_deriv_flow()} for derivative evaluations.
 
+Internal helper that performs one explicit Euler step for hydrologic volume
+using a single mid-day derivative evaluation via \code{dmsta_deriv_flow()}.
+
 Internal helper that integrates hydrologic volume and fluxes over one day
 using \code{Nsteps} RK4 sub-steps. Returns daily totals/diagnostics and
 (optionally) per-substep details in \code{meta$steps}.
@@ -184,5 +203,16 @@ using the RK stage timing defined by \code{step_index}, \code{nsteps}, and
 
 Returns the updated volume (with safety clamp to minimum volume) along with
 stage-averaged fluxes for outflow, seepage, bypass, and ET.
+
+Updates volume as \code{V_new = V + Dt * dvdt} where \code{dvdt} is evaluated at
+\code{step_frac = 0.5} (mid-day), with \code{nsteps = 1}. Returned fluxes correspond
+to the instantaneous (mid-day) rates from \code{dmsta_deriv_flow()}.
+
+Unlike \code{dmsta_rk4_step()}, this function does not compute RK4 stage averages.
+It performs a single derivative evaluation at mid-day (\code{step_frac = 0.5})
+and returns the corresponding instantaneous flux rates.
+}
+\seealso{
+\code{dmsta_deriv_flow()}, \code{dmsta_rk4_step()}
 }
 \keyword{internal}

@@ -38,38 +38,39 @@ NULL
 #' @rdname internal_dmsta_hydro
 
 dmsta_interp_zcontrol <- function(
-    Zcontrol1, # yesterday
-    Zcontrol, # today
-    Zcontrol2, # tomorrow
-    delta, # delta in [0, 1]
-    interp_option = 2L # 1=means, 2=mid-day (default), 3=end-of-day
+    Zcontrol1,  # yesterday
+    Zcontrol,   # today
+    Zcontrol2,  # tomorrow
+    delta,      # delta in [0, 1]
+    interp_option = 2L  # 1 = means, 2 = mid-day (default), 3 = end-of-day
 ) {
-  # Zcontrol1 = yesterday, Zcontrol = today, Zcontrol2 = tomorrow
-  # If today's control depth is missing, use 0
-  if (is.na(Zcontrol))  Zcontrol  <- 0
-  # If neighbors are missing, fall back to today's control depth
-  if (is.na(Zcontrol1)) Zcontrol1 <- Zcontrol
-  if (is.na(Zcontrol2)) Zcontrol2 <- Zcontrol
-
-  # Be defensive about delta
+  # Defensive defaults
+  if (is.null(Zcontrol) || !is.finite(Zcontrol))  Zcontrol  <- 0
+  if (is.null(Zcontrol1) || !is.finite(Zcontrol1)) Zcontrol1 <- Zcontrol
+  if (is.null(Zcontrol2) || !is.finite(Zcontrol2)) Zcontrol2 <- Zcontrol
   if (!is.finite(delta)) delta <- 0
-  if (delta < 0) delta <- 0 else if (delta > 1) delta <- 1
+  delta <- max(0, min(1, delta))
 
-  if (interp_option == 1L) {
-    # Inputs treated as daily means: no within-day variation
-    Zcontrol
-  } else if (interp_option == 2L) {
-    # Inputs treated as mid-day values (DMSTA Case 2)
-    if (delta <= 0.5) Zcontrol1 + (Zcontrol  - Zcontrol1) * (delta + 0.5)
-    else              Zcontrol  + (Zcontrol2 - Zcontrol ) * (delta - 0.5)
-  } else if (interp_option == 3L) {
-    # Inputs treated as end-of-day values (DMSTA Case 3)
-    Zcontrol1 * (1 - delta) + Zcontrol * delta
-  } else {
-    # Fallback to DMSTA default (2)
-    if (delta <= 0.5) Zcontrol1 + (Zcontrol  - Zcontrol1) * (delta + 0.5)
-    else              Zcontrol  + (Zcontrol2 - Zcontrol ) * (delta - 0.5)
-  }
+  switch(as.character(interp_option),
+         "1" = Zcontrol,  # Case 1: daily means (no variation)
+         "2" = {          # Case 2: mid-day values
+           if (delta <= 0.5) {
+             Zcontrol1 + (Zcontrol - Zcontrol1) * (delta + 0.5)
+           } else {
+             Zcontrol + (Zcontrol2 - Zcontrol) * (delta - 0.5)
+           }
+         },
+         "3" = {          # Case 3: end-of-day values
+           Zcontrol1 * (1 - delta) + Zcontrol * delta
+         },
+         {                # Default fallback to Case 2
+           if (delta <= 0.5) {
+             Zcontrol1 + (Zcontrol - Zcontrol1) * (delta + 0.5)
+           } else {
+             Zcontrol + (Zcontrol2 - Zcontrol) * (delta - 0.5)
+           }
+         }
+  )
 }
 
 
@@ -152,6 +153,8 @@ dmsta_deriv_flow <- function(
   ## parameters & defaults
   interp_option <- if (is.null(params$interp_option)) 2L else as.integer(params$interp_option)
 
+  Bypass <- 0 # initialize the variable
+
   Zmin   <- params$Zmin / 100
   A      <- A_cell
   Vmin   <- if (is.null(params$Vmin)) Zmin * A else params$Vmin
@@ -179,7 +182,7 @@ dmsta_deriv_flow <- function(
 
   # DMSTA: Zrelease and Zmin are stored in cm; comparisons use meters
   Zrel_cm <- params$Zrelease
-  if (!is.finite(Zrel_cm)) Zrel_cm <- 0
+  if (is.null(Zrel_cm) || !is.finite(Zrel_cm)) Zrel_cm <- 0
 
   Zmin_cm <- params$Zmin
   if (!is.finite(Zmin_cm)) Zmin_cm <- 0
@@ -222,9 +225,17 @@ dmsta_deriv_flow <- function(
   ##   bypass logic (priority-based)
   if (Bypass_elev > 0 && Z > Bypass_elev) {
     Bypass <- Qi
-  } else if (!is.null(Qimax) && Qimax > 0 && Qi > Qimax) {
-    Bypass <- Qi - Qimax
-  } else if (!is.null(Qomax) && Qomax < 0) {
+    # } else if (!is.null(Qimax) && Qimax > 0 && Qi > Qimax) {
+    #   Bypass <- Qi - Qimax}
+  # Fix for Qimax = 0 (Low-Flow Bypass Handling)?
+  } else if (!is.null(Qimax)) {
+    if (Qimax <= 0) {
+      Bypass <- Qi  # All inflow bypasses
+    } else if (Qi > Qimax) {
+      Bypass <- Qi - Qimax
+    }
+  }
+  else if (!is.null(Qomax) && Qomax < 0) {
     Bypass <- min(-Qomax, Qi)
   } else {
     Bypass <- 0
@@ -248,6 +259,18 @@ dmsta_deriv_flow <- function(
 
   ##   minimum pool protection (VBA order)
   if (Vtrial < Vmin) {
+    ## added Cap Release Flows When Volume Is Insufficient
+    deficit <- (Vmin - Vtrial) / Ddt
+    if (Qrelease > 0) {
+      Qrelease_new <- max(0, Qrelease - deficit)
+      Qfrac <- Qrelease_new / Qrelease
+      QrU1 <- QrU1 * Qfrac
+      QrU2 <- QrU2 * Qfrac
+      Qrelease <- Qrelease_new
+    }
+    Qnet <- Qi + AtmoS - Seepout + Seepin + RecycleQ - Qrelease - Bypass
+    Vtrial <- V + Ddt * Qnet
+
     if (Seepout > 0) {
       # first try eliminating outflow seepage
       Seepout <- max(Seepout + (Vtrial - Vmin) / Ddt, 0)
@@ -458,6 +481,90 @@ dmsta_rk4_step <- function(V, args_base, step_index, Dt) {
   )
 }
 
+#' Advance volume by one Euler step (internal)
+#'
+#' Internal helper that performs one explicit Euler step for hydrologic volume
+#' using a single mid-day derivative evaluation via `dmsta_deriv_flow()`.
+#'
+#' Updates volume as `V_new = V + Dt * dvdt` where `dvdt` is evaluated at
+#' `step_frac = 0.5` (mid-day), with `nsteps = 1`. Returned fluxes correspond
+#' to the instantaneous (mid-day) rates from `dmsta_deriv_flow()`.
+#'
+#' @param V Numeric scalar. Current volume at the start of the step.
+#' @param args_base Named list of arguments passed to `dmsta_deriv_flow()` via
+#'   `do.call()`, typically containing `Qi`, `Rain`, `Et`,
+#'   `Zcontrol_t`, neighbor control depths, `params`, `nsteps`,
+#'   release components (`Qr0`, `Qr1`, `Qr2`), and flags.
+#' @param Dt Numeric scalar. Step duration in days. Default is `1.0`.
+#'
+#' @details
+#' Unlike `dmsta_rk4_step()`, this function does not compute RK4 stage averages.
+#' It performs a single derivative evaluation at mid-day (`step_frac = 0.5`)
+#' and returns the corresponding instantaneous flux rates.
+#'
+#' @return A named list with elements:
+#' \describe{
+#'   \item{V_new}{Updated volume after the Euler step.}
+#'   \item{Qout_ts}{Instantaneous total outflow rate (including releases).}
+#'   \item{SeepOut_ts, SeepIn_ts}{Instantaneous seepage rates.}
+#'   \item{Bypass_ts}{Instantaneous bypass rate.}
+#'   \item{Etest_ts}{Instantaneous ET rate used.}
+#'   \item{Q_treated_ts}{Portion of outflow assigned to the treated component (`Qo`).}
+#'   \item{Q_rel1_ts, Q_rel2_ts}{Portions of outflow assigned to release components (`QrU1`, `QrU2`).}
+#' }
+#'
+#' @seealso `dmsta_deriv_flow()`, `dmsta_rk4_step()`
+#'
+#' @keywords internal
+#' @rdname internal_dmsta_hydro
+#'
+dmsta_euler_step <- function(V, args_base, Dt = 1.0) {
+  step_index <- 1L
+  step_frac <- 0.5  # Mid-day evaluation
+  flux <- do.call(
+    dmsta_deriv_flow,
+    c(list(V = V,
+           step_frac = step_frac,
+           Ddt = Dt,
+           step_index = step_index,
+           nsteps = 1L), args_base)
+  )
+
+  # DMSTA post-step dryout limiter
+  A_cell <- args_base$A_cell
+  Zmin_cm <- args_base$params$Zmin
+  if (!is.finite(Zmin_cm)) Zmin_cm <- 0
+  Vmin <- if (is.null(args_base$params$Vmin)) (Zmin_cm / 100) * A_cell else args_base$params$Vmin
+
+  V_pred <- V + Dt * flux$dvdt
+  qout <- flux$Qout
+
+
+  if (is.finite(Vmin) && V_pred < Vmin) {
+    deficit <- Vmin - V_pred
+    dq <- deficit / Dt
+    if (is.finite(dq) && dq > 0) {
+      qout <- max(0, qout - dq)
+    }
+    V_pred <- Vmin
+  }
+
+  V_new <- max(V_pred, Vmin)
+
+  # V_new <- V + Dt * flux$dvdt #(replaced by V_pred)
+  list(
+    V_new = V_new,
+    Qout_ts = flux$Qout,
+    SeepOut_ts = flux$Seepout,
+    SeepIn_ts = flux$Seepin,
+    Bypass_ts = flux$Bypass,
+    Etest_ts = flux$Etest,
+    Q_treated_ts = flux$Qo,
+    Q_rel1_ts = flux$QrU1,
+    Q_rel2_ts = flux$QrU2
+  )
+}
+
 
 #' Integrate one day of DMSTA hydrology using RK4 (internal)
 #'
@@ -480,6 +587,7 @@ dmsta_rk4_step <- function(V, args_base, step_index, Dt) {
 #'   }
 #' @param params Named list of model parameters. Must include `A_cell` and
 #'   `Zmin` at minimum; see `dmsta_deriv_flow()` for additional fields.
+#' @param method Text. Names of integrator used `RK4` (consistent with dmsta2e) or `Euler` (consistent with dmsta2c)
 #' @param Nsteps Integer. Number of RK4 sub-steps per day.
 #'
 #' @return A structured list with components:
@@ -493,11 +601,11 @@ dmsta_rk4_step <- function(V, args_base, step_index, Dt) {
 #' @rdname internal_dmsta_hydro
 
 dmsta_flow_day <- function(
-    V,
-    inputs,
-    params,
-    Nsteps = 4
+    V, inputs, params,
+    method = c("RK4", "Euler"),
+    Nsteps = 4L
 ) {
+  method <- match.arg(method)
 
   Dt <- 1 / Nsteps
   V_start <- V
@@ -505,8 +613,6 @@ dmsta_flow_day <- function(
   params2 <- params
   if (is.null(params2$interp_option)) params2$interp_option <- 2L
   if (is.null(params2$Qin_Frac)) params2$Qin_Frac <- 1.0
-  if (is.null(inputs$Zcontrol_prev)) inputs$Zcontrol_prev <- inputs$Zcontrol
-  if (is.null(inputs$Zcontrol_next)) inputs$Zcontrol_next <- inputs$Zcontrol
   if (is.null(inputs$RecycleQ)) inputs$RecycleQ <- 0
 
   # DMSTA parity: clamp Zrelease >= Zmin only when releases are present
@@ -520,7 +626,7 @@ dmsta_flow_day <- function(
     }
   }
   if (is.null(Zrelease_used) || !is.finite(Zrelease_used)) Zrelease_used <- 0
-  params2$Zrelease <- Zrelease_used
+  params2$Zrelease <- Zrelease_used / 100
 
   A_cell <- params2$A_cell
   isa_node <- dmsta_is_node(A_cell, params2$IsaNode)
@@ -537,148 +643,108 @@ dmsta_flow_day <- function(
   params2$force_Q_out <- has_Qr0_series
 
   if (isa_node) {
-    nh <- dmsta_node_route(
-      Qi = Qi_eff,
-      RecycleQ = RecycleQ,
-      Seepout_Rate = params2$Seepout_Rate,
-      Qimax = params2$Qimax,
-      Qomax = params2$Qomax
-    )
+    return(dmsta_node_step(Qi = Qi_eff, RecycleQ = RecycleQ, params = params2, Nsteps = Nsteps, Dt = Dt))
+  } else{
 
-    # Build a constant step_out (optional, but keeps meta$steps consistent)
-    step_out <- vector("list", Nsteps)
-    for (k in seq_len(Nsteps)) {
-      step_out[[k]] <- list(
-        step = k,
-        Vo = 0, V = 0,
-        Dt = Dt,
-        Qi_eff = Qi_eff,
-        Qout = nh$Qout,
-        Q_treated = nh$Qout,
-        Q_rel1 = 0,
-        Q_rel2 = 0,
-        SeepOut = nh$SeepOut,
-        SeepIn  = nh$SeepIn,
-        Bypass  = nh$Bypass,
-        Etest   = nh$Etest
+    # Extract daily inputs
+    Qi   <- Qi_eff
+    Rain <- inputs$Rain
+    Et   <- inputs$Et
+    Zcontrol_t <- inputs$Zcontrol
+    Zcontrol_t_minus  <- inputs$Zcontrol_prev
+    Zcontrol_t_plus <- inputs$Zcontrol_next
+    Qr0 <- if (has_Qr0_series) inputs$Qr0 else 0
+    Qr1 <- if (has_Qr1_series) inputs$Qr1 else 0
+    Qr2 <- if (has_Qr2_series) inputs$Qr2 else 0
+    has_depth_constraint <- has_depth_series
+    Zcontrol <- inputs$Zcontrol
+    interp_option <- if (is.null(params2$interp_option)) 2L else as.integer(params2$interp_option)
+
+    if (method == "Euler") {
+      args_base <- list(
+        A_cell = A_cell,
+        Qi = Qi,
+        Rain = Rain,
+        Et = Et,
+        Qr0 = Qr0,
+        Qr1 = Qr1,
+        Qr2 = Qr2,
+        Zcontrol_t = Zcontrol,
+        Zcontrol_t_minus = Zcontrol_t_minus,
+        Zcontrol_t_plus = Zcontrol_t_plus,
+        params = params2
       )
-    }
+      step_out <- vector("list",1)
 
-    # Daily totals: since values are constant rates over the day, totals equal rates
-    Qout_day      <- nh$Qout
-    Q_treated_day <- nh$Qout
-    Q_rel1_day    <- 0
-    Q_rel2_day    <- 0
-    SeepOut_day   <- nh$SeepOut
-    SeepIn_day    <- nh$SeepIn
-    Bypass_day    <- nh$Bypass
-
-    # No area-based rain/ET volumes in node mode
-    EtVol_day   <- 0
-    RainVol_day <- 0
-    NetAtmo_day <- 0
-
-    # No storage in node mode
-    V_end <- 0
-
-    # Water budget: include recycle on inflow like your normal budget does
-    WB_in  <- Qi_eff + RainVol_day + SeepIn_day + (RecycleQ * 1.0)
-    WB_out <- Qout_day + SeepOut_day + EtVol_day + Bypass_day
-    WB_err <- (V_end - V_start) - (WB_in - WB_out)
-    WB_rel <- WB_err / max(1e-12, max(WB_in, WB_out))
-
-    results <- list(
-      V_end = V_end,
-      Qin = Qi_eff,
-      Qout = Qout_day,
-      Q_treated = Q_treated_day,
-      Q_rel1 = Q_rel1_day,
-      Q_rel2 = Q_rel2_day,
-      SeepOut = SeepOut_day,
-      SeepIn = SeepIn_day,
-      Bypass = Bypass_day,
-      RainVol = RainVol_day,
-      EtVol = EtVol_day,
-      NetAtmo = NetAtmo_day
-    )
-
-    water_budget <- list(
-      WB_in = WB_in,
-      WB_out = WB_out,
-      WB_err = WB_err,
-      WB_rel = WB_rel,
-      RainVol = RainVol_day,
-      EtVol   = EtVol_day,
-      NetAtmo = NetAtmo_day,
-      in_components  = list(Qi_eff = Qi_eff, RainVol = RainVol_day, SeepIn = SeepIn_day, Recycle = RecycleQ),
-      out_components = list(Qout = Qout_day, SeepOut = SeepOut_day, EtVol = EtVol_day, Bypass = Bypass_day),
-      dV = V_end - V_start
-    )
-
-    meta <- list(
-      V_start = V_start,
-      V_end   = V_end,
-      Nsteps  = Nsteps,
-      Dt      = Dt,
-      Qi_eff  = Qi_eff,
-      params_used = params2,
-      inputs_used = inputs,
-      steps = step_out,
-      IsaNode = TRUE
-    )
-
-    out <- list(
-      results = results,
-      budgets = list(water = water_budget,
-                     mass = NULL),
-      meta = meta
-    )
-  }else{
-
-    args_base <- list(
-      A_cell = params2$A_cell,
-      Qi = Qi_eff,
-      Rain = inputs$Rain,
-      Et = inputs$Et,
-      Zcontrol_t = inputs$Zcontrol,
-      Zcontrol_t_minus = inputs$Zcontrol_prev,
-      Zcontrol_t_plus = inputs$Zcontrol_next,
-      params = params2,
-      nsteps = Nsteps,
-      RecycleQ = inputs$RecycleQ,
-      Qr0 = if (has_Qr0_series) inputs$Qr0 else 0,
-      Qr1 = if (has_Qr1_series) inputs$Qr1 else 0,
-      Qr2 = if (has_Qr2_series) inputs$Qr2 else 0,
-      has_depth_constraint = has_depth_series
-    )
-
-    # per-step records
-    step_out <- vector("list", Nsteps)
-
-    for (k in seq_len(Nsteps)) {
       Vo <- V
-      step_res <- dmsta_rk4_step(V, args_base, step_index = k, Dt = Dt)
-      V <- step_res$V_new
+      euler_result <- dmsta_euler_step(V, args_base, Dt = 1)
+      V <- euler_result$V_new
 
-      step_out[[k]] <- list(
-        step = k,
+      step_out[[1]] <- list(
         Vo = Vo,
-        V  = V,
-        Dt = Dt,
-        Qi_eff = Qi_eff,
-        Qout = step_res$Qout_ts,
-        Q_treated = step_res$Q_treated_ts,
-        Q_rel1 = step_res$Q_rel1_ts,
-        Q_rel2 = step_res$Q_rel2_ts,
-        SeepOut = step_res$SeepOut_ts,
-        SeepIn  = step_res$SeepIn_ts,
-        Bypass  = step_res$Bypass_ts,
-        Etest   = step_res$Etest_ts
+        V = V,
+        Dt = 1,
+        Qin = Qi,
+        Qout = euler_result$Qout_ts,
+        Q_treated = euler_result$Q_treated_ts,
+        Q_rel1 = euler_result$Q_rel1_ts,
+        Q_rel2 = euler_result$Q_rel2_ts,
+        SeepOut = euler_result$SeepOut_ts,
+        SeepIn = euler_result$SeepIn_ts,
+        Bypass = euler_result$Bypass_ts,
+        Etest = euler_result$Etest_ts,
+        Z = V / A_cell
       )
+
+    } else if (method == "RK4") {
+      # Use dmsta_rk4_step for RK4 integration
+      Dt <- 1.0 / Nsteps
+      args_base <- list(
+        A_cell = A_cell,
+        Qi = Qi,
+        Rain = Rain,
+        Et = Et,
+        RecycleQ = RecycleQ,
+        Qr0 = Qr0,
+        Qr1 = Qr1,
+        Qr2 = Qr2,
+        Zcontrol_t = Zcontrol,
+        Zcontrol_t_minus = Zcontrol_t_minus,
+        Zcontrol_t_plus = Zcontrol_t_plus,
+        params = params2,
+        nsteps = Nsteps,
+        has_depth_constraint = has_depth_constraint
+      )
+
+      # Call RK4 step function
+      # per-step records
+      step_out <- vector("list", Nsteps)
+
+      for (k in seq_len(Nsteps)) {
+        Vo <- V
+        step_res <- dmsta_rk4_step(V, args_base, step_index = k, Dt = Dt)
+        V <- step_res$V_new
+
+        step_out[[k]] <- list(
+          step = k,
+          Vo = Vo,
+          V  = V,
+          Dt = Dt,
+          Qi_eff = Qi_eff,
+          Qout = step_res$Qout_ts,
+          Q_treated = step_res$Q_treated_ts,
+          Q_rel1 = step_res$Q_rel1_ts,
+          Q_rel2 = step_res$Q_rel2_ts,
+          SeepOut = step_res$SeepOut_ts,
+          SeepIn  = step_res$SeepIn_ts,
+          Bypass  = step_res$Bypass_ts,
+          Etest   = step_res$Etest_ts,
+          Z = V / A_cell
+        )
+      }
     }
 
-    # daily aggregates (same as your dmsta_flow_day)
-    Qout_day <- sum(vapply(step_out, function(x) x$Qout * x$Dt, 0.0))
+    Qout_day      <- sum(vapply(step_out, function(x) x$Qout * x$Dt, 0.0))
     Q_treated_day <- sum(vapply(step_out, function(x) x$Q_treated * x$Dt, 0.0))
     Q_rel1_day    <- sum(vapply(step_out, function(x) x$Q_rel1    * x$Dt, 0.0))
     Q_rel2_day    <- sum(vapply(step_out, function(x) x$Q_rel2    * x$Dt, 0.0))
@@ -687,11 +753,13 @@ dmsta_flow_day <- function(
     SeepIn_day  <- sum(vapply(step_out, function(x) x$SeepIn  * x$Dt, 0.0))
     Bypass_day  <- sum(vapply(step_out, function(x) x$Bypass  * x$Dt, 0.0))
 
-    EtVol_day   <- sum(vapply(step_out, function(x) x$Etest * params2$A_cell * x$Dt, 0.0))
-    RainVol_day <- inputs$Rain * params2$A_cell
+    EtVol_day   <- sum(vapply(step_out, function(x) x$Etest * A_cell * x$Dt, 0.0))
+    RainVol_day <- Rain * A_cell
     NetAtmo_day <- RainVol_day - EtVol_day
 
-    RecycleVol_day <- inputs$RecycleQ*1.0
+    Z_day <- sum(vapply(step_out, function(x) x$Z * x$Dt, 0.0)) / sum(vapply(step_out, function(x) x$Dt, 0.0))
+    V_day <- sum(vapply(step_out, function(x) ((x$Vo + x$V) / 2) * x$Dt, 0.0))
+    RecycleVol_day <- RecycleQ*1.0
 
     # Water budget (DMSTA-style)
     WB_in  <- Qi_eff + RainVol_day + SeepIn_day + RecycleVol_day
@@ -701,7 +769,7 @@ dmsta_flow_day <- function(
 
     # structured outputs
     results <- list(
-      V_end = V,
+      V_end = V_day,
       Qin = Qi_eff,
       Qout = Qout_day,
       Q_treated = Q_treated_day,
@@ -712,7 +780,8 @@ dmsta_flow_day <- function(
       Bypass = Bypass_day,
       RainVol = RainVol_day,
       EtVol = EtVol_day,
-      NetAtmo = NetAtmo_day
+      NetAtmo = NetAtmo_day,
+      Z_end = Z_day
     )
 
     water_budget <- list(
@@ -753,7 +822,8 @@ dmsta_flow_day <- function(
       params_used = params2,
       # useful for debugging / parity checks
       inputs_used = inputs,
-      steps = step_out
+      steps = step_out,
+      method = method
     )
 
     out <- list(
@@ -765,9 +835,9 @@ dmsta_flow_day <- function(
       meta = meta
     )
   }
-
-  out
+  return(out)
 }
+
 
 #' Integrate one day of DMSTA hydrology and return sub-step means (internal)
 #'
@@ -1060,7 +1130,12 @@ dmsta_flow_day_steps <- function(
 #'  }
 #'
 #' @export
-dmsta_flow_series <- function(V_init = NULL, series, params, Nsteps = 4L) {
+dmsta_flow_series <- function(V_init = NULL,
+                              series,
+                              params,
+                              method = c("RK4", "Euler"),
+                              Nsteps = 4L) {
+  method <- match.arg(method)
 
   n <- nrow(series)
   if (n < 1) stop("series has zero rows.")
@@ -1075,16 +1150,16 @@ dmsta_flow_series <- function(V_init = NULL, series, params, Nsteps = 4L) {
     isTRUE(series$has_Qr0_series)
   } else {
     # conservative fallback for standalone calls (single day)
-    is.finite(series$Qr0) && series$Qr0 != 0
+    any(is.finite(series$Qr0) & series$Qr0 != 0)
   }
-  has_Qr1_series <- is.finite(series$Qr1) && series$Qr1 != 0 ## DMSTA HydroIndex(3)
-  has_Qr2_series <- is.finite(series$Qr2) && series$Qr2 != 0 ## DMSTA HydroIndex(4)
+  has_Qr1_series <- any(is.finite(series$Qr1) & series$Qr1 != 0) ## DMSTA HydroIndex(3)
+  has_Qr2_series <- any(is.finite(series$Qr2) & series$Qr2 != 0) ## DMSTA HydroIndex(4)
 
   has_depth_constraint_series <- if (!is.null(series$has_depth_constraint)) {
     isTRUE(series$has_depth_constraint)
   } else {
     # conservative fallback for standalone calls (single day)
-    is.finite(series$Zcontrol) && series$Zcontrol != 0
+    any(is.finite(series$Zcontrol) & series$Zcontrol != 0)
   }
 
   # Initialization (ONLY if V_init is NULL)
@@ -1175,7 +1250,8 @@ dmsta_flow_series <- function(V_init = NULL, series, params, Nsteps = 4L) {
       V      = V,
       inputs = in_i,
       params = params_run,
-      Nsteps = Nsteps
+      Nsteps = Nsteps,
+      method = method
     )
 
     # advance state
@@ -1190,8 +1266,8 @@ dmsta_flow_series <- function(V_init = NULL, series, params, Nsteps = 4L) {
     results_df$SeepOut[i]   <- day_res$results$SeepOut
     results_df$SeepIn[i]    <- day_res$results$SeepIn
     results_df$Bypass[i]    <- day_res$results$Bypass
-    results_df$V_end[i]     <- V
-    results_df$Z_end[i]     <- if (params_run$A_cell > 0) V / params_run$A_cell else NA_real_
+    results_df$V_end[i]     <- day_res$results$V_end
+    results_df$Z_end[i]     <- day_res$results$Z_end # if (params_run$A_cell > 0) V / params_run$A_cell else NA_real_
 
     # Store water budget diagnostics
     results_df$RainVol[i] <- day_res$budgets$water$RainVol
@@ -1214,6 +1290,7 @@ dmsta_flow_series <- function(V_init = NULL, series, params, Nsteps = 4L) {
       V_init = V_init,
       V_end  = V,
       Nsteps = Nsteps,
+      method = method,
       A_cell = params$A_cell,
       has_depth_constraint_series = has_depth_constraint_series,
       has_Qr0_series = has_Qr0_series
@@ -1221,4 +1298,245 @@ dmsta_flow_series <- function(V_init = NULL, series, params, Nsteps = 4L) {
   )
   class(out) <- c("dmsta_hydro_result", "list")
   out
+}
+
+
+#' Determine Whether a Cell Should Be Treated as a Node
+#'
+#' Internal helper that replicates DMSTA VBA "IsaNode" behavior: if the cell
+#' has non-positive area (or area is missing/non-finite), it is treated as a
+#' routing node rather than a treatment cell. Node cells bypass storage-based
+#' hydrology and treatment kinetics.
+#'
+#' @param A_cell Numeric scalar. Cell area (km^2). Non-positive values indicate a node.
+#' @param IsaNode Logical scalar or NULL. Optional explicit override; if TRUE,
+#'   the function returns TRUE regardless of `A_cell`.
+#'
+#' @return Logical scalar. TRUE if the cell should be handled as a node.
+#'
+#' @details
+#' A cell is classified as a node when:
+#' \itemize{
+#'   \item `IsaNode` is explicitly `TRUE`, or
+#'   \item `A_cell` is NULL, NA, non-finite, or `<= 0`.
+#' }
+#'
+#' @keywords internal
+#' @noRd
+dmsta_is_node <- function(A_cell, IsaNode = NULL) {
+  if (isTRUE(IsaNode)) return(TRUE)
+  if (is.null(A_cell) || is.na(A_cell) || !is.finite(A_cell)) return(TRUE)
+  A_cell <= 0
+}
+
+
+#' Node Routing Logic for DMSTA (Pass-through with Priority Rules)
+#'
+#' Internal helper implementing the DMSTA VBA "node" (IsaNode) routing logic.
+#' When a cell is treated as a node (no area / no storage), total inflow is
+#' passed through and optionally diverted according to DMSTA priority rules:
+#' seepage out takes precedence, then full bypass, then low-flow bypass, then
+#' outflow cap bypass.
+#'
+#' @param Qi Numeric scalar. Inflow rate to the node (hm^3/day).
+#' @param RecycleQ Numeric scalar. Recycle inflow rate to the node (hm^3/day).
+#'   Default is 0.
+#' @param Seepout_Rate Numeric scalar. If `> 0`, the node routes *all*
+#'   pass-through flow to seepage out (hm^3/day equivalent). Default is 0.
+#' @param Qimax Numeric scalar. If `> 0` (and `Seepout_Rate <= 0`),
+#'   the node routes *all* pass-through flow to bypass. Default is 0.
+#' @param Qomax Numeric scalar. If negative, applies low-flow bypass
+#'   (`min(Qi, -Qomax)`). If positive, caps outflow and bypasses remainder.
+#'   Default is 0.
+#'
+#' @return A named list with elements:
+#' \describe{
+#'   \item{Qout}{Numeric scalar. Routed outflow rate (hm^3/day).}
+#'   \item{Etest}{Numeric scalar. Effective ET rate (m/day); always 0 for nodes.}
+#'   \item{SeepOut}{Numeric scalar. Seepage outflow rate (hm^3/day).}
+#'   \item{SeepIn}{Numeric scalar. Seepage inflow rate (hm^3/day); always 0 for nodes.}
+#'   \item{Bypass}{Numeric scalar. Bypass flow rate (hm^3/day).}
+#' }
+#'
+#' @details
+#' The node begins with `qout = Qi + RecycleQ`. Then the following priority
+#' routing rules are applied:
+#' \enumerate{
+#'   \item If `Seepout_Rate > 0`: route everything to seepage out.
+#'   \item Else if `Qimax > 0`: bypass everything.
+#'   \item Else if `Qomax < 0`: low-flow bypass `min(Qi, -Qomax)`.
+#'   \item Else if `Qomax > 0`: cap outflow at `Qomax`, bypass the remainder.
+#' }
+#'
+#' @keywords internal
+#' @noRd
+dmsta_node_route <- function(Qi, RecycleQ = 0,
+                             Seepout_Rate = 0,
+                             Qimax = 0,
+                             Qomax = 0) {
+
+  qout <- max(0, Qi + RecycleQ)   # VBA: qouT = Qi + RecycleQ
+  Etest <- 0
+  seepout <- 0
+  seepin <- 0
+  bypass <- 0
+
+  # VBA node priority routing
+  if (is.finite(Seepout_Rate) && Seepout_Rate > 0) {
+    seepout <- qout
+    qout <- 0
+  } else if (is.finite(Qimax) && Qimax > 0) {
+    bypass <- qout
+    qout <- 0
+  } else if (is.finite(Qomax) && Qomax < 0) {
+    bypass <- min(Qi, -Qomax)
+    bypass <- max(0, bypass)
+    qout <- max(0, qout - bypass)
+  } else if (is.finite(Qomax) && Qomax > 0) {
+    bypass <- max(0, qout - Qomax)
+    qout <- max(0, qout - bypass)
+  }
+
+  list(Qout = qout, Etest = Etest, SeepOut = seepout, SeepIn = seepin, Bypass = bypass)
+}
+
+#' Route a DMSTA "node" for one day (internal)
+#'
+#' Internal helper for DMSTA node-style routing (i.e., a link/node element with
+#' no storage). This function calls `dmsta_node_route()` to compute outflow,
+#' seepage, bypass, and ET diagnostics for the day, then returns a DMSTAr-style
+#' structured result with `results`, `budgets`, and `meta`.
+#'
+#' Node semantics are consistent with the package parameter convention that
+#' `IsaNode` may be derived when `A_cell <= 0`.
+#'
+#' @param Qi Numeric scalar. External inflow for the day (discharge units used
+#'   by the hydrology engine; commonly hm^3/day in DMSTAr examples).
+#' @param RecycleQ Numeric scalar. Optional recycle inflow for the day (same
+#'   discharge units as `Qi`).
+#' @param params Named list of parameters used by `dmsta_node_route()`. This
+#'   function expects at least:
+#'   \describe{
+#'     \item{Seepout_Rate}{Numeric. Seepage outflow rate parameter (node routing).}
+#'     \item{Qimax}{Numeric. Inflow capacity parameter (node routing).}
+#'     \item{Qomax}{Numeric. Outflow capacity parameter (node routing).}
+#'   }
+#' @param Nsteps Integer. Number of substep records to emit in `meta$steps`.
+#'   For nodes, fluxes are constant across the day; `Nsteps` mainly controls the
+#'   structure/length of `meta$steps`.
+#' @param Dt Numeric scalar. Substep duration in days. Default is `1.0`.
+#'
+#' @details
+#' The returned `meta$steps` is a list of substep records. Each record follows
+#' the internal convention of providing `Vo` (start volume), `V` (end volume),
+#' and `Dt` (substep duration).
+#'
+#' Water budget diagnostics use the standard fields `WB_in`, `WB_out`, `WB_err`,
+#' and `WB_rel` used throughout the hydrology engine.
+#'
+#' @return A structured list with components:
+#' \describe{
+#'   \item{results}{Named list of daily totals/diagnostics (see below).}
+#'   \item{budgets}{Named list with `water` budget diagnostics and `mass = NULL`.}
+#'   \item{meta}{Metadata including inputs, parameters used, and `steps`.}
+#' }
+#'
+#' The `results` element contains:
+#' \describe{
+#'   \item{V_end}{End-of-day volume (node: typically 0).}
+#'   \item{Qin}{Inflow discharge for the day (`Qi`).}
+#'   \item{Qout}{Total outflow discharge for the day.}
+#'   \item{Q_treated}{Outflow assigned to treated component (node: equals `Qout`).}
+#'   \item{Q_rel1, Q_rel2}{Release components (node: 0 in this helper).}
+#'   \item{SeepOut, SeepIn}{Seepage outflow/inflow for the day.}
+#'   \item{Bypass}{Bypass discharge for the day.}
+#'   \item{RainVol, EtVol, NetAtmo}{Atmospheric volume terms (node: set to 0 here).}
+#' }
+#'
+#' @seealso `dmsta_node_route()`, `dmstar_default_params()`
+#'
+#' @keywords internal
+#' @noRd
+
+dmsta_node_step <- function(Qi, RecycleQ, params, Nsteps = 1L, Dt = 1.0) {
+  nh <- dmsta_node_route(
+    Qi = Qi,
+    RecycleQ = RecycleQ,
+    Seepout_Rate = params$Seepout_Rate,
+    Qimax = params$Qimax,
+    Qomax = params$Qomax
+  )
+
+  # Build a constant step_out (optional, but keeps meta$steps consistent)
+  # was vector and loop
+  step_out <- replicate(Nsteps, list(
+    step = NA_integer_,
+    Vo = 0, V = 0,
+    Dt = Dt,
+    Qi_eff = Qi,
+    Qout = nh$Qout,
+    Q_treated = nh$Qout,
+    Q_rel1 = 0,
+    Q_rel2 = 0,
+    SeepOut = nh$SeepOut,
+    SeepIn  = nh$SeepIn,
+    Bypass  = nh$Bypass,
+    Etest   = nh$Etest
+  ), simplify = FALSE)
+
+  # No storage in node mode
+  V_end <- 0
+  # No area-based rain/ET volumes in node mode
+  RainVol_day <- 0
+  EtVol_day <- 0
+  NetAtmo_day <- 0
+
+  # Water budget: include recycle on inflow like your normal budget does
+  WB_in  <- Qi + RainVol_day + nh$SeepIn + RecycleQ
+  WB_out <- nh$Qout + nh$SeepOut + EtVol_day + nh$Bypass
+  WB_err <- (V_end - 0) - (WB_in - WB_out)
+  WB_rel <- WB_err / max(1e-12, max(WB_in, WB_out))
+
+  list(
+    results = list(
+      V_end = V_end,
+      Qin = Qi,
+      Qout = nh$Qout,
+      Q_treated = nh$Qout,
+      Q_rel1 = 0,
+      Q_rel2 = 0,
+      SeepOut = nh$SeepOut,
+      SeepIn = nh$SeepIn,
+      Bypass = nh$Bypass,
+      RainVol = RainVol_day,
+      EtVol = EtVol_day,
+      NetAtmo = NetAtmo_day
+    ),
+    budgets = list(
+      water = list(
+        WB_in = WB_in,
+        WB_out = WB_out,
+        WB_err = WB_err,
+        WB_rel = WB_rel,
+        RainVol = RainVol_day,
+        EtVol   = EtVol_day,
+        NetAtmo = NetAtmo_day,
+        in_components  = list(Qi_eff = Qi, RainVol = RainVol_day, SeepIn = nh$SeepIn, Recycle = RecycleQ),
+        out_components = list(Qout = nh$Qout, SeepOut = nh$SeepOut, EtVol = EtVol_day, Bypass = nh$Bypass),
+        dV = V_end
+      ),
+      mass = NULL
+    ),
+    meta = list(
+      V_start = 0,
+      V_end   = V_end,
+      Nsteps  = Nsteps,
+      Dt      = Dt,
+      Qi_eff  = Qi,
+      params_used = params,
+      inputs_used = NULL,  # optionally pass inputs if needed
+      steps = step_out,
+      IsaNode = TRUE
+    )
+  )
 }
