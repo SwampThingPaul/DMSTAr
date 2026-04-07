@@ -23,12 +23,14 @@ test_that("dmsta_flow_series returns expected structure and class", {
     Seepin_Rate = 0,  Seepin_Elev = 0,
     Qin_Frac = 1,
     IsaNode = NULL,
-    Zrelease = 0
+    Zrelease = 0,
+    Qimax = 0, Qomax = 0
   )
 
-  out <- dmsta_flow_series(V_init = 10, series = series, params = params, Nsteps = 4L,method = "Euler")
+  out <- dmsta_flow_series(V_init = 10, series = series, params = params, Nsteps = 4L,Qmethod = "Euler")
+  out2 <- dmsta_flow_series(V_init = 10, series = series, params = params, Nsteps = 4L,Qmethod = "RK4")
 
-  expect_s3_class(out, "dmsta_hydro_result")
+  expect_s3_class(out, "dmsta_hydro_series_result")
   expect_true(is.data.frame(out$results))
   expect_true(is.list(out$budgets))
   expect_true(is.list(out$meta))

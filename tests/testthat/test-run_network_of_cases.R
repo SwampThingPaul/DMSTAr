@@ -6,7 +6,8 @@ test_that("run_network_of_cases runs and returns expected structure", {
     cases = cases,
     net_table = net,
     outlet_count = 5L,
-    verbose = FALSE
+    verbose = FALSE,
+    # Qmethod = "RK4"
     # plus any dmsta_flowP_case args you want to standardize in tests
   )
 

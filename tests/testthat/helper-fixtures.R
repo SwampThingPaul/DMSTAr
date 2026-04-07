@@ -1,6 +1,6 @@
 
 make_series_base <- function(n = 10) {
-  data(series, package = "DMSTAr")  # example dataset exists in package [1](https://evergladesfoundation-my.sharepoint.com/personal/pjulian_evergladesfoundation_org/Documents/Documents/R/win-library/4.1/DMSTAr/html/series.html?web=1)
+  data(series, package = "DMSTAr")  # example dataset exists in package
   s <- series[seq_len(n), ]
 
   # reshape per docs: Flow -> Qi, Conc -> Ci, Rainfall -> Rain, ET -> Et
@@ -18,11 +18,11 @@ make_series_base <- function(n = 10) {
 
 # Minimal parameter list: use dmstar_default_params and override what's needed.
 make_min_params <- function(...) {
-  p <- dmstar_default_params()  # shipped by package [7](https://evergladesfoundation-my.sharepoint.com/personal/pjulian_evergladesfoundation_org/Documents/Documents/R/win-library/4.1/DMSTAr/html/dmstar_default_params.html?web=1)
+  p <- dmstar_default_params()  # shipped by package
   modifyList(p, list(...))
 }
 
-# Create a "node" cell (A_cell <= 0 triggers IsaNode derivation per docs) [7](https://evergladesfoundation-my.sharepoint.com/personal/pjulian_evergladesfoundation_org/Documents/Documents/R/win-library/4.1/DMSTAr/html/dmstar_default_params.html?web=1)
+# Create a "node" cell (A_cell <= 0 triggers IsaNode derivation per docs)
 make_node_cell <- function(label = "NODE") {
   params <- make_min_params(
     A_cell     = 0,     # node-like; avoids hydrology complexities
@@ -40,7 +40,7 @@ make_node_cell <- function(label = "NODE") {
     Qin_Frac = 1,
     RecycleIndex = 1L
   )
-  dmsta_validate_cells(list(cell))  # normalize/validate [6](https://evergladesfoundation-my.sharepoint.com/personal/pjulian_evergladesfoundation_org/Documents/Documents/R/win-library/4.1/DMSTAr/html/dmsta_validate_cells.html?web=1)
+  dmsta_validate_cells(list(cell))  # normalize/validate
 }
 
 make_case <- function(name, n = 10) {

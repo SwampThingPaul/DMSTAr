@@ -41,12 +41,11 @@ with using the model for designing treatment areas or any other purpose.
 
 ``` r
 citation('DMSTAr')
-#> 
 #> To cite package 'DMSTAr' in publications use:
 #> 
-#>   Paul Julian (2026). DMSTAr: Dynamic Model for Stormwater Treatment
-#>   Areas in R. R package version 0.1.0.
-#>   https://github.com/SwampThingPaul/DMSTAr
+#>   Julian P (2026). _DMSTAr: Dynamic Model for Stormwater Treatment
+#>   Areas in R_. R package version 0.1.0,
+#>   <https://github.com/SwampThingPaul/DMSTAr>.
 #> 
 #> A BibTeX entry for LaTeX users is
 #> 
@@ -70,8 +69,31 @@ devtools::install_github("SwampThingPaul/DMSTAr")
 
 <!-- To install the deployed version from CRAN use: -->
 
-## *Indevelopment*
+## Parity <a name="parity"></a>
 
-- Develop Ordinary Differential Equation (ODE) versions DMSTA functions
+Currently `DMSTAr` has been evaluated against published DMSTA results
+from various planning efforts.
 
-- Develop flume and alum based models
+- Restoration Strategies
+  - DMSTA Model Version 2c (Version Date: 7/29/2011)
+
+  - Link to results and documentation - [Restoration Strategies -
+    Negotiation
+    Phase](https://smmsviewer.apps.sfwmd.gov/projectreport/487)
+- Western Everglades Restoration Plan
+  - DMSTA Model Version 2 (incomplete information)
+
+  - Link to results and documentation - [Western Everglades Restoration
+    Project
+    (WERP)](https://smmsviewer.apps.sfwmd.gov/projectreport/1360)
+- Central Everglades Planning Project, Post Authorization Change Report
+  - DMSTA Model Version 2c2b (2010?),
+    [CEPP](https://smmsviewer.apps.sfwmd.gov/modelreport/2327) used
+    Version 2c2b
+
+  - Link to results and documentation - [DMSTA_C240TSP -
+    EAA](https://smmsviewer.apps.sfwmd.gov/modelreport/3426)
+
+<!-- ## *Indevelopment* -->
+
+<!--  * Develop flume and alum based models  -->

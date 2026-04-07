@@ -16,10 +16,7 @@ knitr::opts_chunk$set(
 )
 ```
 
-```{r setup,eval = FALSE}
-# library(DMSTAr)
-# for now till we get acutal code in here
-```
+
 
 # Introduction
 
@@ -107,7 +104,10 @@ params <- list(
 
 # initial volume (based on input values)
 V_init <- (cm_to_m(params$Zinit) * params$A_cell)
-out_hydro <- dmsta_flow_series(V_init, series, params, Nsteps = 4)
+out_hydro <- dmsta_flow_series(
+  series = series, 
+  params = params, 
+  Nsteps = 4)
 
 hydro_rslt <- out_hydro$results
 
@@ -122,6 +122,8 @@ str(out_hydro)
 Each function provides a list of data.frames including results (`out$results`), daily water budget (`out$budgets$water`) and metadata (`out$meta`). 
 
 ```{r hydro_plot, echo=FALSE, fig.align = "center",fig.cap = "Simulated outflow discharge (top) and water level (bottom).",fig.width = 7,fig.height = 5,fig.align="center"}
+hydro_rslt$Date <- as.Date(hydro_rslt$Date)
+
 layout(matrix(1:2,2,1))
 par(mar=c(2,3,1,0.5),oma = c(2,2,0.5,0.5))
 plot(Q_treated~Date,hydro_rslt,type="l",las=1,ann=F,
@@ -390,8 +392,7 @@ hydroP_net_rslt <- dmsta_flowP_case(
    Nsteps = 4L,
    max_iter = 1L,
    return_cell_series = TRUE,
-   keep_Q17 = TRUE,
-   keep_extra = FALSE
+   keep_Q17 = TRUE
 )
 
 hydroP_case_rslt <- hydroP_net_rslt$results$case
@@ -486,7 +487,7 @@ net <- data.frame(
   Seepage_to  = c("", ""),
   stringsAsFactors = FALSE
 )
-routes <- build_routes_from_net_table(net_table, outlet_count = 1L)
+routes <- build_routes_from_net_table(net, outlet_count = 1L)
 
 ```
 

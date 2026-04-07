@@ -1,120 +1,55 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
-  <url>
-    <loc>/404.html</loc>
-  </url>
-  <url>
-    <loc>/articles/Getting_Started.html</loc>
-  </url>
-  <url>
-    <loc>/articles/index.html</loc>
-  </url>
-  <url>
-    <loc>/articles/kHLR_relationships.html</loc>
-  </url>
-  <url>
-    <loc>/articles/phosphorus-kinetics.html</loc>
-  </url>
-  <url>
-    <loc>/authors.html</loc>
-  </url>
-  <url>
-    <loc>/index.html</loc>
-  </url>
-  <url>
-    <loc>/LICENSE-text.html</loc>
-  </url>
-  <url>
-    <loc>/LICENSE.html</loc>
-  </url>
-  <url>
-    <loc>/news/index.html</loc>
-  </url>
-  <url>
-    <loc>/reference/build_P_kinetics.html</loc>
-  </url>
-  <url>
-    <loc>/reference/build_P_kin_slots.html</loc>
-  </url>
-  <url>
-    <loc>/reference/cfs_to_hm3d.html</loc>
-  </url>
-  <url>
-    <loc>/reference/cm_to_m.html</loc>
-  </url>
-  <url>
-    <loc>/reference/dmstar_default_params.html</loc>
-  </url>
-  <url>
-    <loc>/reference/dmsta_build_tanks.html</loc>
-  </url>
-  <url>
-    <loc>/reference/dmsta_cals.html</loc>
-  </url>
-  <url>
-    <loc>/reference/dmsta_case_network.html</loc>
-  </url>
-  <url>
-    <loc>/reference/dmsta_flowP_case.html</loc>
-  </url>
-  <url>
-    <loc>/reference/dmsta_flowP_series.html</loc>
-  </url>
-  <url>
-    <loc>/reference/dmsta_flow_series.html</loc>
-  </url>
-  <url>
-    <loc>/reference/dmsta_init_case_state.html</loc>
-  </url>
-  <url>
-    <loc>/reference/dmsta_make_cell.html</loc>
-  </url>
-  <url>
-    <loc>/reference/dmsta_p_init_state.html</loc>
-  </url>
-  <url>
-    <loc>/reference/dmsta_validate_cells.html</loc>
-  </url>
-  <url>
-    <loc>/reference/index.html</loc>
-  </url>
-  <url>
-    <loc>/reference/internal_dmsta_case.html</loc>
-  </url>
-  <url>
-    <loc>/reference/internal_dmsta_hydro.html</loc>
-  </url>
-  <url>
-    <loc>/reference/internal_dmsta_phosphorus.html</loc>
-  </url>
-  <url>
-    <loc>/reference/internal_dmsta_tanks.html</loc>
-  </url>
-  <url>
-    <loc>/reference/internal_p_kinetics.html</loc>
-  </url>
-  <url>
-    <loc>/reference/in_to_m.html</loc>
-  </url>
-  <url>
-    <loc>/reference/lpwem-internal.html</loc>
-  </url>
-  <url>
-    <loc>/reference/lpwem_day.html</loc>
-  </url>
-  <url>
-    <loc>/reference/lpwem_series.html</loc>
-  </url>
-  <url>
-    <loc>/reference/model_parameter_builders.html</loc>
-  </url>
-  <url>
-    <loc>/reference/m_to_cm.html</loc>
-  </url>
-  <url>
-    <loc>/reference/series.html</loc>
-  </url>
-  <url>
-    <loc>/reference/validate_P_paramsK.html</loc>
-  </url>
+<urlset xmlns = 'http://www.sitemaps.org/schemas/sitemap/0.9'>
+<url><loc>/404.html</loc></url>
+<url><loc>/articles/Getting_Started.html</loc></url>
+<url><loc>/articles/index.html</loc></url>
+<url><loc>/articles/kHLR_relationships.html</loc></url>
+<url><loc>/articles/phosphorus-kinetics.html</loc></url>
+<url><loc>/authors.html</loc></url>
+<url><loc>/index.html</loc></url>
+<url><loc>/LICENSE-text.html</loc></url>
+<url><loc>/LICENSE.html</loc></url>
+<url><loc>/news/index.html</loc></url>
+<url><loc>/reference/build_P_kinetics.html</loc></url>
+<url><loc>/reference/build_P_kin_slots.html</loc></url>
+<url><loc>/reference/cfs_to_hm3d.html</loc></url>
+<url><loc>/reference/cm_to_m.html</loc></url>
+<url><loc>/reference/dmstar_default_params.html</loc></url>
+<url><loc>/reference/dmsta_build_tanks.html</loc></url>
+<url><loc>/reference/dmsta_cals.html</loc></url>
+<url><loc>/reference/dmsta_case_network.html</loc></url>
+<url><loc>/reference/dmsta_euler_hydro_day.html</loc></url>
+<url><loc>/reference/dmsta_flowP_case.html</loc></url>
+<url><loc>/reference/dmsta_flowP_day.html</loc></url>
+<url><loc>/reference/dmsta_flowP_day_steps.html</loc></url>
+<url><loc>/reference/dmsta_flowP_series.html</loc></url>
+<url><loc>/reference/dmsta_flow_day.html</loc></url>
+<url><loc>/reference/dmsta_flow_day_steps.html</loc></url>
+<url><loc>/reference/dmsta_flow_series.html</loc></url>
+<url><loc>/reference/dmsta_gate_releases.html</loc></url>
+<url><loc>/reference/dmsta_hydro_day.html</loc></url>
+<url><loc>/reference/dmsta_init_case_state.html</loc></url>
+<url><loc>/reference/dmsta_make_cell.html</loc></url>
+<url><loc>/reference/dmsta_p_init_state.html</loc></url>
+<url><loc>/reference/dmsta_rk4_hydro_day.html</loc></url>
+<url><loc>/reference/dmsta_rk4_hydro_step.html</loc></url>
+<url><loc>/reference/dmsta_validate_cells.html</loc></url>
+<url><loc>/reference/dot-dmsta_ode_one_step.html</loc></url>
+<url><loc>/reference/dot-dmsta_rkf45_integrate.html</loc></url>
+<url><loc>/reference/dot-dmsta_trapz_integrate.html</loc></url>
+<url><loc>/reference/index.html</loc></url>
+<url><loc>/reference/internal_dmsta_case.html</loc></url>
+<url><loc>/reference/internal_dmsta_hydro.html</loc></url>
+<url><loc>/reference/internal_dmsta_phosphorus.html</loc></url>
+<url><loc>/reference/internal_dmsta_tanks.html</loc></url>
+<url><loc>/reference/internal_dmsta_utils.html</loc></url>
+<url><loc>/reference/internal_p_kinetics.html</loc></url>
+<url><loc>/reference/in_to_m.html</loc></url>
+<url><loc>/reference/lpwem-internal.html</loc></url>
+<url><loc>/reference/lpwem_day.html</loc></url>
+<url><loc>/reference/lpwem_series.html</loc></url>
+<url><loc>/reference/model_parameter_builders.html</loc></url>
+<url><loc>/reference/m_to_cm.html</loc></url>
+<url><loc>/reference/series.html</loc></url>
+<url><loc>/reference/validate_P_paramsK.html</loc></url>
 </urlset>
+

@@ -6,20 +6,19 @@
 <meta http-equiv="X-UA-Compatible" content="IE=edge">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>k-HLR relationships • DMSTAr</title>
-<!-- jquery --><script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.4.1/jquery.min.js" integrity="sha256-CSXorXvZcTkaix6Yvo6HppcZGetbYMGWSFlBw8HfCJo=" crossorigin="anonymous"></script><!-- Bootstrap --><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/3.4.1/css/bootstrap.min.css" integrity="sha256-bZLfwXAP04zRMK2BjiO8iu9pf4FbLqX6zitd+tIvLhE=" crossorigin="anonymous">
+<!-- jquery --><script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.7.1/jquery.min.js" integrity="sha512-v2CJ7UaYy4JwqLDIrZUI/4hqeoQieOmAZNXBeQyjo21dadnwR+8ZaIJVT8EE2iyI61OV8e6M8PP2/4hpQINQ/g==" crossorigin="anonymous" referrerpolicy="no-referrer"></script><!-- Bootstrap --><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/3.4.1/css/bootstrap.min.css" integrity="sha256-bZLfwXAP04zRMK2BjiO8iu9pf4FbLqX6zitd+tIvLhE=" crossorigin="anonymous">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/3.4.1/js/bootstrap.min.js" integrity="sha256-nuL8/2cJ5NDSSwnKD8VqreErSWHtnEP9E7AySL+1ev4=" crossorigin="anonymous"></script><!-- bootstrap-toc --><link rel="stylesheet" href="../bootstrap-toc.css">
 <script src="../bootstrap-toc.js"></script><!-- Font Awesome icons --><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.12.1/css/all.min.css" integrity="sha256-mmgLkCYLUQbXn0B1SRqzHar6dCnv9oZFPEC1g1cwlkk=" crossorigin="anonymous">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.12.1/css/v4-shims.min.css" integrity="sha256-wZjR52fzng1pJHwx4aV2AO3yyTOXrcDW7jBpJtTwVxw=" crossorigin="anonymous">
 <!-- clipboard.js --><script src="https://cdnjs.cloudflare.com/ajax/libs/clipboard.js/2.0.6/clipboard.min.js" integrity="sha256-inc5kl9MA1hkeYUt+EC3BhlIgyp/2jDIyBLS6k3UxPI=" crossorigin="anonymous"></script><!-- headroom.js --><script src="https://cdnjs.cloudflare.com/ajax/libs/headroom/0.11.0/headroom.min.js" integrity="sha256-AsUX4SJE1+yuDu5+mAVzJbuYNPHj/WroHuZ8Ir/CkE0=" crossorigin="anonymous"></script><script src="https://cdnjs.cloudflare.com/ajax/libs/headroom/0.11.0/jQuery.headroom.min.js" integrity="sha256-ZX/yNShbjqsohH1k95liqY9Gd8uOiE1S4vZc+9KQ1K4=" crossorigin="anonymous"></script><!-- pkgdown --><link href="../pkgdown.css" rel="stylesheet">
 <script src="../pkgdown.js"></script><meta property="og:title" content="k-HLR relationships">
-<meta property="og:description" content="DMSTAr">
 <!-- mathjax --><script src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/MathJax.js" integrity="sha256-nvJJv9wWKEm88qvoQl9ekL2J+k/RWIsaSScxxlsrv8k=" crossorigin="anonymous"></script><script src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/config/TeX-AMS-MML_HTMLorMML.js" integrity="sha256-84DKXVJXs0/F8OTMzX4UR909+jtl4G7SPypPavF+GfA=" crossorigin="anonymous"></script><!--[if lt IE 9]>
 <script src="https://oss.maxcdn.com/html5shiv/3.7.3/html5shiv.min.js"></script>
 <script src="https://oss.maxcdn.com/respond/1.4.2/respond.min.js"></script>
 <![endif]-->
 </head>
 <body data-spy="scroll" data-target="#toc">
-    
+
 
     <div class="container template-article">
       <header><div class="navbar navbar-default navbar-fixed-top" role="navigation">
@@ -45,7 +44,7 @@
 <li class="dropdown">
   <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
     Articles
-     
+
     <span class="caret"></span>
   </a>
   <ul class="dropdown-menu" role="menu">
@@ -68,7 +67,7 @@
 <li>
   <a href="https://github.com/SwampThingPaul/DMSTAr/" class="external-link">
     <span class="fab fa-github fa-lg"></span>
-     
+
   </a>
 </li>
       </ul>
@@ -79,7 +78,7 @@
 </div>
 <!--/.navbar -->
 
-      
+
 
       </header><script src="kHLR_relationships_files/kePrint-0.0.1/kePrint.js"></script><link href="kHLR_relationships_files/lightable-0.0.1/lightable.css" rel="stylesheet">
 <div class="row">
@@ -98,49 +97,68 @@
 <!-- https://wwwalker.net/dmsta1/doc/theory/pcycle.htm  good background -->
 <p>The purpose of this vignette is to explain a way to derive
 “equivalent”k-HLR relationships that let you translate between Dynamic
-DMSTA-style P model parameters (ie. <span class="math inline">\(K_1\)</span>, <span class="math inline">\(K_2\)</span>, <span class="math inline">\(K_3\)</span>,<span class="math inline">\(C_0\)</span> and <span class="math inline">\(C_1\)</span>), and the familar <span class="math inline">\(k-C^*\)</span>/N-tank-in-series design
-relationships used for screening and sizing of treatment wetalnds.</p>
+DMSTA-style P model parameters (ie.
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>K</mi><mn>1</mn></msub><annotation encoding="application/x-tex">K_1</annotation></semantics></math>,
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>K</mi><mn>2</mn></msub><annotation encoding="application/x-tex">K_2</annotation></semantics></math>,
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>K</mi><mn>3</mn></msub><annotation encoding="application/x-tex">K_3</annotation></semantics></math>,<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>C</mi><mn>0</mn></msub><annotation encoding="application/x-tex">C_0</annotation></semantics></math>
+and
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>C</mi><mn>1</mn></msub><annotation encoding="application/x-tex">C_1</annotation></semantics></math>),
+and the familiar
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>k</mi><mo>−</mo><msup><mi>C</mi><mo>*</mo></msup></mrow><annotation encoding="application/x-tex">k-C^*</annotation></semantics></math>/N-tank-in-series
+design relationships used for screening and sizing of treatment
+wetlands.</p>
 <p>DMSTA was conceptualized as a dynamic extension of a steady state
-settling rate model. In practise, DMSTA maintains dynamic water balance,
+settling rate model. In practice, DMSTA maintains dynamic water balance,
 hydraulic routing and P cycling routines. Generally, P removal is
 proportional to the product of water column P and available P storage in
-vegetation and sediment. Meanwhile, P recylcing is described
-mathmatically as a quadratic to the liable ppol. Finally P removal to
-permanent burial is 1st order from libile storage.</p>
-<p>DMSTA has three key rate constants, <span class="math inline">\(K_1\)</span>, <span class="math inline">\(K_2\)</span> and <span class="math inline">\(K_3\)</span> that scale P biogeochemistry
-represented by the model (removal, recycle and burial). These arethe
-principal fitting parameters for calibration to observed data. These
-parameters were linearly transformed to a diffrent parameter space from
-<span class="math inline">\(K\)</span>, <span class="math inline">\(C_0\)</span> and <span class="math inline">\(C_1\)</span>.</p>
+vegetation and sediment. Meanwhile, P recycling is described
+mathematically as a quadratic to the liable pool. Finally P removal to
+permanent burial is 1st order from labile storage.</p>
+<p>DMSTA has three key rate constants,
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>K</mi><mn>1</mn></msub><annotation encoding="application/x-tex">K_1</annotation></semantics></math>,
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>K</mi><mn>2</mn></msub><annotation encoding="application/x-tex">K_2</annotation></semantics></math>
+and
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>K</mi><mn>3</mn></msub><annotation encoding="application/x-tex">K_3</annotation></semantics></math>
+that scale P biogeochemistry represented by the model (removal, recycle
+and burial). These are the principal fitting parameters for calibration
+to observed data. These parameters were linearly transformed to a
+different parameter space from
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>K</mi><annotation encoding="application/x-tex">K</annotation></semantics></math>,
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>C</mi><mn>0</mn></msub><annotation encoding="application/x-tex">C_0</annotation></semantics></math>
+and
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>C</mi><mn>1</mn></msub><annotation encoding="application/x-tex">C_1</annotation></semantics></math>.</p>
 <ul>
 <li>
-<span class="math inline">\(K\)</span> = net settling rate at steady
-state (m/yr)</li>
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>K</mi><annotation encoding="application/x-tex">K</annotation></semantics></math>
+= net settling rate at steady state (m/yr)</li>
 <li>
-<span class="math inline">\(C_0\)</span> = water column
-concentration at zero labile storage (<span class="math inline">\(\mu g
-\ L^{-1}\)</span>)</li>
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>C</mi><mn>0</mn></msub><annotation encoding="application/x-tex">C_0</annotation></semantics></math>
+= water column concentration at zero labile storage
+(<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>μ</mi><mi>g</mi><mspace width="0.222em"></mspace><msup><mi>L</mi><mrow><mi>−</mi><mn>1</mn></mrow></msup></mrow><annotation encoding="application/x-tex">\mu g \ L^{-1}</annotation></semantics></math>)</li>
 <li>
-<span class="math inline">\(C_1\)</span> = water column
-concentration when labile storage is at 1 <span class="math inline">\(g
-\ m^{-2}\)</span> (<span class="math inline">\(\mu g \
-L^{-1}\)</span>)</li>
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>C</mi><mn>1</mn></msub><annotation encoding="application/x-tex">C_1</annotation></semantics></math>
+= water column concentration when labile storage is at 1
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>g</mi><mspace width="0.222em"></mspace><msup><mi>m</mi><mrow><mi>−</mi><mn>2</mn></mrow></msup></mrow><annotation encoding="application/x-tex">g \ m^{-2}</annotation></semantics></math>
+(<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>μ</mi><mi>g</mi><mspace width="0.222em"></mspace><msup><mi>L</mi><mrow><mi>−</mi><mn>1</mn></mrow></msup></mrow><annotation encoding="application/x-tex">\mu g \ L^{-1}</annotation></semantics></math>)</li>
 </ul>
-<p>Typically, <span class="math inline">\(K\)</span> is estimated by
-fitting a model to a concentration time-series, <span class="math inline">\(C_0\)</span> and <span class="math inline">\(C_1\)</span> are estimated from the storage and
-concentration relationship for a given wetlands and/or vegetative
-community.</p>
+<p>Typically,
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>K</mi><annotation encoding="application/x-tex">K</annotation></semantics></math>
+is estimated by fitting a model to a concentration time-series,
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>C</mi><mn>0</mn></msub><annotation encoding="application/x-tex">C_0</annotation></semantics></math>
+and
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>C</mi><mn>1</mn></msub><annotation encoding="application/x-tex">C_1</annotation></semantics></math>
+are estimated from the storage and concentration relationship for a
+given wetlands and/or vegetative community.</p>
 <p><br></p>
 <div class="section level2">
 <h2 id="the-models">The Models:<a class="anchor" aria-label="anchor" href="#the-models"></a>
 </h2>
 <ol style="list-style-type: decimal">
-<li>The <span class="math inline">\(NKC^*\)</span> Model: A generalized
-tank-in-series outflow model represented as</li>
+<li>The
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>N</mi><mi>K</mi><msup><mi>C</mi><mo>*</mo></msup></mrow><annotation encoding="application/x-tex">NKC^*</annotation></semantics></math>
+Model: A generalized tank-in-series outflow model represented as</li>
 </ol>
-<span class="math display">\[C_{out} = \frac{C_{in} - C^{*}}{(1 +
-\frac{k}{N \cdot HLR})^{N}} + C^*\]</span>
-<table class="table table" style="width: auto !important; margin-left: auto; margin-right: auto;">
+<math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>C</mi><mrow><mi>o</mi><mi>u</mi><mi>t</mi></mrow></msub><mo>=</mo><mfrac><mrow><msub><mi>C</mi><mrow><mi>i</mi><mi>n</mi></mrow></msub><mo>−</mo><msup><mi>C</mi><mo>*</mo></msup></mrow><msup><mrow><mo stretchy="true" form="prefix">(</mo><mn>1</mn><mo>+</mo><mfrac><mi>k</mi><mrow><mi>N</mi><mo>⋅</mo><mi>H</mi><mi>L</mi><mi>R</mi></mrow></mfrac><mo stretchy="true" form="postfix">)</mo></mrow><mi>N</mi></msup></mfrac><mo>+</mo><msup><mi>C</mi><mo>*</mo></msup></mrow><annotation encoding="application/x-tex">C_{out} = \frac{C_{in} - C^{*}}{(1 + \frac{k}{N \cdot HLR})^{N}} + C^*</annotation></semantics></math><table class="table table" style="width: auto !important; margin-left: auto; margin-right: auto;">
 <caption>
 Model variables
 </caption>
@@ -158,75 +176,74 @@ Units
 <tbody>
 <tr>
 <td style="text-align:left;">
-<span class="math inline">\(Q\)</span>
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>Q</mi><annotation encoding="application/x-tex">Q</annotation></semantics></math>
 </td>
 <td style="text-align:left;">
 Flow
 </td>
 <td style="text-align:center;">
-<span class="math inline">\(\mathrm{m^{3}\ y^{-1}}\)</span>
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msup><mi mathvariant="normal">m</mi><mn mathvariant="normal">3</mn></msup><mspace width="0.222em"></mspace><msup><mi mathvariant="normal">y</mi><mrow><mi mathvariant="normal">−</mi><mn mathvariant="normal">1</mn></mrow></msup></mrow><annotation encoding="application/x-tex">\mathrm{m^{3}\ y^{-1}}</annotation></semantics></math>
 </td>
 </tr>
 <tr>
 <td style="text-align:left;">
-<span class="math inline">\(A\)</span>
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>A</mi><annotation encoding="application/x-tex">A</annotation></semantics></math>
 </td>
 <td style="text-align:left;">
 Area
 </td>
 <td style="text-align:center;">
-<span class="math inline">\(\mathrm{m^{2}}\)</span>
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msup><mi mathvariant="normal">m</mi><mn mathvariant="normal">2</mn></msup><annotation encoding="application/x-tex">\mathrm{m^{2}}</annotation></semantics></math>
 </td>
 </tr>
 <tr>
 <td style="text-align:left;">
-<span class="math inline">\(HLR\)</span>
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>H</mi><mi>L</mi><mi>R</mi></mrow><annotation encoding="application/x-tex">HLR</annotation></semantics></math>
 </td>
 <td style="text-align:left;">
-Hydraulic Looading Rate <span class="math inline">\(HLR = Q/A\)</span>
+Hydraulic Looading Rate
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>H</mi><mi>L</mi><mi>R</mi><mo>=</mo><mi>Q</mi><mi>/</mi><mi>A</mi></mrow><annotation encoding="application/x-tex">HLR = Q/A</annotation></semantics></math>
 </td>
 <td style="text-align:center;">
-<span class="math inline">\(\mathrm{m\ y^{-1}}\)</span>
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi mathvariant="normal">m</mi><mspace width="0.222em"></mspace><msup><mi mathvariant="normal">y</mi><mrow><mi mathvariant="normal">−</mi><mn mathvariant="normal">1</mn></mrow></msup></mrow><annotation encoding="application/x-tex">\mathrm{m\ y^{-1}}</annotation></semantics></math>
 </td>
 </tr>
 <tr>
 <td style="text-align:left;">
-<span class="math inline">\(C_{in}\)</span>,<span class="math inline">\(C_{out}\)</span>
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>C</mi><mrow><mi>i</mi><mi>n</mi></mrow></msub><annotation encoding="application/x-tex">C_{in}</annotation></semantics></math>,<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>C</mi><mrow><mi>o</mi><mi>u</mi><mi>t</mi></mrow></msub><annotation encoding="application/x-tex">C_{out}</annotation></semantics></math>
 </td>
 <td style="text-align:left;">
 Inflow/Outflow Concentration
 </td>
 <td style="text-align:center;">
-<span class="math inline">\(\mathrm{mg\ m^{-3}\ or \ \mu g\
-L^{-1}}\)</span>
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi mathvariant="normal">m</mi><mi mathvariant="normal">g</mi><mspace width="0.222em"></mspace><msup><mi mathvariant="normal">m</mi><mrow><mi mathvariant="normal">−</mi><mn mathvariant="normal">3</mn></mrow></msup><mspace width="0.222em"></mspace><mi mathvariant="normal">o</mi><mi mathvariant="normal">r</mi><mspace width="0.222em"></mspace><mi mathvariant="normal">μ</mi><mi mathvariant="normal">g</mi><mspace width="0.222em"></mspace><msup><mi mathvariant="normal">L</mi><mrow><mi mathvariant="normal">−</mi><mn mathvariant="normal">1</mn></mrow></msup></mrow><annotation encoding="application/x-tex">\mathrm{mg\ m^{-3}\ or \ \mu g\ L^{-1}}</annotation></semantics></math>
 </td>
 </tr>
 <tr>
 <td style="text-align:left;">
-<span class="math inline">\(C^*\)</span>
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msup><mi>C</mi><mo>*</mo></msup><annotation encoding="application/x-tex">C^*</annotation></semantics></math>
 </td>
 <td style="text-align:left;">
 Background concentration
 </td>
 <td style="text-align:center;">
-<span class="math inline">\(\mathrm{mg\ m^{-3}\ or \ \mu g\
-L^{-1}}\)</span>
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi mathvariant="normal">m</mi><mi mathvariant="normal">g</mi><mspace width="0.222em"></mspace><msup><mi mathvariant="normal">m</mi><mrow><mi mathvariant="normal">−</mi><mn mathvariant="normal">3</mn></mrow></msup><mspace width="0.222em"></mspace><mi mathvariant="normal">o</mi><mi mathvariant="normal">r</mi><mspace width="0.222em"></mspace><mi mathvariant="normal">μ</mi><mi mathvariant="normal">g</mi><mspace width="0.222em"></mspace><msup><mi mathvariant="normal">L</mi><mrow><mi mathvariant="normal">−</mi><mn mathvariant="normal">1</mn></mrow></msup></mrow><annotation encoding="application/x-tex">\mathrm{mg\ m^{-3}\ or \ \mu g\ L^{-1}}</annotation></semantics></math>
 </td>
 </tr>
 <tr>
 <td style="text-align:left;">
-<span class="math inline">\(k\)</span>
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>k</mi><annotation encoding="application/x-tex">k</annotation></semantics></math>
 </td>
 <td style="text-align:left;">
 areal net settling (removal velocity)
 </td>
 <td style="text-align:center;">
-<span class="math inline">\(\mathrm{m\ y^{-1}}\)</span>
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi mathvariant="normal">m</mi><mspace width="0.222em"></mspace><msup><mi mathvariant="normal">y</mi><mrow><mi mathvariant="normal">−</mi><mn mathvariant="normal">1</mn></mrow></msup></mrow><annotation encoding="application/x-tex">\mathrm{m\ y^{-1}}</annotation></semantics></math>
 </td>
 </tr>
 <tr>
 <td style="text-align:left;">
-<span class="math inline">\(N\)</span>
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>N</mi><annotation encoding="application/x-tex">N</annotation></semantics></math>
 </td>
 <td style="text-align:left;">
 Number of tanks in series
@@ -237,71 +254,83 @@ unitless
 </tr>
 </tbody>
 </table>
-<p>When <span class="math inline">\(N = 1\)</span> it indicates a fully
-mixed tank (conservative), meanwhile <span class="math inline">\(N = 3 -
-5\)</span> is the common STA design range.</p>
+<p>When
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>N</mi><mo>=</mo><mn>1</mn></mrow><annotation encoding="application/x-tex">N = 1</annotation></semantics></math>
+it indicates a fully mixed tank (conservative), meanwhile
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>N</mi><mo>=</mo><mn>3</mn><mo>−</mo><mn>5</mn></mrow><annotation encoding="application/x-tex">N = 3 - 5</annotation></semantics></math>
+is the common STA design range.</p>
 <p>Using equation above, here are some useful limited cases and/or
 simplifications of the model.</p>
 <ul>
 <li>
-<span class="math inline">\(N = 1\)</span> (single Continuously
-Stirred Tank Reactor [CSTR])</li>
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>N</mi><mo>=</mo><mn>1</mn></mrow><annotation encoding="application/x-tex">N = 1</annotation></semantics></math>
+(single Continuously Stirred Tank Reactor [CSTR])</li>
 </ul>
-<p><span class="math display">\[C_{out} = C^{*} + \frac{C_{in} -
-C^{*}}{1 + \frac{k}{N \cdot HLR}}\]</span></p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>C</mi><mrow><mi>o</mi><mi>u</mi><mi>t</mi></mrow></msub><mo>=</mo><msup><mi>C</mi><mo>*</mo></msup><mo>+</mo><mfrac><mrow><msub><mi>C</mi><mrow><mi>i</mi><mi>n</mi></mrow></msub><mo>−</mo><msup><mi>C</mi><mo>*</mo></msup></mrow><mrow><mn>1</mn><mo>+</mo><mfrac><mi>k</mi><mrow><mi>N</mi><mo>⋅</mo><mi>H</mi><mi>L</mi><mi>R</mi></mrow></mfrac></mrow></mfrac></mrow><annotation encoding="application/x-tex">C_{out} = C^{*} + \frac{C_{in} - C^{*}}{1 + \frac{k}{N \cdot HLR}}</annotation></semantics></math></p>
 <ul>
 <li>
-<span class="math inline">\(N \to\infty\)</span> (plug-flow
-limit)</li>
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>N</mi><mo>→</mo><mi>∞</mi></mrow><annotation encoding="application/x-tex">N \to\infty</annotation></semantics></math>
+(plug-flow limit)</li>
 </ul>
-<p><span class="math display">\[C_{out} = C^{*} + (C_{in} - C^{*})e^{-k
-/ HLR}\]</span></p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>C</mi><mrow><mi>o</mi><mi>u</mi><mi>t</mi></mrow></msub><mo>=</mo><msup><mi>C</mi><mo>*</mo></msup><mo>+</mo><mrow><mo stretchy="true" form="prefix">(</mo><msub><mi>C</mi><mrow><mi>i</mi><mi>n</mi></mrow></msub><mo>−</mo><msup><mi>C</mi><mo>*</mo></msup><mo stretchy="true" form="postfix">)</mo></mrow><msup><mi>e</mi><mrow><mi>−</mi><mi>k</mi><mi>/</mi><mi>H</mi><mi>L</mi><mi>R</mi></mrow></msup></mrow><annotation encoding="application/x-tex">C_{out} = C^{*} + (C_{in} - C^{*})e^{-k / HLR}</annotation></semantics></math></p>
 <p><br></p>
 <p>Using the tank in series equation, here is the inverse
 relationship</p>
 <p><br></p>
 <div class="section level4">
 <h4 id="solve-for-required-hlr-given-target-c_out">
-<strong>Solve for required HLR (<em>given target <span class="math inline">\(C_{out}\)</span></em>)</strong><a class="anchor" aria-label="anchor" href="#solve-for-required-hlr-given-target-c_out"></a>
+<strong>Solve for required HLR (<em>given target
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>C</mi><mrow><mi>o</mi><mi>u</mi><mi>t</mi></mrow></msub><annotation encoding="application/x-tex">C_{out}</annotation></semantics></math></em>)</strong><a class="anchor" aria-label="anchor" href="#solve-for-required-hlr-given-target-c_out"></a>
 </h4>
-<p>Rearrange the <span class="math inline">\(NKC^*\)</span> formula:</p>
-<p><span class="math display">\[\bigg( 1 + \frac{k}{N \cdot HLR}
-\bigg)^N = \frac{C_{in} - C^*}{C_{out} - C^{*}} \]</span> <span class="math display">\[HLR = \frac{k/N}{\big( \frac{C_{in} -
-C^*}{C_{out} - C^{*}} \big)^{1/N} -1}\]</span> Then area for a specified
-flow <span class="math inline">\(Q\)</span> is:</p>
-<p><span class="math display">\[A = \frac{Q}{HLR}\]</span>
-<strong>Domain constraints:</strong> you need <span class="math inline">\(C_{out} &gt; C^{*}\)</span> and <span class="math inline">\(C_{in} &gt; C^{*}\)</span>. If <span class="math inline">\(C_{out} \le C^{*}\)</span>, the outflow is
-exceeding the assumed background concentration.</p>
+<p>Rearrange the
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>N</mi><mi>K</mi><msup><mi>C</mi><mo>*</mo></msup></mrow><annotation encoding="application/x-tex">NKC^*</annotation></semantics></math>
+formula:</p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mo minsize="2.4" maxsize="2.4" stretchy="false" form="prefix">(</mo><mn>1</mn><mo>+</mo><mfrac><mi>k</mi><mrow><mi>N</mi><mo>⋅</mo><mi>H</mi><mi>L</mi><mi>R</mi></mrow></mfrac><msup><mo minsize="2.4" maxsize="2.4" stretchy="false" form="postfix">)</mo><mi>N</mi></msup><mo>=</mo><mfrac><mrow><msub><mi>C</mi><mrow><mi>i</mi><mi>n</mi></mrow></msub><mo>−</mo><msup><mi>C</mi><mo>*</mo></msup></mrow><mrow><msub><mi>C</mi><mrow><mi>o</mi><mi>u</mi><mi>t</mi></mrow></msub><mo>−</mo><msup><mi>C</mi><mo>*</mo></msup></mrow></mfrac></mrow><annotation encoding="application/x-tex">\bigg( 1 + \frac{k}{N \cdot HLR} \bigg)^N = \frac{C_{in} - C^*}{C_{out} - C^{*}} </annotation></semantics></math><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>H</mi><mi>L</mi><mi>R</mi><mo>=</mo><mfrac><mrow><mi>k</mi><mi>/</mi><mi>N</mi></mrow><mrow><mo minsize="1.2" maxsize="1.2" stretchy="false" form="prefix">(</mo><mfrac><mrow><msub><mi>C</mi><mrow><mi>i</mi><mi>n</mi></mrow></msub><mo>−</mo><msup><mi>C</mi><mo>*</mo></msup></mrow><mrow><msub><mi>C</mi><mrow><mi>o</mi><mi>u</mi><mi>t</mi></mrow></msub><mo>−</mo><msup><mi>C</mi><mo>*</mo></msup></mrow></mfrac><msup><mo minsize="1.2" maxsize="1.2" stretchy="false" form="postfix">)</mo><mrow><mn>1</mn><mi>/</mi><mi>N</mi></mrow></msup><mo>−</mo><mn>1</mn></mrow></mfrac></mrow><annotation encoding="application/x-tex">HLR = \frac{k/N}{\big( \frac{C_{in} - C^*}{C_{out} - C^{*}} \big)^{1/N} -1}</annotation></semantics></math>
+Then area for a specified flow
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>Q</mi><annotation encoding="application/x-tex">Q</annotation></semantics></math>
+is:</p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>A</mi><mo>=</mo><mfrac><mi>Q</mi><mrow><mi>H</mi><mi>L</mi><mi>R</mi></mrow></mfrac></mrow><annotation encoding="application/x-tex">A = \frac{Q}{HLR}</annotation></semantics></math><strong>Domain constraints:</strong> you need
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>C</mi><mrow><mi>o</mi><mi>u</mi><mi>t</mi></mrow></msub><mo>&gt;</mo><msup><mi>C</mi><mo>*</mo></msup></mrow><annotation encoding="application/x-tex">C_{out} &gt; C^{*}</annotation></semantics></math>
+and
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>C</mi><mrow><mi>i</mi><mi>n</mi></mrow></msub><mo>&gt;</mo><msup><mi>C</mi><mo>*</mo></msup></mrow><annotation encoding="application/x-tex">C_{in} &gt; C^{*}</annotation></semantics></math>.
+If
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>C</mi><mrow><mi>o</mi><mi>u</mi><mi>t</mi></mrow></msub><mo>≤</mo><msup><mi>C</mi><mo>*</mo></msup></mrow><annotation encoding="application/x-tex">C_{out} \le C^{*}</annotation></semantics></math>,
+the outflow is exceeding the assumed background concentration.</p>
 <p><br></p>
 </div>
 <div class="section level4">
 <h4 id="solve-for-k-given-observed-c_inc_out-and-hlr">
-<strong>Solve for k (given observed <span class="math inline">\(C_{in}\)</span>,<span class="math inline">\(C_{out}\)</span> and <span class="math inline">\(HLR\)</span>)</strong><a class="anchor" aria-label="anchor" href="#solve-for-k-given-observed-c_inc_out-and-hlr"></a>
+<strong>Solve for k (given observed
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>C</mi><mrow><mi>i</mi><mi>n</mi></mrow></msub><annotation encoding="application/x-tex">C_{in}</annotation></semantics></math>,<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>C</mi><mrow><mi>o</mi><mi>u</mi><mi>t</mi></mrow></msub><annotation encoding="application/x-tex">C_{out}</annotation></semantics></math>
+and
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>H</mi><mi>L</mi><mi>R</mi></mrow><annotation encoding="application/x-tex">HLR</annotation></semantics></math>)</strong><a class="anchor" aria-label="anchor" href="#solve-for-k-given-observed-c_inc_out-and-hlr"></a>
 </h4>
-<p><span class="math display">\[k = N \cdot HLR \bigg[ \bigg(
-\frac{C_{in} - C^{*}}{C_{out} - C^{*}} \bigg)^{1/N} -1 \bigg]\]</span>
-This is the equivalent settling velocity (<span class="math inline">\(m
-\ yr^{-1}\)</span>) implied by observed performance (at the chosen <span class="math inline">\(N\)</span> and $C^{<em>8</em>}).</p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>k</mi><mo>=</mo><mi>N</mi><mo>⋅</mo><mi>H</mi><mi>L</mi><mi>R</mi><mo minsize="2.4" maxsize="2.4" stretchy="false" form="prefix">[</mo><mo minsize="2.4" maxsize="2.4" stretchy="false" form="prefix">(</mo><mfrac><mrow><msub><mi>C</mi><mrow><mi>i</mi><mi>n</mi></mrow></msub><mo>−</mo><msup><mi>C</mi><mo>*</mo></msup></mrow><mrow><msub><mi>C</mi><mrow><mi>o</mi><mi>u</mi><mi>t</mi></mrow></msub><mo>−</mo><msup><mi>C</mi><mo>*</mo></msup></mrow></mfrac><msup><mo minsize="2.4" maxsize="2.4" stretchy="false" form="postfix">)</mo><mrow><mn>1</mn><mi>/</mi><mi>N</mi></mrow></msup><mo>−</mo><mn>1</mn><mo minsize="2.4" maxsize="2.4" stretchy="false" form="postfix">]</mo></mrow><annotation encoding="application/x-tex">k = N \cdot HLR \bigg[ \bigg( \frac{C_{in} - C^{*}}{C_{out} - C^{*}} \bigg)^{1/N} -1 \bigg]</annotation></semantics></math>
+This is the equivalent settling velocity
+(<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>m</mi><mspace width="0.222em"></mspace><mi>y</mi><msup><mi>r</mi><mrow><mi>−</mi><mn>1</mn></mrow></msup></mrow><annotation encoding="application/x-tex">m \ yr^{-1}</annotation></semantics></math>)
+implied by observed performance (at the chosen
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>N</mi><annotation encoding="application/x-tex">N</annotation></semantics></math>
+and $C^{<em>8</em>}).</p>
 <ul>
 <li>
-<span class="math inline">\(N = 1\)</span> (single Continuously
-Stirred Tank Reactor [CSTR])</li>
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>N</mi><mo>=</mo><mn>1</mn></mrow><annotation encoding="application/x-tex">N = 1</annotation></semantics></math>
+(single Continuously Stirred Tank Reactor [CSTR])</li>
 </ul>
-<p><span class="math display">\[k = HLR \cdot \bigg(
-\frac{C_{in}-C^{*}}{C_{out}-C^{*}} -1 \bigg)\]</span></p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>k</mi><mo>=</mo><mi>H</mi><mi>L</mi><mi>R</mi><mo>⋅</mo><mo minsize="2.4" maxsize="2.4" stretchy="false" form="prefix">(</mo><mfrac><mrow><msub><mi>C</mi><mrow><mi>i</mi><mi>n</mi></mrow></msub><mo>−</mo><msup><mi>C</mi><mo>*</mo></msup></mrow><mrow><msub><mi>C</mi><mrow><mi>o</mi><mi>u</mi><mi>t</mi></mrow></msub><mo>−</mo><msup><mi>C</mi><mo>*</mo></msup></mrow></mfrac><mo>−</mo><mn>1</mn><mo minsize="2.4" maxsize="2.4" stretchy="false" form="postfix">)</mo></mrow><annotation encoding="application/x-tex">k = HLR \cdot \bigg( \frac{C_{in}-C^{*}}{C_{out}-C^{*}} -1 \bigg)</annotation></semantics></math></p>
 <ul>
 <li>
-<span class="math inline">\(N \to\infty\)</span> (plug-flow
-limit)</li>
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>N</mi><mo>→</mo><mi>∞</mi></mrow><annotation encoding="application/x-tex">N \to\infty</annotation></semantics></math>
+(plug-flow limit)</li>
 </ul>
-<p><span class="math display">\[k = HLR \cdot ln\bigg(
-\frac{C_{in}-C^{*}}{C_{out}-C^{*}} \bigg)\]</span></p>
-<p>This is often the method to estimate the upper bounds of <span class="math inline">\(k\)</span> from observed annual data.</p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>k</mi><mo>=</mo><mi>H</mi><mi>L</mi><mi>R</mi><mo>⋅</mo><mi>l</mi><mi>n</mi><mo minsize="2.4" maxsize="2.4" stretchy="false" form="prefix">(</mo><mfrac><mrow><msub><mi>C</mi><mrow><mi>i</mi><mi>n</mi></mrow></msub><mo>−</mo><msup><mi>C</mi><mo>*</mo></msup></mrow><mrow><msub><mi>C</mi><mrow><mi>o</mi><mi>u</mi><mi>t</mi></mrow></msub><mo>−</mo><msup><mi>C</mi><mo>*</mo></msup></mrow></mfrac><mo minsize="2.4" maxsize="2.4" stretchy="false" form="postfix">)</mo></mrow><annotation encoding="application/x-tex">k = HLR \cdot ln\bigg( \frac{C_{in}-C^{*}}{C_{out}-C^{*}} \bigg)</annotation></semantics></math></p>
+<p>This is often the method to estimate the upper bounds of
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>k</mi><annotation encoding="application/x-tex">k</annotation></semantics></math>
+from observed annual data.</p>
 <p><br></p>
 <ol start="2" style="list-style-type: decimal">
 <li>DMSTA Model: Conceptually represented as</li>
 </ol>
-<p><img src="kHLR_relationships_files/figure-html/DMSTA%20plot-1.png" width="624" style="display: block; margin: auto;"></p>
+<p><img src="kHLR_relationships_files/figure-html/DMSTA%20plot-1.png" class="r-plt" alt="" width="624" style="display: block; margin: auto;"></p>
 <table class="table table" style="width: auto !important; margin-left: auto; margin-right: auto;">
 <caption>
 DMSTA State Variables and Parameters
@@ -331,7 +360,7 @@ M
 Water column P storage
 </td>
 <td style="text-align:left;">
-<span class="math inline">\(\mathrm{mg\ m^{-2}}\)</span>
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi mathvariant="normal">m</mi><mi mathvariant="normal">g</mi><mspace width="0.222em"></mspace><msup><mi mathvariant="normal">m</mi><mrow><mi mathvariant="normal">−</mi><mn mathvariant="normal">2</mn></mrow></msup></mrow><annotation encoding="application/x-tex">\mathrm{mg\ m^{-2}}</annotation></semantics></math>
 </td>
 </tr>
 <tr>
@@ -342,7 +371,7 @@ S
 Biomass P storage
 </td>
 <td style="text-align:left;">
-<span class="math inline">\(\mathrm{mg\ m^{-2}}\)</span>
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi mathvariant="normal">m</mi><mi mathvariant="normal">g</mi><mspace width="0.222em"></mspace><msup><mi mathvariant="normal">m</mi><mrow><mi mathvariant="normal">−</mi><mn mathvariant="normal">2</mn></mrow></msup></mrow><annotation encoding="application/x-tex">\mathrm{mg\ m^{-2}}</annotation></semantics></math>
 </td>
 </tr>
 <tr>
@@ -353,7 +382,7 @@ Z
 Mean water depth
 </td>
 <td style="text-align:left;">
-<span class="math inline">\(m\)</span>
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>m</mi><annotation encoding="application/x-tex">m</annotation></semantics></math>
 </td>
 </tr>
 <tr grouplength="2">
@@ -369,7 +398,7 @@ L
 External P load
 </td>
 <td style="text-align:left;">
-<span class="math inline">\(\mathrm{mg\ m^{-2}\ yr^{-1}}\)</span>
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi mathvariant="normal">m</mi><mi mathvariant="normal">g</mi><mspace width="0.222em"></mspace><msup><mi mathvariant="normal">m</mi><mrow><mi mathvariant="normal">−</mi><mn mathvariant="normal">2</mn></mrow></msup><mspace width="0.222em"></mspace><mi mathvariant="normal">y</mi><msup><mi mathvariant="normal">r</mi><mrow><mi mathvariant="normal">−</mi><mn mathvariant="normal">1</mn></mrow></msup></mrow><annotation encoding="application/x-tex">\mathrm{mg\ m^{-2}\ yr^{-1}}</annotation></semantics></math>
 </td>
 </tr>
 <tr>
@@ -380,7 +409,7 @@ Q
 Outflow rate
 </td>
 <td style="text-align:left;">
-<span class="math inline">\(\mathrm{m\ yr^{-1}}\)</span>
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi mathvariant="normal">m</mi><mspace width="0.222em"></mspace><mi mathvariant="normal">y</mi><msup><mi mathvariant="normal">r</mi><mrow><mi mathvariant="normal">−</mi><mn mathvariant="normal">1</mn></mrow></msup></mrow><annotation encoding="application/x-tex">\mathrm{m\ yr^{-1}}</annotation></semantics></math>
 </td>
 </tr>
 <tr grouplength="3">
@@ -396,7 +425,7 @@ K1
 Maximum uptake rate
 </td>
 <td style="text-align:left;">
-<span class="math inline">\(\mathrm{m^{3}\ mg^{-1}\ yr^{-1}}\)</span>
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msup><mi mathvariant="normal">m</mi><mn mathvariant="normal">3</mn></msup><mspace width="0.222em"></mspace><mi mathvariant="normal">m</mi><msup><mi mathvariant="normal">g</mi><mrow><mi mathvariant="normal">−</mi><mn mathvariant="normal">1</mn></mrow></msup><mspace width="0.222em"></mspace><mi mathvariant="normal">y</mi><msup><mi mathvariant="normal">r</mi><mrow><mi mathvariant="normal">−</mi><mn mathvariant="normal">1</mn></mrow></msup></mrow><annotation encoding="application/x-tex">\mathrm{m^{3}\ mg^{-1}\ yr^{-1}}</annotation></semantics></math>
 </td>
 </tr>
 <tr>
@@ -407,7 +436,7 @@ K2
 Recycle rate
 </td>
 <td style="text-align:left;">
-<span class="math inline">\(\mathrm{m^{2}\ mg^{-1}\ yr^{-1}}\)</span>
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msup><mi mathvariant="normal">m</mi><mn mathvariant="normal">2</mn></msup><mspace width="0.222em"></mspace><mi mathvariant="normal">m</mi><msup><mi mathvariant="normal">g</mi><mrow><mi mathvariant="normal">−</mi><mn mathvariant="normal">1</mn></mrow></msup><mspace width="0.222em"></mspace><mi mathvariant="normal">y</mi><msup><mi mathvariant="normal">r</mi><mrow><mi mathvariant="normal">−</mi><mn mathvariant="normal">1</mn></mrow></msup></mrow><annotation encoding="application/x-tex">\mathrm{m^{2}\ mg^{-1}\ yr^{-1}}</annotation></semantics></math>
 </td>
 </tr>
 <tr>
@@ -418,7 +447,7 @@ K3
 Burial rate
 </td>
 <td style="text-align:left;">
-<span class="math inline">\(\mathrm{yr^{-1}}\)</span>
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi mathvariant="normal">y</mi><msup><mi mathvariant="normal">r</mi><mrow><mi mathvariant="normal">−</mi><mn mathvariant="normal">1</mn></mrow></msup></mrow><annotation encoding="application/x-tex">\mathrm{yr^{-1}}</annotation></semantics></math>
 </td>
 </tr>
 </tbody>
@@ -441,7 +470,7 @@ Equation
 Storage:
 </td>
 <td style="text-align:center;">
-<span class="math inline">\(K1 \cdot C = K2 \cdot S + K3\)</span>
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>K</mi><mn>1</mn><mo>⋅</mo><mi>C</mi><mo>=</mo><mi>K</mi><mn>2</mn><mo>⋅</mo><mi>S</mi><mo>+</mo><mi>K</mi><mn>3</mn></mrow><annotation encoding="application/x-tex">K1 \cdot C = K2 \cdot S + K3</annotation></semantics></math>
 </td>
 </tr>
 <tr>
@@ -449,7 +478,7 @@ Storage:
 Overall:
 </td>
 <td style="text-align:center;">
-<span class="math inline">\(L - Q \cdot C = K3 \cdot S\)</span>
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>L</mi><mo>−</mo><mi>Q</mi><mo>⋅</mo><mi>C</mi><mo>=</mo><mi>K</mi><mn>3</mn><mo>⋅</mo><mi>S</mi></mrow><annotation encoding="application/x-tex">L - Q \cdot C = K3 \cdot S</annotation></semantics></math>
 </td>
 </tr>
 <tr>
@@ -457,8 +486,7 @@ Overall:
 Solution for C:
 </td>
 <td style="text-align:center;">
-<span class="math inline">\(C = \frac{(K2 \cdot L + K3^{2})}{K3 \cdot K1
-+ Q \cdot K2}\)</span>
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>C</mi><mo>=</mo><mfrac><mrow><mo stretchy="true" form="prefix">(</mo><mi>K</mi><mn>2</mn><mo>⋅</mo><mi>L</mi><mo>+</mo><mi>K</mi><msup><mn>3</mn><mn>2</mn></msup><mo stretchy="true" form="postfix">)</mo></mrow><mrow><mi>K</mi><mn>3</mn><mo>⋅</mo><mi>K</mi><mn>1</mn><mo>+</mo><mi>Q</mi><mo>⋅</mo><mi>K</mi><mn>2</mn></mrow></mfrac></mrow><annotation encoding="application/x-tex">C = \frac{(K2 \cdot L + K3^{2})}{K3 \cdot K1 + Q \cdot K2}</annotation></semantics></math>
 </td>
 </tr>
 <tr>
@@ -466,36 +494,54 @@ Solution for C:
 Solution for S:
 </td>
 <td style="text-align:center;">
-<span class="math inline">\(S = \frac{(K1 \cdot C - K3)}{K2}\)</span>
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>S</mi><mo>=</mo><mfrac><mrow><mo stretchy="true" form="prefix">(</mo><mi>K</mi><mn>1</mn><mo>⋅</mo><mi>C</mi><mo>−</mo><mi>K</mi><mn>3</mn><mo stretchy="true" form="postfix">)</mo></mrow><mrow><mi>K</mi><mn>2</mn></mrow></mfrac></mrow><annotation encoding="application/x-tex">S = \frac{(K1 \cdot C - K3)}{K2}</annotation></semantics></math>
 </td>
 </tr>
 </tbody>
 </table>
 <p>Whereas the steady-state DMSTA solution is equivalent to a simple
-<span class="math inline">\(KC^{*}\)</span> model with <span class="math inline">\(C^{*} = C_0\)</span> and <span class="math inline">\(K\)</span> is interpreted as a net settling rate
-(<span class="math inline">\(m \ yr^{-1}\)</span>). Therefore, for
-“equivalent design model” purposes <span class="math inline">\(C^{*}
-\equiv C_{0}\)</span> and <span class="math inline">\(k \equiv
-K\)</span>. This means that the DMSTAs calibrated (<span class="math inline">\(K\)</span> and <span class="math inline">\(C_{0}\)</span>) can be subsituted directly into
-the <span class="math inline">\(NKC^{*}\)</span> model.</p>
-<p>Where <span class="math display">\[C = \frac{(L + K \cdot C_{0})}{(K
-+ Q)}\]</span></p>
-<p><span class="math display">\[S = 1000 \cdot \frac{C-C_0}{C1 -
-C_0}\]</span></p>
-<p><img src="kHLR_relationships_files/figure-html/DMSTA%20plot2-1.png" width="50%" style="display: block; margin: auto;"></p>
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>K</mi><msup><mi>C</mi><mo>*</mo></msup></mrow><annotation encoding="application/x-tex">KC^{*}</annotation></semantics></math>
+model with
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msup><mi>C</mi><mo>*</mo></msup><mo>=</mo><msub><mi>C</mi><mn>0</mn></msub></mrow><annotation encoding="application/x-tex">C^{*} = C_0</annotation></semantics></math>
+and
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>K</mi><annotation encoding="application/x-tex">K</annotation></semantics></math>
+is interpreted as a net settling rate
+(<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>m</mi><mspace width="0.222em"></mspace><mi>y</mi><msup><mi>r</mi><mrow><mi>−</mi><mn>1</mn></mrow></msup></mrow><annotation encoding="application/x-tex">m \ yr^{-1}</annotation></semantics></math>).
+Therefore, for “equivalent design model” purposes
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msup><mi>C</mi><mo>*</mo></msup><mo>≡</mo><msub><mi>C</mi><mn>0</mn></msub></mrow><annotation encoding="application/x-tex">C^{*} \equiv C_{0}</annotation></semantics></math>
+and
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>k</mi><mo>≡</mo><mi>K</mi></mrow><annotation encoding="application/x-tex">k \equiv K</annotation></semantics></math>.
+This means that the DMSTAs calibrated
+(<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>K</mi><annotation encoding="application/x-tex">K</annotation></semantics></math>
+and
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>C</mi><mn>0</mn></msub><annotation encoding="application/x-tex">C_{0}</annotation></semantics></math>)
+can be subsituted directly into the
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>N</mi><mi>K</mi><msup><mi>C</mi><mo>*</mo></msup></mrow><annotation encoding="application/x-tex">NKC^{*}</annotation></semantics></math>
+model.</p>
+<p>Where
+<math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>C</mi><mo>=</mo><mfrac><mrow><mo stretchy="true" form="prefix">(</mo><mi>L</mi><mo>+</mo><mi>K</mi><mo>⋅</mo><msub><mi>C</mi><mn>0</mn></msub><mo stretchy="true" form="postfix">)</mo></mrow><mrow><mo stretchy="true" form="prefix">(</mo><mi>K</mi><mo>+</mo><mi>Q</mi><mo stretchy="true" form="postfix">)</mo></mrow></mfrac></mrow><annotation encoding="application/x-tex">C = \frac{(L + K \cdot C_{0})}{(K + Q)}</annotation></semantics></math></p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>S</mi><mo>=</mo><mn>1000</mn><mo>⋅</mo><mfrac><mrow><mi>C</mi><mo>−</mo><msub><mi>C</mi><mn>0</mn></msub></mrow><mrow><mi>C</mi><mn>1</mn><mo>−</mo><msub><mi>C</mi><mn>0</mn></msub></mrow></mfrac></mrow><annotation encoding="application/x-tex">S = 1000 \cdot \frac{C-C_0}{C1 - C_0}</annotation></semantics></math></p>
+<p><img src="kHLR_relationships_files/figure-html/DMSTA%20plot2-1.png" class="r-plt" alt="" width="50%" style="display: block; margin: auto;"></p>
 <p>Where,</p>
-<p><span class="math display">\[K = \frac{K2 \cdot K1}{K2}\]</span></p>
-<p>Therefore, given (<span class="math inline">\(K\)</span>,<span class="math inline">\(C_0\)</span>,<span class="math inline">\(C_1\)</span>), (<span class="math inline">\(K1\)</span>, <span class="math inline">\(K2\)</span>, <span class="math inline">\(K3\)</span>) can be estimated:</p>
-<p><span class="math display">\[K3 = K \cdot \frac{C_{1} -
-C_{0}}{1000}\]</span></p>
-<p><span class="math display">\[K1 = \frac{K3}{C_0}\]</span></p>
-<p><span class="math display">\[K_2 = \frac{K3 \cdot K1}{K}\]</span></p>
-<p>Given (<span class="math inline">\(K1\)</span>, <span class="math inline">\(K2\)</span>, <span class="math inline">\(K3\)</span>), (<span class="math inline">\(K\)</span>,<span class="math inline">\(C_0\)</span>,<span class="math inline">\(C_1\)</span>) can be estimated:</p>
-<p><span class="math display">\[C_{0} = \frac{K_3}{K_1}\]</span></p>
-<p><span class="math display">\[K = \frac{K_1 \cdot
-K_3}{K_2}\]</span></p>
-<p><span class="math display">\[ C_1 = \frac{1000 \cdot K_{2} +
-K_{3}}{K_{1}}\]</span></p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>K</mi><mo>=</mo><mfrac><mrow><mi>K</mi><mn>2</mn><mo>⋅</mo><mi>K</mi><mn>1</mn></mrow><mrow><mi>K</mi><mn>2</mn></mrow></mfrac></mrow><annotation encoding="application/x-tex">K = \frac{K2 \cdot K1}{K2}</annotation></semantics></math></p>
+<p>Therefore, given
+(<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>K</mi><annotation encoding="application/x-tex">K</annotation></semantics></math>,<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>C</mi><mn>0</mn></msub><annotation encoding="application/x-tex">C_0</annotation></semantics></math>,<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>C</mi><mn>1</mn></msub><annotation encoding="application/x-tex">C_1</annotation></semantics></math>),
+(<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>K</mi><mn>1</mn></mrow><annotation encoding="application/x-tex">K1</annotation></semantics></math>,
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>K</mi><mn>2</mn></mrow><annotation encoding="application/x-tex">K2</annotation></semantics></math>,
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>K</mi><mn>3</mn></mrow><annotation encoding="application/x-tex">K3</annotation></semantics></math>)
+can be estimated:</p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>K</mi><mn>3</mn><mo>=</mo><mi>K</mi><mo>⋅</mo><mfrac><mrow><msub><mi>C</mi><mn>1</mn></msub><mo>−</mo><msub><mi>C</mi><mn>0</mn></msub></mrow><mn>1000</mn></mfrac></mrow><annotation encoding="application/x-tex">K3 = K \cdot \frac{C_{1} - C_{0}}{1000}</annotation></semantics></math></p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>K</mi><mn>1</mn><mo>=</mo><mfrac><mrow><mi>K</mi><mn>3</mn></mrow><msub><mi>C</mi><mn>0</mn></msub></mfrac></mrow><annotation encoding="application/x-tex">K1 = \frac{K3}{C_0}</annotation></semantics></math></p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>K</mi><mn>2</mn></msub><mo>=</mo><mfrac><mrow><mi>K</mi><mn>3</mn><mo>⋅</mo><mi>K</mi><mn>1</mn></mrow><mi>K</mi></mfrac></mrow><annotation encoding="application/x-tex">K_2 = \frac{K3 \cdot K1}{K}</annotation></semantics></math></p>
+<p>Given
+(<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>K</mi><mn>1</mn></mrow><annotation encoding="application/x-tex">K1</annotation></semantics></math>,
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>K</mi><mn>2</mn></mrow><annotation encoding="application/x-tex">K2</annotation></semantics></math>,
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>K</mi><mn>3</mn></mrow><annotation encoding="application/x-tex">K3</annotation></semantics></math>),
+(<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>K</mi><annotation encoding="application/x-tex">K</annotation></semantics></math>,<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>C</mi><mn>0</mn></msub><annotation encoding="application/x-tex">C_0</annotation></semantics></math>,<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>C</mi><mn>1</mn></msub><annotation encoding="application/x-tex">C_1</annotation></semantics></math>)
+can be estimated:</p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>C</mi><mn>0</mn></msub><mo>=</mo><mfrac><msub><mi>K</mi><mn>3</mn></msub><msub><mi>K</mi><mn>1</mn></msub></mfrac></mrow><annotation encoding="application/x-tex">C_{0} = \frac{K_3}{K_1}</annotation></semantics></math></p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>K</mi><mo>=</mo><mfrac><mrow><msub><mi>K</mi><mn>1</mn></msub><mo>⋅</mo><msub><mi>K</mi><mn>3</mn></msub></mrow><msub><mi>K</mi><mn>2</mn></msub></mfrac></mrow><annotation encoding="application/x-tex">K = \frac{K_1 \cdot K_3}{K_2}</annotation></semantics></math></p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>C</mi><mn>1</mn></msub><mo>=</mo><mfrac><mrow><mn>1000</mn><mo>⋅</mo><msub><mi>K</mi><mn>2</mn></msub><mo>+</mo><msub><mi>K</mi><mn>3</mn></msub></mrow><msub><mi>K</mi><mn>1</mn></msub></mfrac></mrow><annotation encoding="application/x-tex"> C_1 = \frac{1000 \cdot K_{2} + K_{3}}{K_{1}}</annotation></semantics></math></p>
 </div>
 <div class="section level3">
 <h3 id="helpful-r-code">Helpful R Code<a class="anchor" aria-label="anchor" href="#helpful-r-code"></a>
@@ -608,9 +654,7 @@ and examples.</p>
 
   <div class="col-md-3 hidden-xs hidden-sm" id="pkgdown-sidebar">
 
-        <nav id="toc" data-toggle="toc"><h2 data-toc-skip>Contents</h2>
-    </nav>
-</div>
+      </div>
 
 </div>
 
@@ -623,16 +667,16 @@ and examples.</p>
 
 <div class="pkgdown">
   <p></p>
-<p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.0.7.</p>
+<p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.2.0.</p>
 </div>
 
       </footer>
 </div>
 
-  
 
 
-  
+
+
 
   </body>
 </html>

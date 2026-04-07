@@ -19,6 +19,7 @@ test_that("dmsta_flowP_series runs and returns expected structure", {
     # cell geometry and timing
     A_cell    = 10,       # area (km^2 in your DMSTA convention)
     DutyCycle = 0.95,
+    Qimax = 0, Qomax = 0,
 
     # initial conditions for hydrology + P
     Zinit       = 100,    # cm
@@ -72,6 +73,61 @@ test_that("dmsta_flowP_series runs and returns expected structure", {
     fseep_out     = 0
   )
 
+  # ppar <- build_P_kin_slots(
+  #   mods = c("STA", "PSTA", "RES"),
+  #   registry = NULL,
+  #   pparams = params,
+  #   Dpy = 365.25,
+  #   DutyCycle = params$DutyCycle
+  # )
+  # validate_P_paramsK(ppar)
+  #
+  # tanks <- dmsta_build_tanks(params$A_cell, 3)
+  # init_P_state <- dmsta_p_init_state(
+  #     tanks,
+  #     Z_init_m = params$Zinit/100,
+  #     C_init_ppb = params$C_init_ppb,
+  #     Y_init_mgm2 = params$Y_init_mgm2
+  #   )
+  # Vint <- params$A_cell * params$Zinit/100
+  #
+  # constants <- list(
+  #   Cmax = if (is.null(params$Cmax)) 2000 else params$Cmax,
+  #   C_rain = if (is.null(params$C_rain)) 0 else params$C_rain,
+  #   DryDepo = if (is.null(params$DryDepo)) 0 else (params$DryDepo / 365.25),
+  #   seepin_conc = params$seepin_conc,
+  #   seepout_conc_max = if (!is.null(params$seepage_c)) params$seepage_c else 0,
+  #   fseep_recycle = if (!is.null(params$fseep_recycle)) params$fseep_recycle else 0,
+  #   fseep_out = if (!is.null(params$fseep_out)) params$fseep_out else 0
+  # )
+
+  # out_day1_step <- DMSTAr:::dmsta_flowP_day_steps(
+  #   V = Vint,
+  #   inputs = series[1,],
+  #   params = params,
+  #   tanks = tanks,
+  #   ppar = ppar,
+  #   P_state = init_P_state,
+  #   constants = constants
+  # )
+  # out_day1_step$accum
+  # out_day1_step$hyd
+
+  # out_day1 <- DMSTAr:::dmsta_flowP_day(
+  #   V = Vint,
+  #   inputs = series[1,],
+  #   params = params,
+  #   tanks = tanks,
+  #   ppar = ppar,
+  #   P_state = init_P_state,
+  #   constants = constants
+  # )
+  # out_day1$results$P$loads
+  # out_day1$results$P$flows
+  # out_day1$results$P$conc
+  #
+  # out_day1$budgets$mass$storage
+
   # --- Run ---
   out <- dmsta_flowP_series(
     series   = series,
@@ -81,6 +137,8 @@ test_that("dmsta_flowP_series runs and returns expected structure", {
     N_plant  = 3L,
     return_steps = FALSE
   )
+
+
 
   # --- Contract / structure ---
   expect_s3_class(out, "dmsta_result")

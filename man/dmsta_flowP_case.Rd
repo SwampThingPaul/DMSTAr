@@ -2,13 +2,17 @@
 % Please edit documentation in R/Case_Sim.R
 \name{dmsta_flowP_case}
 \alias{dmsta_flowP_case}
-\title{Run a multi-cell (network) DMSTA hydrology + phosphorus simulation}
+\title{Run a networked DMSTA hydrology–phosphorus simulation}
 \usage{
 dmsta_flowP_case(
   series,
   cells,
   Nsteps = 4L,
   N_plant = 30L,
+  Qmethod = c("RK4", "Euler", "RKF45", "custom"),
+  Pmethod = c("RK4", "Euler"),
+  integrator_fun = NULL,
+  interp_option = 2L,
   max_iter = 1L,
   conv_tol = 0.01,
   return_cell_series = TRUE,
@@ -17,72 +21,69 @@ dmsta_flowP_case(
 )
 }
 \arguments{
-\item{series}{A data.frame with required columns:
-\describe{
-\item{Date}{Date column coercible via \code{as.Date()}.}
-\item{Qi}{Watershed inflow rate (volume/day).}
-\item{Ci}{Watershed inflow concentration (ppb).}
-\item{Rain}{Rain rate (m/day).}
-\item{Et}{ET rate (m/day).}
-\item{Zcontrol}{Control depth (m).}
-}
-Optional columns include \code{Qr0}, \code{Qr1}, \code{Qr2} (release components).}
+\item{series}{Data frame of daily watershed inputs. Must include
+\code{Date}, \code{Qi}, \code{Ci}, \code{Rain}, \code{Et}, and
+\code{Zcontrol}.}
 
-\item{cells}{A list of cell definitions (e.g., created by \code{\link[=dmsta_make_cell]{dmsta_make_cell()}}).
-Each cell must include at minimum: \code{label}, \code{params}, \code{ttankS},
-\code{ppar}, and \code{constants}. Use \code{dmsta_prepare_cells_modules()} to
-populate \code{ppar/constants} or build them when creating cells.}
+\item{cells}{List of cell definitions created by
+\code{dmsta_make_cell()} and validated with
+\code{dmsta_validate_cells()}.}
 
-\item{Nsteps}{Integer. RK substeps per day used by the hydrology and P integrators.}
+\item{Nsteps}{Integer. Number of hydrology sub‑steps per day.}
 
-\item{N_plant}{Integer. Rolling window (days) used for computing \code{Z_plant}
-(rolling mean depth per cell) for reservoir penalty blending.}
+\item{N_plant}{Integer. Window length (days) for rolling mean depth
+used in reservoir penalty blending.}
 
-\item{max_iter}{Integer. Number of outer iterations (usually 1; can be used for
-convergence experiments).}
+\item{Qmethod}{Character string specifying the hydrology integrator
+(\code{"RK4"}, \code{"Euler"}, \code{"RKF45"}, or \code{"custom"}).}
 
-\item{conv_tol}{Numeric. Convergence tolerance used when \code{max_iter > 1}.}
+\item{Pmethod}{Character string specifying the phosphorus integrator
+(\code{"RK4"} or \code{"Euler"}).}
 
-\item{return_cell_series}{Logical; if \code{TRUE}, return per-cell daily series outputs.}
+\item{integrator_fun}{Optional custom hydrology integrator function.}
 
-\item{keep_Q17}{Logical; if \code{TRUE}, keep seep recycle bookkeeping stream (Q17/L17/C17).}
+\item{interp_option}{Control‑depth interpolation option (DMSTA semantics).}
 
-\item{...}{Passed to \code{dmsta_case_components()} for output normalization options
-(e.g., \code{keep_P}, \code{P_prefix}, \code{keep_list_cols}, \code{keep_extra}).}
+\item{max_iter}{Integer. Maximum number of network convergence iterations.}
+
+\item{conv_tol}{Numeric. Relative convergence tolerance on external
+phosphorus loads.}
+
+\item{return_cell_series}{Logical. If \code{TRUE}, return per‑cell
+daily output series.}
+
+\item{keep_Q17}{Logical. If \code{TRUE}, retain seep‑recycle bookkeeping
+streams (Q17/L17/C17).}
+
+\item{...}{Additional arguments passed to daily hydrology integration.}
 }
 \value{
-An object of class \code{"dmsta_network_result"} (a list) with elements:
+An object of class \code{"dmsta_network_result"} containing:
 \describe{
-\item{results}{List with \code{case} (data.frame) and \code{cells} (list of data.frames).}
-\item{budgets}{List with \code{water} and \code{mass} sublists; each includes case and cell components.}
-\item{meta}{Metadata including convergence diagnostics and the (validated) cell definitions used.}
+\item{results}{Case‑level and optional per‑cell daily output series.}
+\item{budgets}{Water and phosphorus mass budgets at case and cell level.}
+\item{meta}{Convergence diagnostics and model configuration metadata.}
 }
 }
 \description{
-Runs a DMSTA "case" simulation over a network of cells. Each cell is simulated
-in sequence each day; treated outflows (term 13) are routed downstream according
-to either:
-\itemize{
-\item a single \code{"SPLITTER"} cell with \code{SplitterFrac}, or
-\item per-cell \code{DownCell} indices (0 means terminal/out of system).
-}
+Simulates coupled hydrology and phosphorus dynamics for a network of
+interconnected DMSTA cells over a daily time series. Each cell is
+simulated sequentially within each day, with treated outflows routed
+downstream according to network topology, splitter rules, and recycle
+indices.
 }
 \details{
-Watershed inflow is distributed to cells using \code{Qin_Frac} (typically only
-for cells upstream of the splitter, matching DMSTA conventions). Recycled seepage
-transfers are handled as a one-day lagged internal transfer stream.
+This function manages network‑level state, routing, lagged recycle
+bookkeeping, and optional convergence iteration, while delegating
+per‑cell daily physics to \code{dmsta_flowP_day()}.
 
-The function:
-\enumerate{
-\item Validates and normalizes cell definitions (\code{dmsta_validate_cells()}).
-\item Initializes per-cell volumes, tanks, and P states (\code{dmsta_init_case_state()}).
-\item Runs each day forward, simulating each cell sequentially and routing treated
-outflows to downstream cells.
-\item Accumulates case-level stream accounting (Q3, Q7, Q13, Q14, Q25, Q26, optional Q17)
-and corresponding loads/concentrations.
-\item Computes case-level water and phosphorus budgets, including a transit reservoir
-for lagged internal transfer (\code{Recycle}).
-}
+Network routing follows DMSTA conventions. Treated outflows are routed
+either to a downstream cell or out of system, while bypass, release,
+and seepage discharge streams leave the system immediately. Lagged
+seepage recycle is tracked explicitly as an internal transit reservoir.
+
+For strict DMSTA parity, use \code{Qmethod = "RK4"} and
+\code{Pmethod = "RK4"} with no operational overrides.
 }
 \examples{
 # Read data (internal)

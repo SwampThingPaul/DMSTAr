@@ -503,66 +503,58 @@ dmsta_case_components <- function(
   out
 }
 
-#' Run a multi-cell (network) DMSTA hydrology + phosphorus simulation
+#' Run a networked DMSTA hydrology–phosphorus simulation
 #'
-#' Runs a DMSTA "case" simulation over a network of cells. Each cell is simulated
-#' in sequence each day; treated outflows (term 13) are routed downstream according
-#' to either:
-#' \itemize{
-#'   \item a single `"SPLITTER"` cell with `SplitterFrac`, or
-#'   \item per-cell `DownCell` indices (0 means terminal/out of system).
+#' Simulates coupled hydrology and phosphorus dynamics for a network of
+#' interconnected DMSTA cells over a daily time series. Each cell is
+#' simulated sequentially within each day, with treated outflows routed
+#' downstream according to network topology, splitter rules, and recycle
+#' indices.
+#'
+#' This function manages network‑level state, routing, lagged recycle
+#' bookkeeping, and optional convergence iteration, while delegating
+#' per‑cell daily physics to `dmsta_flowP_day()`.
+#'
+#' @param series Data frame of daily watershed inputs. Must include
+#'   `Date`, `Qi`, `Ci`, `Rain`, `Et`, and
+#'   `Zcontrol`.
+#' @param cells List of cell definitions created by
+#'   `dmsta_make_cell()` and validated with
+#'   `dmsta_validate_cells()`.
+#' @param Nsteps Integer. Number of hydrology sub‑steps per day.
+#' @param N_plant Integer. Window length (days) for rolling mean depth
+#'   used in reservoir penalty blending.
+#' @param Qmethod Character string specifying the hydrology integrator
+#'   (`"RK4"`, `"Euler"`, `"RKF45"`, or `"custom"`).
+#' @param Pmethod Character string specifying the phosphorus integrator
+#'   (`"RK4"` or `"Euler"`).
+#' @param integrator_fun Optional custom hydrology integrator function.
+#' @param interp_option Control‑depth interpolation option (DMSTA semantics).
+#' @param max_iter Integer. Maximum number of network convergence iterations.
+#' @param conv_tol Numeric. Relative convergence tolerance on external
+#'   phosphorus loads.
+#' @param return_cell_series Logical. If `TRUE`, return per‑cell
+#'   daily output series.
+#' @param keep_Q17 Logical. If `TRUE`, retain seep‑recycle bookkeeping
+#'   streams (Q17/L17/C17).
+#' @param ... Additional arguments passed to daily hydrology integration.
+#'
+#' @return An object of class `"dmsta_network_result"` containing:
+#' \describe{
+#'   \item{results}{Case‑level and optional per‑cell daily output series.}
+#'   \item{budgets}{Water and phosphorus mass budgets at case and cell level.}
+#'   \item{meta}{Convergence diagnostics and model configuration metadata.}
 #' }
-#'
-#' Watershed inflow is distributed to cells using `Qin_Frac` (typically only
-#' for cells upstream of the splitter, matching DMSTA conventions). Recycled seepage
-#' transfers are handled as a one-day lagged internal transfer stream.
-#'
-#' @param series A data.frame with required columns:
-#'   \describe{
-#'     \item{Date}{Date column coercible via `as.Date()`.}
-#'     \item{Qi}{Watershed inflow rate (volume/day).}
-#'     \item{Ci}{Watershed inflow concentration (ppb).}
-#'     \item{Rain}{Rain rate (m/day).}
-#'     \item{Et}{ET rate (m/day).}
-#'     \item{Zcontrol}{Control depth (m).}
-#'   }
-#'   Optional columns include `Qr0`, `Qr1`, `Qr2` (release components).
-#'
-#' @param cells A list of cell definitions (e.g., created by [dmsta_make_cell()]).
-#'   Each cell must include at minimum: `label`, `params`, `ttankS`,
-#'   `ppar`, and `constants`. Use `dmsta_prepare_cells_modules()` to
-#'   populate `ppar/constants` or build them when creating cells.
-#'
-#' @param Nsteps Integer. RK substeps per day used by the hydrology and P integrators.
-#' @param N_plant Integer. Rolling window (days) used for computing `Z_plant`
-#'   (rolling mean depth per cell) for reservoir penalty blending.
-#' @param max_iter Integer. Number of outer iterations (usually 1; can be used for
-#'   convergence experiments).
-#' @param conv_tol Numeric. Convergence tolerance used when `max_iter > 1`.
-#' @param return_cell_series Logical; if `TRUE`, return per-cell daily series outputs.
-#' @param keep_Q17 Logical; if `TRUE`, keep seep recycle bookkeeping stream (Q17/L17/C17).
-#' @param ... Passed to `dmsta_case_components()` for output normalization options
-#'   (e.g., `keep_P`, `P_prefix`, `keep_list_cols`, `keep_extra`).
 #'
 #' @details
-#' The function:
-#' \enumerate{
-#'   \item Validates and normalizes cell definitions (`dmsta_validate_cells()`).
-#'   \item Initializes per-cell volumes, tanks, and P states (`dmsta_init_case_state()`).
-#'   \item Runs each day forward, simulating each cell sequentially and routing treated
-#'         outflows to downstream cells.
-#'   \item Accumulates case-level stream accounting (Q3, Q7, Q13, Q14, Q25, Q26, optional Q17)
-#'         and corresponding loads/concentrations.
-#'   \item Computes case-level water and phosphorus budgets, including a transit reservoir
-#'         for lagged internal transfer (`Recycle`).
-#' }
+#' Network routing follows DMSTA conventions. Treated outflows are routed
+#' either to a downstream cell or out of system, while bypass, release,
+#' and seepage discharge streams leave the system immediately. Lagged
+#' seepage recycle is tracked explicitly as an internal transit reservoir.
 #'
-#' @return An object of class `"dmsta_network_result"` (a list) with elements:
-#' \describe{
-#'   \item{results}{List with `case` (data.frame) and `cells` (list of data.frames).}
-#'   \item{budgets}{List with `water` and `mass` sublists; each includes case and cell components.}
-#'   \item{meta}{Metadata including convergence diagnostics and the (validated) cell definitions used.}
-#' }
+#' For strict DMSTA parity, use `Qmethod = "RK4"` and
+#' `Pmethod = "RK4"` with no operational overrides.
+#'
 #'
 #' @examples
 #' # Read data (internal)
@@ -692,16 +684,29 @@ dmsta_case_components <- function(
 #'
 #' @export
 dmsta_flowP_case <- function(
-    series,             # data.frame: Date, Qi, Ci, Rain, Et, Zcontrol (+ optional Qr0/Qr1/Qr2)
-    cells,              # list of per-cell definitions
-    Nsteps = 4L,
-    N_plant = 30L,
-    max_iter = 1L,
-    conv_tol = 0.01,
-    return_cell_series = TRUE,
-    keep_Q17 = TRUE,     # keep seep recycle stream (recommended for auditing)
-    ...
+  series,
+  cells,
+  Nsteps = 4L,
+  N_plant = 30L,
+  Qmethod = c("RK4", "Euler", "RKF45", "custom"),
+  Pmethod = c("RK4", "Euler"),
+  integrator_fun = NULL,
+  interp_option = 2L,
+  max_iter = 1L,
+  conv_tol = 0.01,
+  return_cell_series = TRUE,
+  keep_Q17 = TRUE,
+  ...
 ) {
+
+  Qmethod <- match.arg(Qmethod)
+  Pmethod <- match.arg(Pmethod)
+
+  ## Optional operational release pause (non‑DMSTA)
+  release_pause_days <- cells[[1]]$params$release_pause_days
+  if (is.null(release_pause_days)) release_pause_days <- 0L
+  release_pause_days <- max(0L, as.integer(release_pause_days))
+
   # Input checks
   req <- c("Date","Qi","Ci","Rain","Et","Zcontrol")
   miss <- setdiff(req, names(series))
@@ -778,6 +783,7 @@ dmsta_flowP_case <- function(
       L_bypass = NA_real_, L_seep_discharge = NA_real_,
       L_seep_recycle_out = NA_real_,
       L_uptake = NA_real_, L_recycle = NA_real_, L_sed = NA_real_, L_direct = NA_real_,
+      L_burial = NA_real_, L_release = NA_real_,
       stringsAsFactors = FALSE
     )
   }
@@ -872,10 +878,11 @@ dmsta_flowP_case <- function(
   iterations_used <- 0L
   prev_totalL <- NA_real_
 
-  # series-level flags (HydroIndex presence style); ## DMSTA HydroIndex(2)
+  ## Series‑level HydroIndex semantics
   has_Qr0_series <- any(is.finite(series$Qr0) & series$Qr0 != 0)
-  has_Qr1_series <- any(is.finite(series$Qr1) & series$Qr1 != 0) ## DMSTA HydroIndex(3)
-  has_Qr2_series <- any(is.finite(series$Qr2) & series$Qr2 != 0) ## DMSTA HydroIndex(4)
+  has_Qr1_series <- any(is.finite(series$Qr1) & series$Qr1 != 0)
+  has_Qr2_series <- any(is.finite(series$Qr2) & series$Qr2 != 0)
+  has_depth_constraint_series <- any(is.finite(series$Zcontrol) & series$Zcontrol != 0)
 
   ## DMSTA HydroIndex(1)
   has_depth_constraint_series <- any(is.finite(series$Zcontrol) & series$Zcontrol != 0)
@@ -979,6 +986,12 @@ dmsta_flowP_case <- function(
         cd <- cells[[ic]]
         p  <- cd$params
 
+        ## Lagged recycle
+        RecycleQ <- sum(QRecycle[day, cells[[ic]]$RecycleIndex], na.rm = TRUE)
+        RecycleM <- sum(MRecycle[day, cells[[ic]]$RecycleIndex], na.rm = TRUE)
+
+        nz <- dmsta_zneighbors(day, series$Zcontrol)
+
         # IMPORTANT: DO NOT reinitialize V/Pstate here
 
         Qin_total <- Qi_cell[day, ic]
@@ -994,14 +1007,14 @@ dmsta_flowP_case <- function(
         Cin_up <- if (Qin_up > 0) Lin_up / Qin_up else 0.0
 
         # Lagged seep recycle into this cell
-        RecycleQ <- 0.0
-        RecycleM <- 0.0
-        for (j in seq_len(ncell)) {
-          if (!is.null(cells[[j]]$RecycleIndex) && cells[[j]]$RecycleIndex == ic) {
-            RecycleQ <- RecycleQ + QRecycle[day, j]
-            RecycleM <- RecycleM + MRecycle[day, j]
-          }
-        }
+        # RecycleQ <- 0.0
+        # RecycleM <- 0.0
+        # for (j in seq_len(ncell)) {
+        #   if (!is.null(cells[[j]]$RecycleIndex) && cells[[j]]$RecycleIndex == ic) {
+        #     RecycleQ <- RecycleQ + QRecycle[day, j]
+        #     RecycleM <- RecycleM + MRecycle[day, j]
+        #   }
+        # }
 
         nz <- neighbors_zcontrol(day, series$Zcontrol)
 
@@ -1014,31 +1027,30 @@ dmsta_flowP_case <- function(
           Zcontrol = nz$today,
           Zcontrol_prev = nz$prev_day,
           Zcontrol_next = nz$nxt,
-
-          # pass SERIES-LEVEL flags
           has_depth_constraint = has_depth_constraint_series,
-          # has_Qr0_series = has_Qr0_series,
-          # has_Qr1_series = has_Qr1_series,
-          # has_Qr2_series = has_Qr2_series,
           Qr0 = if (has_Qr0_series) series$Qr0[day] else 0,
           Qr1 = if (has_Qr1_series) series$Qr1[day] else 0,
           Qr2 = if (has_Qr2_series) series$Qr2[day] else 0,
-          # Qr0 = series$Qr0[day],
-          # Qr1 = series$Qr1[day],
-          # Qr2 = series$Qr2[day],
           RecycleQ = RecycleQ,
           RecycleM = RecycleM
         )
 
-        # Rolling Z_plant
+        ## Optional release pause (non‑DMSTA)
+        if (release_pause_days > 0L && day <= release_pause_days) {
+          day_inputs$Qr1 <- 0
+          day_inputs$Qr2 <- 0
+        }
+
+        ## Rolling Z_plant
         if (day > 1) Z_hist[day, ic] <- V[ic] / p$A_cell
         i0 <- max(1L, day - N_plant + 1L)
-        Z_plant <- mean(Z_hist[i0:day, ic])
+        Z_plant <- mean(Z_hist[i0:day, ic], na.rm = TRUE)
 
-        # wrapper already allocates basin inflow; prevent double multiply
+        ## Prevent double Qin scaling
         p_run <- p
         p_run$Qin_Frac <- 1.0
 
+        ## Updated call with integrator pass‑through
         res <- dmsta_flowP_day(
           V = V[ic],
           P_state = Pstate[[ic]],
@@ -1047,8 +1059,13 @@ dmsta_flowP_case <- function(
           params = p_run,
           ppar = cd$ppar,
           constants = cd$constants,
+          Qmethod = Qmethod,
+          Pmethod = Pmethod,
           Nsteps = Nsteps,
-          Z_plant = Z_plant
+          Z_plant = Z_plant,
+          integrator_fun = integrator_fun,
+          interp_option = interp_option,
+          ...
         )
 
         # Advance states
@@ -1172,16 +1189,18 @@ dmsta_flowP_case <- function(
           c_mb$L_rain[day] <- pb$inputs_external$L_rain
           c_mb$L_drydep[day] <- pb$inputs_external$L_drydep
           c_mb$L_seepin[day] <- pb$inputs_external$L_seepin
-          c_mb$L_treated[day] <- pb$outputs_external$L_treated
-          c_mb$L_rel1[day] <- pb$outputs_external$L_rel1
-          c_mb$L_rel2[day] <- pb$outputs_external$L_rel2
-          c_mb$L_bypass[day] <- pb$outputs_external$L_bypass
-          c_mb$L_seep_discharge[day] <- pb$outputs_external$L_seep_discharge
-          c_mb$L_seep_recycle_out[day] <- pb$transfers$L_seep_recycle_out
+          c_mb$L_treated[day] <- res$results$P$loads$treated # pb$outputs_external$L_treated
+          c_mb$L_rel1[day] <- res$results$P$loads$rel1# pb$outputs_external$L_rel1
+          c_mb$L_rel2[day] <- res$results$P$loads$rel2# pb$outputs_external$L_rel2
+          c_mb$L_bypass[day] <- res$results$P$loads$bypass # pb$outputs_external$L_bypass
+          c_mb$L_seep_discharge[day] <- res$results$P$loads$seep_discharge #pb$outputs_external$L_seep_discharge
+          c_mb$L_seep_recycle_out[day] <- res$results$P$loads$seep_recycle # pb$transfers$L_seep_recycle_out
           c_mb$L_uptake[day] <- pb$mechanisms$L_uptake
           c_mb$L_recycle[day] <- pb$mechanisms$L_recycle
           c_mb$L_sed[day] <- pb$mechanisms$L_sed
           c_mb$L_direct[day] <- pb$mechanisms$L_direct
+          c_mb$L_burial[day] <- pb$mechanisms$L_burial
+          c_mb$L_release[day] <- pb$mechanisms$L_release
 
           cell_out[[ic]] <- co
           cell_wb[[ic]]  <- c_wb
@@ -1373,11 +1392,14 @@ dmsta_flowP_case <- function(
       conv_tol = conv_tol,
       history = conv_hist
     ),
+    Qmethod = Qmethod,
+    Pmethod = Pmethod,
     Nsteps = Nsteps,
     N_plant = N_plant,
     max_iter = max_iter,
     conv_tol = conv_tol,
     cells = cells
+
   )
 
   out <- list(

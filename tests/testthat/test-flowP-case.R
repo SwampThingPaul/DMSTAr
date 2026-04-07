@@ -44,6 +44,7 @@ test_that("dmsta_flowP_case runs for a minimal 2-cell network and returns expect
     Seepin_Rate   = 0,
     Seepin_Elev   = 0,   # cm
     Qin_Frac      = 1.0, # NOTE: dmsta_flowP_case sets p_run$Qin_Frac = 1.0 internally
+    Qimax = 0, Qomax = 0,
 
     # kinetics builder inputs for STA/PSTA/RES
     # STA

@@ -6,20 +6,19 @@
 <meta http-equiv="X-UA-Compatible" content="IE=edge">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Phosphorus Kinetics in DMSTAr • DMSTAr</title>
-<!-- jquery --><script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.4.1/jquery.min.js" integrity="sha256-CSXorXvZcTkaix6Yvo6HppcZGetbYMGWSFlBw8HfCJo=" crossorigin="anonymous"></script><!-- Bootstrap --><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/3.4.1/css/bootstrap.min.css" integrity="sha256-bZLfwXAP04zRMK2BjiO8iu9pf4FbLqX6zitd+tIvLhE=" crossorigin="anonymous">
+<!-- jquery --><script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.7.1/jquery.min.js" integrity="sha512-v2CJ7UaYy4JwqLDIrZUI/4hqeoQieOmAZNXBeQyjo21dadnwR+8ZaIJVT8EE2iyI61OV8e6M8PP2/4hpQINQ/g==" crossorigin="anonymous" referrerpolicy="no-referrer"></script><!-- Bootstrap --><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/3.4.1/css/bootstrap.min.css" integrity="sha256-bZLfwXAP04zRMK2BjiO8iu9pf4FbLqX6zitd+tIvLhE=" crossorigin="anonymous">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/3.4.1/js/bootstrap.min.js" integrity="sha256-nuL8/2cJ5NDSSwnKD8VqreErSWHtnEP9E7AySL+1ev4=" crossorigin="anonymous"></script><!-- bootstrap-toc --><link rel="stylesheet" href="../bootstrap-toc.css">
 <script src="../bootstrap-toc.js"></script><!-- Font Awesome icons --><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.12.1/css/all.min.css" integrity="sha256-mmgLkCYLUQbXn0B1SRqzHar6dCnv9oZFPEC1g1cwlkk=" crossorigin="anonymous">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.12.1/css/v4-shims.min.css" integrity="sha256-wZjR52fzng1pJHwx4aV2AO3yyTOXrcDW7jBpJtTwVxw=" crossorigin="anonymous">
 <!-- clipboard.js --><script src="https://cdnjs.cloudflare.com/ajax/libs/clipboard.js/2.0.6/clipboard.min.js" integrity="sha256-inc5kl9MA1hkeYUt+EC3BhlIgyp/2jDIyBLS6k3UxPI=" crossorigin="anonymous"></script><!-- headroom.js --><script src="https://cdnjs.cloudflare.com/ajax/libs/headroom/0.11.0/headroom.min.js" integrity="sha256-AsUX4SJE1+yuDu5+mAVzJbuYNPHj/WroHuZ8Ir/CkE0=" crossorigin="anonymous"></script><script src="https://cdnjs.cloudflare.com/ajax/libs/headroom/0.11.0/jQuery.headroom.min.js" integrity="sha256-ZX/yNShbjqsohH1k95liqY9Gd8uOiE1S4vZc+9KQ1K4=" crossorigin="anonymous"></script><!-- pkgdown --><link href="../pkgdown.css" rel="stylesheet">
 <script src="../pkgdown.js"></script><meta property="og:title" content="Phosphorus Kinetics in DMSTAr">
-<meta property="og:description" content="DMSTAr">
 <!-- mathjax --><script src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/MathJax.js" integrity="sha256-nvJJv9wWKEm88qvoQl9ekL2J+k/RWIsaSScxxlsrv8k=" crossorigin="anonymous"></script><script src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/config/TeX-AMS-MML_HTMLorMML.js" integrity="sha256-84DKXVJXs0/F8OTMzX4UR909+jtl4G7SPypPavF+GfA=" crossorigin="anonymous"></script><!--[if lt IE 9]>
 <script src="https://oss.maxcdn.com/html5shiv/3.7.3/html5shiv.min.js"></script>
 <script src="https://oss.maxcdn.com/respond/1.4.2/respond.min.js"></script>
 <![endif]-->
 </head>
 <body data-spy="scroll" data-target="#toc">
-    
+
 
     <div class="container template-article">
       <header><div class="navbar navbar-default navbar-fixed-top" role="navigation">
@@ -45,7 +44,7 @@
 <li class="dropdown">
   <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
     Articles
-     
+
     <span class="caret"></span>
   </a>
   <ul class="dropdown-menu" role="menu">
@@ -68,7 +67,7 @@
 <li>
   <a href="https://github.com/SwampThingPaul/DMSTAr/" class="external-link">
     <span class="fab fa-github fa-lg"></span>
-     
+
   </a>
 </li>
       </ul>
@@ -79,7 +78,7 @@
 </div>
 <!--/.navbar -->
 
-      
+
 
       </header><div class="row">
   <div class="col-md-9 contents">
@@ -130,62 +129,87 @@ provide parameters).</p>
 </ul>
 <p>Core internal flux forms (conceptually) are:</p>
 <ul>
-<li><p><span class="math inline">\(Removal \propto K1 \cdot F_{c}(C)
-\cdot F_{z}(z) \cdot C \cdot S\)</span></p></li>
-<li><p><span class="math inline">\(Recycle \propto K2 \cdot
-S^{2}\)</span></p></li>
-<li><p><span class="math inline">\(Burial \propto K3 \cdot
-S\)</span></p></li>
+<li><p><math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>R</mi><mi>e</mi><mi>m</mi><mi>o</mi><mi>v</mi><mi>a</mi><mi>l</mi><mo>∝</mo><mi>K</mi><mn>1</mn><mo>⋅</mo><msub><mi>F</mi><mi>c</mi></msub><mrow><mo stretchy="true" form="prefix">(</mo><mi>C</mi><mo stretchy="true" form="postfix">)</mo></mrow><mo>⋅</mo><msub><mi>F</mi><mi>z</mi></msub><mrow><mo stretchy="true" form="prefix">(</mo><mi>z</mi><mo stretchy="true" form="postfix">)</mo></mrow><mo>⋅</mo><mi>C</mi><mo>⋅</mo><mi>S</mi></mrow><annotation encoding="application/x-tex">Removal \propto K1 \cdot F_{c}(C) \cdot F_{z}(z) \cdot C \cdot S</annotation></semantics></math></p></li>
+<li><p><math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>R</mi><mi>e</mi><mi>c</mi><mi>y</mi><mi>c</mi><mi>l</mi><mi>e</mi><mo>∝</mo><mi>K</mi><mn>2</mn><mo>⋅</mo><msup><mi>S</mi><mn>2</mn></msup></mrow><annotation encoding="application/x-tex">Recycle \propto K2 \cdot S^{2}</annotation></semantics></math></p></li>
+<li><p><math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>B</mi><mi>u</mi><mi>r</mi><mi>i</mi><mi>a</mi><mi>l</mi><mo>∝</mo><mi>K</mi><mn>3</mn><mo>⋅</mo><mi>S</mi></mrow><annotation encoding="application/x-tex">Burial \propto K3 \cdot S</annotation></semantics></math></p></li>
 </ul>
 <p>Where</p>
 <ul>
-<li><p><span class="math inline">\(K1\)</span>, <span class="math inline">\(K2\)</span>, <span class="math inline">\(K3\)</span> = removal, recycling and burial rate
-coefficients</p></li>
+<li><p><math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>K</mi><mn>1</mn></mrow><annotation encoding="application/x-tex">K1</annotation></semantics></math>,
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>K</mi><mn>2</mn></mrow><annotation encoding="application/x-tex">K2</annotation></semantics></math>,
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>K</mi><mn>3</mn></mrow><annotation encoding="application/x-tex">K3</annotation></semantics></math>
+= removal, recycling and burial rate coefficients</p></li>
 <li><p>C = water-column P concentration</p></li>
 <li><p>S = liable P Storage</p></li>
-<li><p><span class="math inline">\(F_{c}\)</span> and <span class="math inline">\(F_{z}\)</span> = efficiency modifiers</p></li>
+<li><p><math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>F</mi><mi>c</mi></msub><annotation encoding="application/x-tex">F_{c}</annotation></semantics></math>
+and
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>F</mi><mi>z</mi></msub><annotation encoding="application/x-tex">F_{z}</annotation></semantics></math>
+= efficiency modifiers</p></li>
 </ul>
 <div class="section level4">
-<h4 id="concentration-dependent-scale-factor-f_c">Concentration-dependent scale factor (<span class="math inline">\(F_{c}\)</span>)<a class="anchor" aria-label="anchor" href="#concentration-dependent-scale-factor-f_c"></a>
+<h4 id="concentration-dependent-scale-factor-f_c">Concentration-dependent scale factor
+(<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>F</mi><mi>c</mi></msub><annotation encoding="application/x-tex">F_{c}</annotation></semantics></math>)<a class="anchor" aria-label="anchor" href="#concentration-dependent-scale-factor-f_c"></a>
 </h4>
-<p><span class="math inline">\(F_{c}\)</span> limits removal efficiency
-at low water column P concentration. DMSTA, at its core, assumes that
-biological and physicochemical uptake processes become less efficient as
-C approaches background levels. Therefore, <span class="math inline">\(F_{c}\)</span> represents declining phosphorus
-uptake efficiency as water‑column concentrations approach low‑P
-conditions. Ultimately, this factor prevents the model from
-unrealistically removing phosphorus at full strength when concentrations
-are already very low.</p>
-<p>In practice, <span class="math inline">\(F_{c}\)</span> is governed
-by the parameter “C2” also called Chalf. It is defined as the
-concentration at which removal efficiency is ~50% of the maximum.
-Conceptually, at high concentrations, <span class="math inline">\(F_{c}
-\approx 1\)</span>, whereas at low concentrations, <span class="math inline">\(F_{c}\)</span> is effectively 0.</p>
+<p><math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>F</mi><mi>c</mi></msub><annotation encoding="application/x-tex">F_{c}</annotation></semantics></math>
+limits removal efficiency at low water column P concentration. DMSTA, at
+its core, assumes that biological and physicochemical uptake processes
+become less efficient as C approaches background levels. Therefore,
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>F</mi><mi>c</mi></msub><annotation encoding="application/x-tex">F_{c}</annotation></semantics></math>
+represents declining phosphorus uptake efficiency as water‑column
+concentrations approach low‑P conditions. Ultimately, this factor
+prevents the model from unrealistically removing phosphorus at full
+strength when concentrations are already very low.</p>
+<p>In practice,
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>F</mi><mi>c</mi></msub><annotation encoding="application/x-tex">F_{c}</annotation></semantics></math>
+is governed by the parameter “C2” also called Chalf. It is defined as
+the concentration at which removal efficiency is ~50% of the maximum.
+Conceptually, at high concentrations,
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>F</mi><mi>c</mi></msub><mo>≈</mo><mn>1</mn></mrow><annotation encoding="application/x-tex">F_{c} \approx 1</annotation></semantics></math>,
+whereas at low concentrations,
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>F</mi><mi>c</mi></msub><annotation encoding="application/x-tex">F_{c}</annotation></semantics></math>
+is effectively 0.</p>
 <p><br></p>
 <div class="figure" style="text-align: center">
-<img src="phosphorus-kinetics_files/figure-html/Fc%20calc-1.png" alt="Graphical representation of $F_c$." width="624"><p class="caption">
-Graphical representation of <span class="math inline">\(F_c\)</span>.
+<img src="phosphorus-kinetics_files/figure-html/Fc%20calc-1.png" class="r-plt" alt="Graphical representation of $F_c$." width="624"><p class="caption">
+Graphical representation of
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>F</mi><mi>c</mi></msub><annotation encoding="application/x-tex">F_c</annotation></semantics></math>.
 </p>
 </div>
 <p><br></p>
 </div>
 <div class="section level4">
-<h4 id="depth-dependent-scale-factor-f_z">Depth Dependent scale factor (<span class="math inline">\(F_{z}\)</span>)<a class="anchor" aria-label="anchor" href="#depth-dependent-scale-factor-f_z"></a>
+<h4 id="depth-dependent-scale-factor-f_z">Depth Dependent scale factor
+(<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>F</mi><mi>z</mi></msub><annotation encoding="application/x-tex">F_{z}</annotation></semantics></math>)<a class="anchor" aria-label="anchor" href="#depth-dependent-scale-factor-f_z"></a>
 </h4>
-<p><span class="math inline">\(F_{z}\)</span> adjusts removal efficiency
-based on water depth. Phosphorus removal processes in STAs are most
-effective over a preferred depth range. Very shallow or very deep water
-reduces contact with vegetation, periphyton, and sediments. <span class="math inline">\(F_z\)</span> encodes that assumption without
-adding new state variables accounting for the reducted P removal
-efficiency below optimal water depths.</p>
-<p>In DMSTA (and <code>DMSTAr</code>), <span class="math inline">\(F_z\)</span> is controlled by three depth
-parameters, depth of maximum or saturated uptake (<span class="math inline">\(Z1\)</span>), lower penalty depth (<span class="math inline">\(Z2\)</span>) and upper penalty depth (<span class="math inline">\(Z3\)</span>). Conceptually, depth near <span class="math inline">\(Z1\)</span>, <span class="math inline">\(F_z
-\approx 1\)</span>. However, when depth is <span class="math inline">\(&lt;Z2\)</span> or <span class="math inline">\(&gt;Z3\)</span> <span class="math inline">\(F_z
-&lt;1\)</span>.</p>
+<p><math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>F</mi><mi>z</mi></msub><annotation encoding="application/x-tex">F_{z}</annotation></semantics></math>
+adjusts removal efficiency based on water depth. Phosphorus removal
+processes in STAs are most effective over a preferred depth range. Very
+shallow or very deep water reduces contact with vegetation, periphyton,
+and sediments.
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>F</mi><mi>z</mi></msub><annotation encoding="application/x-tex">F_z</annotation></semantics></math>
+encodes that assumption without adding new state variables accounting
+for the reducted P removal efficiency below optimal water depths.</p>
+<p>In DMSTA (and <code>DMSTAr</code>),
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>F</mi><mi>z</mi></msub><annotation encoding="application/x-tex">F_z</annotation></semantics></math>
+is controlled by three depth parameters, depth of maximum or saturated
+uptake
+(<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>Z</mi><mn>1</mn></mrow><annotation encoding="application/x-tex">Z1</annotation></semantics></math>),
+lower penalty depth
+(<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>Z</mi><mn>2</mn></mrow><annotation encoding="application/x-tex">Z2</annotation></semantics></math>)
+and upper penalty depth
+(<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>Z</mi><mn>3</mn></mrow><annotation encoding="application/x-tex">Z3</annotation></semantics></math>).
+Conceptually, depth near
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>Z</mi><mn>1</mn></mrow><annotation encoding="application/x-tex">Z1</annotation></semantics></math>,
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>F</mi><mi>z</mi></msub><mo>≈</mo><mn>1</mn></mrow><annotation encoding="application/x-tex">F_z \approx 1</annotation></semantics></math>.
+However, when depth is
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mo>&lt;</mo><mi>Z</mi><mn>2</mn></mrow><annotation encoding="application/x-tex">&lt;Z2</annotation></semantics></math>
+or
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mo>&gt;</mo><mi>Z</mi><mn>3</mn></mrow><annotation encoding="application/x-tex">&gt;Z3</annotation></semantics></math><math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>F</mi><mi>z</mi></msub><mo>&lt;</mo><mn>1</mn></mrow><annotation encoding="application/x-tex">F_z &lt;1</annotation></semantics></math>.</p>
 <p><br></p>
 <div class="figure" style="text-align: center">
-<img src="phosphorus-kinetics_files/figure-html/Fz%20calc-1.png" alt="Graphical representation of $F_z$." width="624"><p class="caption">
-Graphical representation of <span class="math inline">\(F_z\)</span>.
+<img src="phosphorus-kinetics_files/figure-html/Fz%20calc-1.png" class="r-plt" alt="Graphical representation of $F_z$." width="624"><p class="caption">
+Graphical representation of
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>F</mi><mi>z</mi></msub><annotation encoding="application/x-tex">F_z</annotation></semantics></math>.
 </p>
 </div>
 <p><br></p>
@@ -202,7 +226,12 @@ Graphical representation of <span class="math inline">\(F_z\)</span>.
 model-type builder (e.g. “STA”, “PSTA”, “RES”). Builders return a
 standardized set of raw parameters (including at least
 <code>C1000</code>, <code>Cstar</code>, <code>Ks</code>), and DMSTAr
-derives <span class="math inline">\(K1\)</span>, <span class="math inline">\(K2\)</span> and <span class="math inline">\(K3\)</span> plus a model indicator PModel.</p>
+derives
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>K</mi><mn>1</mn></mrow><annotation encoding="application/x-tex">K1</annotation></semantics></math>,
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>K</mi><mn>2</mn></mrow><annotation encoding="application/x-tex">K2</annotation></semantics></math>
+and
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>K</mi><mn>3</mn></mrow><annotation encoding="application/x-tex">K3</annotation></semantics></math>
+plus a model indicator PModel.</p>
 <p><code>DMSTAr</code>, consistent with DMSTA, supports two internal
 formulations</p>
 <ul>
@@ -320,9 +349,7 @@ function as a default.</p>
 
   <div class="col-md-3 hidden-xs hidden-sm" id="pkgdown-sidebar">
 
-        <nav id="toc" data-toggle="toc"><h2 data-toc-skip>Contents</h2>
-    </nav>
-</div>
+      </div>
 
 </div>
 
@@ -335,16 +362,16 @@ function as a default.</p>
 
 <div class="pkgdown">
   <p></p>
-<p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.0.7.</p>
+<p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.2.0.</p>
 </div>
 
       </footer>
 </div>
 
-  
 
 
-  
+
+
 
   </body>
 </html>

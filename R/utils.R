@@ -174,7 +174,52 @@ neighbors_zcontrol <- function(i, z) {
 }
 
 
+#' Robust neighbor-day control-depth lookup (internal)
+#'
+#' Convenience wrapper around `neighbors_zcontrol()` that guarantees
+#' finite numeric control depths for today, previous day, and next day.
+#'
+#' @details
+#' DMSTAr hydrology and coupled hydrology–phosphorus routines require
+#' `Zcontrol` (today), `Zcontrol_prev` (yesterday), and
+#' `Zcontrol_next` (tomorrow) to be finite numerics. This helper
+#' enforces that contract by applying defensive fallbacks:
+#' \itemize{
+#'   \item If `today` is not finite, it is set to 0.
+#'   \item If `prev_day` or `nxt` are not finite, they fall back to `today`.
+#' }
+#'
+#' The returned list uses the same names as `neighbors_zcontrol()`
+#' (`today`, `prev_day`, `nxt`) so callers can assign
+#' consistently.
+#'
+#' @param i Integer index into `z`.
+#' @param z Numeric vector of daily control depths (m).
+#'
+#' @return Named list with numeric scalars:
+#' \describe{
+#'   \item{today}{Control depth for day `i`.}
+#'   \item{prev_day}{Control depth for day `i-1` (or `today` at the start).}
+#'   \item{nxt}{Control depth for day `i+1` (or `today` at the end).}
+#' }
+#'
+#' @keywords internal
+#' @rdname internal_dmsta_utils
+dmsta_zneighbors <- function(i, z) {
+  # what the model means
+  nz <- neighbors_zcontrol(i, z)
 
+  z_today <- nz$today
+  z_prev  <- nz$prev_day
+  z_next  <- nz$nxt
+
+  # Defensive fallbacks
+  if (!is.finite(z_today)) z_today <- 0
+  if (!is.finite(z_prev))  z_prev  <- z_today
+  if (!is.finite(z_next))  z_next  <- z_today
+
+  list(today = z_today, prev_day = z_prev, nxt = z_next)
+}
 
 
 
@@ -245,6 +290,9 @@ neighbors_zcontrol <- function(i, z) {
 #' @param Zmin Numeric. Minimum elevation (model-specific).
 #' @param Cmax Numeric. Maximum concentration cap (model-specific).
 #' @param IsaNode Logical or `NULL`. If `NULL`, derived as `(A_cell <= 0)`.
+#' @param release_pause_days Numeric. The number of days Qr* are paused
+#' @param enable_P_release Logical. If `TRUE` P release from sediment is active
+#' @param K_release Numeric. Currently a kg/day rate. For future implementation
 #' @param ... Additional named parameters to add to the returned list, or to
 #'   override existing defaults by name. All must be named (e.g., `foo = 1`).
 #'
@@ -313,6 +361,9 @@ dmstar_default_params <- function(MT = FALSE,
                                   DutyCycle = 0.95,
                                   Zmin = 2,
                                   Cmax = 2000,
+                                  release_pause_days = 0L,
+                                  enable_P_release = FALSE,
+                                  K_release = 0,
                                   IsaNode = NULL,
                                   ...
 ){
@@ -359,7 +410,10 @@ dmstar_default_params <- function(MT = FALSE,
          C_init_ppb = C_init_ppb,
          Y_init_mgm2 = Y_init_mgm2,
          Qin_Frac = Qin_Frac,
-         Ntanks = Ntanks)
+         Ntanks = Ntanks,
+         release_pause_days = release_pause_days,
+         enable_P_release = enable_P_release,
+         K_release = K_release)
 
 
   # derive IsaNode if not supplied

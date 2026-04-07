@@ -49,6 +49,9 @@ dmstar_default_params(
   DutyCycle = 0.95,
   Zmin = 2,
   Cmax = 2000,
+  release_pause_days = 0L,
+  enable_P_release = FALSE,
+  K_release = 0,
   IsaNode = NULL,
   ...
 )
@@ -142,6 +145,12 @@ the returned list with \code{0}. Defaults to \code{FALSE}.}
 \item{Zmin}{Numeric. Minimum elevation (model-specific).}
 
 \item{Cmax}{Numeric. Maximum concentration cap (model-specific).}
+
+\item{release_pause_days}{Numeric. The number of days Qr* are paused}
+
+\item{enable_P_release}{Logical. If \code{TRUE} P release from sediment is active}
+
+\item{K_release}{Numeric. Currently a kg/day rate. For future implementation}
 
 \item{IsaNode}{Logical or \code{NULL}. If \code{NULL}, derived as \code{(A_cell <= 0)}.}
 

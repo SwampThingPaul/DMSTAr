@@ -449,21 +449,25 @@ lag_vec <- function(x, lag_days) {
 #' @seealso [dmsta_flowP_case()]
 #' @rdname dmsta_case_network
 #' @export
-run_network_of_cases <- function(cases,
-                                 net_table = NULL,
-                                 routes = NULL,
-                                 outlet_count = 5L,
-                                 verbose = TRUE,
-                                 check_route = FALSE,
-                                 Nsteps_case = NULL,
-                                 ...) {
 
+run_network_of_cases <- function(
+    cases,
+    net_table = NULL,
+    routes = NULL,
+    outlet_count = 5L,
+    verbose = TRUE,
+    check_route = FALSE,
+    Nsteps_case = NULL,
+    ...
+) {
+
+  # Resolve case names
   case_names <- names(cases)
   if (is.null(case_names) || any(case_names == "")) {
     stop("cases must be a named list; names are DMSTA CASE IDs.")
   }
 
-  # Build routes from net_table if not supplied
+  # Build routing table if needed
   if (is.null(routes)) {
     if (is.null(net_table)) stop("Provide either net_table or routes.")
     routes <- build_routes_from_net_table(net_table, outlet_count = outlet_count)
@@ -476,22 +480,29 @@ run_network_of_cases <- function(cases,
   bad_to <- setdiff(unique(routes$to_id[routes$to_type == "CASE"]), case_names)
   if (length(bad_to)) stop("Unknown downstream CASE in routes: ", paste(bad_to, collapse = ", "))
 
+  # Determine execution order (topological)
   exec_order <- topo_order_cases(routes, case_names)
+  if (verbose) {
+    message("Case execution order: ", paste(exec_order, collapse = " -> "))
+  }
 
-  ## To check the process
-  if (verbose) message("Case execution order: ", paste(exec_order, collapse = " -> "))
-
-  # Assumption confirmed by you: all cases share same Date sequence
+  # Shared date sequence
   net_dates <- cases[[exec_order[1]]]$series_base$Date
   nday <- length(net_dates)
 
-  # routed inflows per case (Q, L)
-  routed_in <- lapply(cases, function(cd) list(Q = numeric(nday), L = numeric(nday)))
+  # Routed inflows (Q, L) per case
+  routed_in <- lapply(cases, function(cd) list(
+    Q = numeric(nday),
+    L = numeric(nday)
+  ))
 
-  # outlet bins Q/L
-  outlets <- lapply(seq_len(outlet_count), function(i) list(Q = numeric(nday), L = numeric(nday)))
+  # Outlet bins
+  outlets <- lapply(seq_len(outlet_count), function(i) {
+    list(Q = numeric(nday), L = numeric(nday))
+  })
   names(outlets) <- paste0("Outlet", seq_len(outlet_count))
 
+  # Output containers
   case_results <- vector("list", length(case_names))
   names(case_results) <- case_names
 
@@ -507,72 +518,98 @@ run_network_of_cases <- function(cases,
     stringsAsFactors = FALSE
   )
 
-  # resolve Nsteps per case
+
+  # NEW BLOCK: Extract integrator controls from
   dots <- list(...)
-  nsteps_default <- if (!is.null(dots$Nsteps)) as.integer(dots$Nsteps) else 4L
-  dots$Nsteps <- NULL  # avoid duplicates / override issues
+
+  # Defaults
+  Qmethod <- "RK4"
+  Pmethod <- "RK4"
+  interp_option <- 2L
+  integrator_fun <- NULL
+
+  if (!is.null(dots$Qmethod)) {
+    Qmethod <- dots$Qmethod
+    dots$Qmethod <- NULL
+  }
+  if (!is.null(dots$Pmethod)) {
+    Pmethod <- dots$Pmethod
+    dots$Pmethod <- NULL
+  }
+  if (!is.null(dots$interp_option)) {
+    interp_option <- as.integer(dots$interp_option)
+    dots$interp_option <- NULL
+  }
+  if (!is.null(dots$integrator_fun)) {
+    integrator_fun <- dots$integrator_fun
+    dots$integrator_fun <- NULL
+  }
+
+  Qmethod <- match.arg(Qmethod, c("RK4", "Euler", "RKF45", "custom"))
+  Pmethod <- match.arg(Pmethod, c("RK4", "Euler"))
+
+  # Resolve Nsteps per case
+  nsteps_default <- if (!is.null(dots$Nsteps)) {
+    as.integer(dots$Nsteps)
+  } else {
+    4L
+  }
+  dots$Nsteps <- NULL
 
   resolve_nsteps <- function(case_id) {
-    # allow scalar
     if (is.null(Nsteps_case)) return(nsteps_default)
-    if (length(Nsteps_case) == 1L && is.null(names(Nsteps_case))) return(as.integer(Nsteps_case))
-
-    # allow named vector or list
+    if (length(Nsteps_case) == 1L && is.null(names(Nsteps_case))) {
+      return(as.integer(Nsteps_case))
+    }
     if (!is.null(names(Nsteps_case)) && case_id %in% names(Nsteps_case)) {
       return(as.integer(Nsteps_case[[case_id]]))
     }
-
-    # fallback
     nsteps_default
   }
 
-  # Run cases in downstream order
+  # Execute cases in downstream order
   for (cn in exec_order) {
     cd <- cases[[cn]]
     base <- cd$series_base
 
-    # dmsta_flowP_case requires Date, Qi, Ci, Rain, Et, Zcontrol
     needed <- c("Date", "Qi", "Ci", "Rain", "Et", "Zcontrol")
     if (!all(needed %in% names(base))) {
       stop("Case ", cn, " series_base must include: ", paste(needed, collapse = ", "))
     }
+    if (length(base$Date) != nday) {
+      stop("Case ", cn, " Date length differs from network calendar.")
+    }
 
-    if (length(base$Date) != nday) stop("Case ", cn, " Date length differs; expected shared network calendar.")
-
-    # Add routed inflows to base inflow (as DMSTA describes) [1](http://www.wwwalker.net/dmsta/)
-    # --- sanitize base series FIRST (Excel blanks -> NA -> must become 0)
+    # Combine base + routed inflows (DMSTA semantics)
     Qb <- base$Qi
     Cb <- base$Ci
-
     Qb[!is.finite(Qb)] <- 0
     Cb[!is.finite(Cb)] <- 0
-
     Lb <- Qb * Cb
 
-    # --- sanitize routed inflows too (defensive)
+    # sanitize routed inflows too (defensive)
     rq <- routed_in[[cn]]$Q
     rl <- routed_in[[cn]]$L
     rq[!is.finite(rq)] <- 0
     rl[!is.finite(rl)] <- 0
 
-    # --- combine (DMSTA network semantics: add upstream to base) [2](http://www.wwwalker.net/dmsta/)
+    # combine (DMSTA network semantics: add upstream to base)
     Qin <- Qb + rq
     Lin <- Lb + rl
-
-    # --- compute Cin safely
+    # compute Cin safely
     Cin <- ifelse(Qin > 0, Lin / Qin, 0)
     Cin[!is.finite(Cin)] <- 0
 
-    # --- NOW build series_run using the sanitized values
+    # NOW build series_run using the sanitized values
     series_run <- base
     series_run$Qi <- Qin
     series_run$Ci <- Cin
 
     nsteps_i <- resolve_nsteps(cn)
-
     ## To check the process
-    if (verbose) message("Running CASE: ", cn, " (Nsteps=", nsteps_i, ")")
-
+    if (verbose) {
+      message("Running CASE: ", cn, " (Nsteps=", nsteps_i, ")")
+    }
     if (verbose) {
       message(sprintf(
         "CASE %s: baseQ sum=%.4f anyNA=%s | routedQ sum=%.4f anyNA=%s | routedL sum=%.4f anyNA=%s",
@@ -586,10 +623,21 @@ run_network_of_cases <- function(cases,
     # Run the case simulation
     res <- do.call(
       dmsta_flowP_case,
-      c(list(series = series_run, cells = cd$cells, Nsteps = nsteps_i),dots)
+      c(
+        list(
+          series = series_run,
+          cells = cd$cells,
+          Nsteps = nsteps_i,
+          Qmethod = Qmethod,
+          Pmethod = Pmethod,
+          integrator_fun = integrator_fun,
+          interp_option = interp_option
+        ),
+        dots
+      )
     )
-    case_results[[cn]] <- res
 
+    case_results[[cn]] <- res
     df <- extract_df(res)
 
     # Adds summary of routing printed in console
@@ -603,14 +651,12 @@ run_network_of_cases <- function(cases,
               " total=", sum(df$Q_out_total, na.rm=TRUE))
     }
 
-
-
-    # Route configured streams out of this case
+    # Route outputs downstream
     rsub <- routes[routes$from_case == cn, , drop = FALSE]
     if (nrow(rsub)) {
       for (ri in seq_len(nrow(rsub))) {
         r <- rsub[ri, ]
-        cols <- stream_map_cols(r$stream,outflow_def = "treated")
+        cols <- stream_map_cols(r$stream, outflow_def = "treated")
 
         if (!(cols["Q"] %in% names(df) && cols["L"] %in% names(df))) {
           stop("Case ", cn, " output missing: ", cols["Q"], " / ", cols["L"])
@@ -618,11 +664,8 @@ run_network_of_cases <- function(cases,
 
         Qs <- df[[cols["Q"]]] * r$frac
         Ls <- df[[cols["L"]]] * r$frac
-
-        ## added
         Qs[!is.finite(Qs)] <- 0
         Ls[!is.finite(Ls)] <- 0
-
 
         # optional lag
         if (!is.null(r$lag_days) && r$lag_days != 0L) {
@@ -658,6 +701,7 @@ run_network_of_cases <- function(cases,
     }
   }
 
+  # Outlet summary
   outlet_summary <- do.call(rbind, lapply(seq_len(outlet_count), function(k) {
     Q <- outlets[[k]]$Q
     L <- outlets[[k]]$L
@@ -670,7 +714,7 @@ run_network_of_cases <- function(cases,
     )
   }))
 
-  list(
+  out <- list(
     order = exec_order,
     case_results = case_results,
     routed_in = routed_in,
@@ -678,5 +722,12 @@ run_network_of_cases <- function(cases,
     outlet_summary = outlet_summary,
     ledger = ledger
   )
+
+  attr(out, "Qmethod") <- Qmethod
+  attr(out, "Pmethod") <- Pmethod
+  attr(out, "interp_option") <- interp_option
+
+  out
 }
+
 
