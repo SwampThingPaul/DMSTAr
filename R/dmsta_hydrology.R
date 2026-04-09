@@ -224,9 +224,11 @@ dmsta_DerivFlow <- function(
       VnexT <- VlasT + Ddt * QneT
     }
 
-  } else if (isTRUE(has_outflow_constraint) && !isTRUE(has_depth_constraint)) {
+  } else if (isTRUE(has_outflow_constraint) &&
+             !isTRUE(has_depth_constraint) &&
+             is.finite(Qr_0)) {
     # VBA: HydroIndex(2) > 0 And HydroIndex(1) = 0  -> Qo = Qr_0
-    Qo <- Qr_0
+    Qo <- max(0,Qr_0)
 
   } else if (Q_a < 0) {
     # constant volume system - not documented
@@ -250,7 +252,7 @@ dmsta_DerivFlow <- function(
   # update with overflow and trim if dipping below control volume
   VnexT <- VlasT + (QneT - Qo) * Ddt
   if (VnexT < Vcontrol && Qo > 0) {
-    Qo <- max(0, QneT - (Vcontrol - VlasT) / Ddt)
+     Qo <- max(0, QneT - (Vcontrol - VlasT) / Ddt)
   }
 
   Dvdt <- QneT - Qo
@@ -275,74 +277,103 @@ dmsta_DerivFlow <- function(
   )
 }
 
-#' Gate release flows based on storage relative to release depth
+#' Gate release flows based on storage and (optionally) hydraulic availability (DMSTA 2C2B)
 #'
 #' Applies DMSTA-style release gating logic to determine which release
 #' components are active based on current storage volume relative to a
-#' specified release depth. When storage is at or below the release
-#' elevation, discretionary release components are suppressed.
-#'
-#' This function implements the release gating behavior used in DMSTA
-#' to prevent releases when pool elevation is below the allowable
-#' release depth. It is a lightweight helper and does not perform
-#' hydrologic integration or time stepping.
+#' specified release depth. Optionally applies the DMSTA 2C2B hydraulic
+#' availability cap (Qorel) that scales releases when specified releases
+#' exceed hydraulically available discharge.
 #'
 #' @param Vo Numeric scalar. Current storage volume (hm^3).
 #' @param A_cell Numeric scalar. Cell area (km^2).
-#' @param Zrelease Numeric scalar. Release depth threshold (m). Releases
-#'   are suppressed when `Vo <= Zrelease * A_cell`.
-#' @param Qr_0 Numeric scalar. Fixed outflow or gate-controlled flow
-#'   component (hm^3/day). Always passed through if finite.
-#' @param Qr_1 Numeric scalar. First discretionary release component
-#'   (hm^3/day).
-#' @param Qr_2 Numeric scalar. Second discretionary release component
-#'   (hm^3/day).
+#' @param Zrelease Numeric scalar. Release depth threshold (m). Discretionary
+#' releases are suppressed when `Vo <= Zrelease * A_cell`.
+#' @param Qr_0 Numeric scalar. Fixed outflow / gate-controlled component (hm^3/day).
+#' @param Qr_1 Numeric scalar. Discretionary release 1 (hm^3/day).
+#' @param Qr_2 Numeric scalar. Discretionary release 2 (hm^3/day).
+#'
+#' @param dmsta_version Character. DMSTA version semantics. `"2E"` (default)
+#' applies depth-only gating. `"2C2B"` additionally applies hydraulic
+#' availability scaling (Qorel) when enabled by `Zrelsign < 0`.
+#' @param Zrelsign Numeric scalar. Raw (pre-unit-conversion) z_release value used
+#' by DMSTA 2C2B to enable hydraulic scaling when negative. Ignored unless
+#' `dmsta_version = "2C2B"`.
+#'
+#' @param Z Numeric scalar. Current depth used to compute hydraulic availability (m).
+#' If NULL, computed as `Vo / A_cell` when possible.
+#' @param Q_a,Q_b,Width,Zweir,Qomax Hydraulic parameters for Qorel computation, as in DMSTA.
 #'
 #' @return A named list with elements:
 #' \describe{
-#'   \item{QrU_0}{Effective fixed/gated outflow component (hm^3/day).}
-#'   \item{QrU_1}{Effective first discretionary release component
-#'     after gating (hm^3/day).}
-#'   \item{QrU_2}{Effective second discretionary release component
-#'     after gating (hm^3/day).}
-#'   \item{Qrelease}{Total discretionary release
-#'     (`QrU_1 + QrU_2`, hm^3/day).}
-#'   \item{Sspec}{Total specified outflow including all components
-#'     (`QrU_0 + QrU_1 + QrU_2`, hm^3/day).}
+#' \item{QrU_0}{Effective fixed/gated component (hm^3/day).}
+#' \item{QrU_1}{Effective discretionary release 1 (hm^3/day).}
+#' \item{QrU_2}{Effective discretionary release 2 (hm^3/day).}
+#' \item{Qrelease}{Total discretionary release (`QrU_1 + QrU_2`, hm^3/day).}
+#' \item{Sspec}{Total specified outflow including all components (`QrU_0 + QrU_1 + QrU_2`, hm^3/day).}
+#' \item{Qorel}{Hydraulically available discharge used for scaling (hm^3/day) or NA if not used.}
 #' }
 #'
-#' @details
-#' If `Zrelease` is missing or non-finite, it is treated as zero,
-#' allowing releases at all storage levels. When storage is below the
-#' release depth, discretionary releases (`Qr_1` and `Qr_2`)
-#' are set to zero, while the fixed component (`Qr_0`) remains
-#' active if finite.
-#'
-#' This function corresponds to the release gating behavior embedded
-#' in the DMSTA VBA hydrology routines (Module1) and is intended for
-#' internal use by hydrology and flow–P orchestration functions.
-#'
-#'
 #' @keywords internal
+dmsta_gate_releases <- function(
+    Vo, A_cell, Zrelease, Qr_0, Qr_1, Qr_2,
+    dmsta_version = c("2E", "2C2B"),
+    Zrelsign = NA_real_,
+    Z = NULL,
+    Q_a = 0, Q_b = 1, Width = 1, Zweir = 0, Qomax = 0
+) {
+  dmsta_version <- match.arg(dmsta_version)
 
-dmsta_gate_releases <- function(Vo, A_cell, Zrelease, Qr_0, Qr_1, Qr_2) {
-  # Zrelease is a depth (same units as Z = V/A_cell). Often meters in your R workflow.
+  # defensive numeric defaults
   if (!is.finite(Zrelease) || is.null(Zrelease)) Zrelease <- 0
+  QrU_0 <- if (is.finite(Qr_0)) Qr_0 else 0
+  QrU_1 <- if (is.finite(Qr_1)) Qr_1 else 0
+  QrU_2 <- if (is.finite(Qr_2)) Qr_2 else 0
 
-  if (A_cell > 0 && Vo <= Zrelease * A_cell) {
+  # Depth-based gating (both 2E and 2C2B)
+  if (is.finite(A_cell) && A_cell > 0 && Vo <= Zrelease * A_cell) {
     QrU_1 <- 0
     QrU_2 <- 0
-  } else {
-    QrU_1 <- if (is.finite(Qr_1)) Qr_1 else 0
-    QrU_2 <- if (is.finite(Qr_2)) Qr_2 else 0
   }
-  QrU_0 <- if (is.finite(Qr_0)) Qr_0 else 0
+
+  # 2C2B hydraulic availability scaling (only if enabled by Zrelsign < 0)
+  Qorel <- NA_real_
+  if (identical(dmsta_version, "2C2B") && is.finite(Zrelsign) && Zrelsign < 0) {
+    if (is.null(Z) || !is.finite(Z)) {
+      Z <- if (is.finite(A_cell) && A_cell > 0) Vo / A_cell else 0
+    }
+
+    # Qorel = hydraulically available discharge
+    if (is.finite(Z) && is.finite(Zweir) && Z > Zweir) {
+      Qorel <- Q_a * Width * (Z - Zweir)^Q_b
+      if (is.finite(Qomax) && Qomax > 0) Qorel <- min(Qorel, Qomax)
+    } else {
+      Qorel <- 0
+    }
+
+    # Apply only if specified releases exceed availability
+    Qrelease <- QrU_1 + QrU_2
+    if (is.finite(Qorel) && (Qrelease + QrU_0) > Qorel) {
+      # Priority: Qr0 first (cap it to Qorel), then scale Qr1/Qr2 proportionally
+      QrU_0 <- min(QrU_0, Qorel)
+      if (Qrelease > 0) {
+        scale <- max(0, (Qorel - QrU_0)) / Qrelease
+        QrU_1 <- QrU_1 * scale
+        QrU_2 <- QrU_2 * scale
+      } else {
+        QrU_1 <- 0
+        QrU_2 <- 0
+      }
+    }
+  }
+
   list(
     QrU_0 = QrU_0,
     QrU_1 = QrU_1,
     QrU_2 = QrU_2,
     Qrelease = QrU_1 + QrU_2,
-    Sspec = QrU_0 + QrU_1 + QrU_2
+    Sspec = QrU_0 + QrU_1 + QrU_2,
+    Qorel = Qorel
   )
 }
 
@@ -381,16 +412,33 @@ dmsta_rk4_hydro_step <- function(
   # runge kutta integration
   A_cell <- params$A_cell
   Vo <- V
+  Z_prev <- if (A_cell > 0) Vo / A_cell else 0
 
-  # --- Gate releases using Vo (DMSTA semantics) ---
+  # Gate releases
+
+  # Predictor stage: advance stage using inflow only
+  # DMSTA semantics: releases see inflow effect immediately
+  Z_gate <- Z_prev +  (inputs$Qi * Dt) / max(A_cell, 1e-12)
+  Vo_gate <- Z_gate * A_cell
+
+  dmsta_version <- if (!is.null(params$dmsta_version)) as.character(params$dmsta_version) else "2E"
+  Zrelsign <- if (!is.null(params$Zrelsign)) params$Zrelsign else NA_real_
+
   gate <- dmsta_gate_releases(
-    Vo = Vo, A_cell = A_cell,
+    Vo = Vo_gate,
+    A_cell = A_cell,
     Zrelease = if (!is.null(params$Zrelease)) params$Zrelease else 0,
     Qr_0 = if (!is.null(inputs$Qr0)) inputs$Qr0 else 0,
     Qr_1 = if (!is.null(inputs$Qr1)) inputs$Qr1 else 0,
-    Qr_2 = if (!is.null(inputs$Qr2)) inputs$Qr2 else 0
+    Qr_2 = if (!is.null(inputs$Qr2)) inputs$Qr2 else 0,
+    dmsta_version = dmsta_version,
+    Zrelsign = Zrelsign,
+    Z = Z_gate,# if (A_cell > 0) Vo / A_cell else 0,
+    Q_a = params$Q_a, Q_b = params$Q_b, Width = params$Width,
+    Zweir = params$Zweir, Qomax = params$Qomax
   )
   Qrelease <- gate$Qrelease
+
 
   # convenience: call derivative with shared args
   call_deriv <- function(V_stage, StepFrac, Ddt_stage) {
@@ -429,7 +477,7 @@ dmsta_rk4_hydro_step <- function(
       # HydroIndex-style flags
       has_outflow_constraint = isTRUE(inputs$has_outflow_constraint),
       has_depth_constraint  = isTRUE(inputs$has_depth_constraint),
-      Qr_0 = if (!is.null(inputs$Qr0)) inputs$Qr0 else 0
+      Qr_0 = gate$QrU_0 # if (!is.null(inputs$Qr0)) inputs$Qr0 else 0
     )
   }
 
@@ -448,6 +496,11 @@ dmsta_rk4_hydro_step <- function(
 
   s4 <- call_deriv(V4, StepFrac = 1.0, Ddt_stage = Dt)
   Dv4 <- s4$Dvdt * Dt
+
+  ## weighted averages
+  Z_avg     <- (s1$Z + 2*s2$Z + 2*s3$Z + s4$Z) / 6
+  Zcont_avg <- (s1$Zcont + 2*s2$Zcont + 2*s3$Zcont + s4$Zcont) / 6
+  Qo_avg    <- (s1$Qo + 2*s2$Qo + 2*s3$Qo + s4$Qo) / 6
 
   # --- Weighted averages (matches VBA) ---
   V_new <- Vo + (Dv1 + 2 * Dv2 + 2 * Dv3 + Dv4) / 6
@@ -489,7 +542,11 @@ dmsta_rk4_hydro_step <- function(
     Seepout = Seepout,
     Seepin = Seepin,
     Bypass = Bypass,
-    gate = gate
+    gate = gate,
+    Z_avg = Z_avg,
+    Zcont_avg = Zcont_avg,
+    Qo_avg = Qo_avg
+
   )
 }
 
@@ -539,7 +596,11 @@ dmsta_rk4_hydro_day <- function(V, inputs, params, Nsteps = 4L) {
       SeepOut = step_res$Seepout,
       SeepIn  = step_res$Seepin,
       Bypass  = step_res$Bypass,
-      Etest = step_res$Etest
+      Etest = step_res$Etest,
+      Z_avg = step_res$Z_avg,
+      Zcont_avg = step_res$Zcont_avg,
+      Qo = step_res$Qo_avg
+
     )
   }
 
@@ -598,23 +659,46 @@ dmsta_rk4_hydro_day <- function(V, inputs, params, Nsteps = 4L) {
 dmsta_euler_hydro_day <- function(V, inputs, params) {
   # Euler
   A_cell <- params$A_cell
+  Vo <- V  # start-of-day volume (fixes earlier Vo bug)
 
-  # Gate releases using Vo for the day (Euler has a single step; Vo=V)
+  dmsta_version <- if (!is.null(params$dmsta_version)) as.character(params$dmsta_version) else "2E"
+  Zrelsign <- if (!is.null(params$Zrelsign)) params$Zrelsign else NA_real_
+
+  # --- Midpoint predictor so discharge can activate within-day ---
+  # Trial midpoint volume using inflow only (simple predictor)
+  Qi0 <- if (!is.null(inputs$Qi) && is.finite(inputs$Qi)) inputs$Qi else 0
+  Rain0 <- if (!is.null(inputs$Rain) && is.finite(inputs$Rain)) inputs$Rain else 0
+  Et0 <- if (!is.null(inputs$Et) && is.finite(inputs$Et)) inputs$Et else 0
+  RecycleQ0 <- if (!is.null(inputs$RecycleQ) && is.finite(inputs$RecycleQ)) inputs$RecycleQ else 0
+
+  # atmosphere at start: (Rain - Et)*A
+  Atmo0 <- (Rain0 - Et0) * A_cell
+  V_mid <- Vo + 0.5 * (Qi0 + Atmo0 + RecycleQ0)  # no outflow yet in predictor
+  if (!is.finite(V_mid) || V_mid < 0) V_mid <- Vo
+
+  Z_mid <- if (A_cell > 0) V_mid / A_cell else 0
+
+  # Gate releases using midpoint stage/volume
   gate <- dmsta_gate_releases(
-    Vo = V, A_cell = A_cell,
+    Vo = V_mid, A_cell = A_cell,
     Zrelease = if (!is.null(params$Zrelease)) params$Zrelease else 0,
     Qr_0 = if (!is.null(inputs$Qr0)) inputs$Qr0 else 0,
     Qr_1 = if (!is.null(inputs$Qr1)) inputs$Qr1 else 0,
-    Qr_2 = if (!is.null(inputs$Qr2)) inputs$Qr2 else 0
+    Qr_2 = if (!is.null(inputs$Qr2)) inputs$Qr2 else 0,
+    dmsta_version = dmsta_version,
+    Zrelsign = Zrelsign,
+    Z = Z_mid,
+    Q_a = params$Q_a, Q_b = params$Q_b, Width = params$Width,
+    Zweir = params$Zweir, Qomax = params$Qomax
   )
 
   s <- dmsta_DerivFlow(
-    V = V, A_cell = A_cell,
+    V = V_mid, A_cell = A_cell,
     Qi = inputs$Qi, Rain = inputs$Rain, Et = inputs$Et,
     Zcontrol = inputs$Zcontrol,
     Zcontrol1 = inputs$Zcontrol_prev,
     Zcontrol2 = inputs$Zcontrol_next,
-    Step = 1, StepFrac = 0, Nsteps = 1, Ddt = 1,
+    Step = 1, StepFrac = 0.5, Nsteps = 1, Ddt = 1,
     params = params,
     RecycleQ = if (!is.null(inputs$RecycleQ)) inputs$RecycleQ else 0,
     Qrelease = gate$Qrelease,
@@ -625,12 +709,13 @@ dmsta_euler_hydro_day <- function(V, inputs, params) {
     Q_a = params$Q_a, Q_b = params$Q_b, Width = params$Width,
     ShutdownET = params$ShutdownET,
     has_outflow_constraint = isTRUE(inputs$has_outflow_constraint),
-    has_depth_constraint  = isTRUE(inputs$has_depth_constraint),
-    Qr_0 = if (!is.null(inputs$Qr0)) inputs$Qr0 else 0
+    has_depth_constraint = isTRUE(inputs$has_depth_constraint),
+    Qr_0 = gate$QrU_0# if (!is.null(inputs$Qr0)) inputs$Qr0 else 0
   )
 
-  V_new <- V + s$Dvdt * 1
+  V_new <- Vo + s$Dvdt * 1
   qout_total <- s$Qot
+
 
   # Use the same release fraction logic as RK4 output split
   Sspec <- gate$Sspec
@@ -819,15 +904,25 @@ dmsta_euler_hydro_day <- function(V, inputs, params) {
   A_cell <- params$A_cell
   Dt <- 1 / Nsteps
 
-  # --- Release gating ONCE per step using Vo (DMSTA semantics) ---
+  # Release gating ONCE per step using Vo (DMSTA semantics)
+  dmsta_version <- if (!is.null(params$dmsta_version)) as.character(params$dmsta_version) else "2E"
+  Zrelsign <- if (!is.null(params$Zrelsign)) params$Zrelsign else NA_real_
+
   gate <- dmsta_gate_releases(
     Vo = Vo, A_cell = A_cell,
     Zrelease = if (!is.null(params$Zrelease)) params$Zrelease else 0,
     Qr_0 = if (!is.null(inputs$Qr0)) inputs$Qr0 else 0,
     Qr_1 = if (!is.null(inputs$Qr1)) inputs$Qr1 else 0,
-    Qr_2 = if (!is.null(inputs$Qr2)) inputs$Qr2 else 0
+    Qr_2 = if (!is.null(inputs$Qr2)) inputs$Qr2 else 0,
+    dmsta_version = dmsta_version,
+    Zrelsign = Zrelsign,
+    Z = if (A_cell > 0) Vo / A_cell else 0,
+    Q_a = params$Q_a, Q_b = params$Q_b, Width = params$Width,
+    Zweir = params$Zweir, Qomax = params$Qomax
   )
-  Qrelease_fixed <- gate$Qrelease
+  Qrelease <- gate$Qrelease
+
+  Qr0_eff <- gate$QrU_0
 
   # RHS: dV/dt (t in [0,1] is local within-step tau)
   f <- function(tau, V) {
@@ -846,7 +941,7 @@ dmsta_euler_hydro_day <- function(V, inputs, params) {
       Ddt = Dt,
       params = params,
       RecycleQ = if (!is.null(inputs$RecycleQ)) inputs$RecycleQ else 0,
-      Qrelease = Qrelease_fixed,
+      Qrelease = Qrelease,
       Q_zmin = params$Q_zmin,
       Zweir  = params$Zweir,
       Zmin   = params$Zmin,
@@ -864,7 +959,7 @@ dmsta_euler_hydro_day <- function(V, inputs, params) {
       ShutdownET = params$ShutdownET,
       has_outflow_constraint = isTRUE(inputs$has_outflow_constraint),
       has_depth_constraint  = isTRUE(inputs$has_depth_constraint),
-      Qr_0 = if (!is.null(inputs$Qr0)) inputs$Qr0 else 0
+      Qr_0 = Qr0_eff# if (!is.null(inputs$Qr0)) inputs$Qr0 else 0
     )
     res$Dvdt
   }
@@ -902,7 +997,7 @@ dmsta_euler_hydro_day <- function(V, inputs, params) {
       Ddt = Dt,
       params = params,
       RecycleQ = if (!is.null(inputs$RecycleQ)) inputs$RecycleQ else 0,
-      Qrelease = Qrelease_fixed,
+      Qrelease = Qrelease,
       Q_zmin = params$Q_zmin,
       Zweir  = params$Zweir,
       Zmin   = params$Zmin,
@@ -920,7 +1015,7 @@ dmsta_euler_hydro_day <- function(V, inputs, params) {
       ShutdownET = params$ShutdownET,
       has_outflow_constraint = isTRUE(inputs$has_outflow_constraint),
       has_depth_constraint  = isTRUE(inputs$has_depth_constraint),
-      Qr_0 = if (!is.null(inputs$Qr0)) inputs$Qr0 else 0
+      Qr_0 = Qr0_eff# if (!is.null(inputs$Qr0)) inputs$Qr0 else 0
     )
   }
 
@@ -1415,6 +1510,7 @@ dmsta_node_step <- function(Qi, RecycleQ, params, Nsteps = 1L, Dt = 1.0) {
   )
 }
 
+
 #' Simulate one day of DMSTA hydrology
 #'
 #' High-level daily hydrology orchestrator applying DMSTA
@@ -1433,6 +1529,7 @@ dmsta_node_step <- function(Qi, RecycleQ, params, Nsteps = 1L, Dt = 1.0) {
 #' @return Daily hydrology results and diagnostics.
 #'
 #' @keywords internal
+#'
 dmsta_flow_day <- function(
     V,
     inputs,
@@ -1448,6 +1545,8 @@ dmsta_flow_day <- function(
   # Defensive copies
   inputs2 <- as.list(inputs)
   params2 <- as.list(params)
+
+  if (is.null(params2$dmsta_version)) params2$dmsta_version <- "2E"
 
   V_start <- V
   Dt <- 1 / as.integer(Nsteps)
@@ -1466,19 +1565,35 @@ dmsta_flow_day <- function(
   # Unit normalization (cm → m)
   params2$Zinit        <- cm_to_m(params2$Zinit)
   params2$Zmin         <- cm_to_m(params2$Zmin)
-  params2$Zrelease     <- cm_to_m(params2$Zrelease)
+  # params2$Zrelease     <- cm_to_m(params2$Zrelease)
   params2$Bypass_elev  <- cm_to_m(params2$Bypass_elev)
   params2$Q_zmin       <- cm_to_m(params2$Q_zmin)
   params2$Zweir        <- cm_to_m(params2$Zweir)
   params2$Seepin_Elev  <- cm_to_m(params2$Seepin_Elev)
   params2$Seepout_Elev <- cm_to_m(params2$Seepout_Elev)
 
+  Zrelease_raw <- params2$Zrelease
+  # store Zrsign for 2C2B gating enablement
+  params2$Zrelsign <- if (is.finite(Zrelease_raw)) Zrelease_raw else NA_real_
+
+  # interpret Zrelease depth (m)
+  if (identical(as.character(params2$dmsta_version), "2C2B") && is.finite(Zrelease_raw) && Zrelease_raw < 0) {
+    params2$Zrelease <- cm_to_m(abs(Zrelease_raw))
+  } else {
+    params2$Zrelease <- cm_to_m(Zrelease_raw)
+  }
+
   # Presence-based flags
   # (DMSTAr inputs: 0 = inactive)
-  has_Qr0_series  <- any(is.finite(inputs2$Qr0) & inputs2$Qr0 != 0)
-  has_Qr1_series  <- any(is.finite(inputs2$Qr1) & inputs2$Qr1 != 0)
-  has_Qr2_series  <- any(is.finite(inputs2$Qr2) & inputs2$Qr2 != 0)
-  has_depth_series <- any(is.finite(inputs2$Zcontrol) & inputs2$Zcontrol != 0)
+  # has_Qr0_series  <- any(is.finite(inputs2$Qr0) & inputs2$Qr0 != 0)
+  # has_Qr1_series  <- any(is.finite(inputs2$Qr1) & inputs2$Qr1 != 0)
+  # has_Qr2_series  <- any(is.finite(inputs2$Qr2) & inputs2$Qr2 != 0)
+  # has_depth_series <- any(is.finite(inputs2$Zcontrol) & inputs2$Zcontrol != 0)
+
+  has_Qr0_series  <- !is.null(params2$QR0_name) && is.character(params2$QR0_name) && nzchar(params2$QR0_name)
+  has_Qr1_series  <- !is.null(params2$QR1_name) && is.character(params2$QR1_name) && nzchar(params2$QR1_name)
+  has_Qr2_series  <- !is.null(params2$QR2_name) && is.character(params2$QR2_name) && nzchar(params2$QR2_name)
+  has_depth_series  <- !is.null(params2$Zcon_name) && is.character(params2$Zcon_name) && nzchar(params2$Zcon_name)
 
   # Normalize inactive series to 0
   if (!has_Qr0_series) inputs2$Qr0 <- 0
@@ -1491,8 +1606,17 @@ dmsta_flow_day <- function(
   params2$force_Q_out            <- isTRUE(has_Qr0_series)
 
   # Qin routing (Module1e semantics)
-  Qi_eff <- params2$Qin_Frac * inputs2$Qi
-  inputs2$Qi <- Qi_eff
+  # Qi_eff <- params2$Qin_Frac * inputs2$Qi
+  # inputs2$Qi <- Qi_eff
+  # offline scheduling
+
+  qin_frac_today <- if (!is.null(inputs2$Qin_Frac) && is.finite(inputs2$Qin_Frac)) {
+    inputs2$Qin_Frac
+  } else {
+    params2$Qin_Frac
+  }
+  Qi_eff <- qin_frac_today * inputs2$Qi
+
 
   # Zrelease clamp to Zmin
   # ONLY when releases are present
@@ -1625,7 +1749,7 @@ dmsta_flow_day <- function(
     dV = V_end
   )
 
-    meta <- list(
+  meta <- list(
     V_start = V_start,
     V_end   = V_end,
     Nsteps  = as.integer(Nsteps),
@@ -1652,6 +1776,7 @@ dmsta_flow_day <- function(
   class(out) <- c("dmsta_flow_day_result", "list")
   out
 }
+
 
 #' Return daily hydrology results with normalized sub-steps
 #'
@@ -1885,7 +2010,6 @@ dmsta_flow_day_steps <- function(
 #'  Zrelease = 0,   # cm; z_release; minimum depth for releases
 #'  RecycleQ = 0,
 #'  IsaNode = NULL,
-#'  release_pause_days = 0L,
 #'  enable_P_release = FALSE,
 #'  K_release = 0,
 #'  IsaNode = NULL
@@ -1910,9 +2034,6 @@ dmsta_flow_series <- function(
 ) {
   Qmethod <- match.arg(Qmethod)
 
-  release_pause_days <- params$release_pause_days
-  if (is.null(release_pause_days)) release_pause_days <- 0L
-
   n <- nrow(series)
   if (n < 1) stop("`series` must have at least one row.")
 
@@ -1935,16 +2056,61 @@ dmsta_flow_series <- function(
     row <- series[i, , drop = FALSE]
     inputs <- as.list(row)
 
-    # release‑pause control match CEPP PACR A2
-    if (i <= release_pause_days) {
-      inputs$Qr0 <- 0
-      inputs$Qr1 <- 0
-      inputs$Qr2 <- 0
-    }
-
     # Neighbor control depths
     inputs$Zcontrol_prev <- if (i > 1) series$Zcontrol[i - 1] else series$Zcontrol[i]
     inputs$Zcontrol_next <- if (i < n) series$Zcontrol[i + 1] else series$Zcontrol[i]
+
+
+    # storage for offline diagnostics
+    if (i == 1) {
+      offline_meta <- vector("list", n)
+    }
+
+    # Offline diversion scheduling (2C2B semantics)
+    dmsta_version <- if (!is.null(params$dmsta_version)) as.character(params$dmsta_version) else "2E"
+    if (identical(dmsta_version, "2C2B")) {
+
+      base_frac <- if (!is.null(params$Qin_Frac)) params$Qin_Frac else 1.0
+
+      off <- .dmsta_offline_qin_frac(
+        date           = series$Date[i],
+        base_frac      = base_frac,
+        offline_trigger= isTRUE(params$offline_trigger),
+        offline_start  = params$offline_start,
+        offline_freq   = params$offline_freq,
+        offline_dur    = params$offline_dur,
+        offline_fracs  = params$offline_fracs
+      )
+
+      # apply fraction used *today*
+      inputs$Qin_Frac <- off$Qin_frac
+
+      # keep metadata record
+      offline_meta[[i]] <- data.frame(
+        Date            = series$Date[i],
+        Qin_frac_base   = base_frac,
+        Qin_frac_used   = off$Qin_frac,
+        offline         = off$offline,
+        offline_index   = off$offline_index
+      )
+    } else {
+      if (!is.null(params$Qin_Frac) && is.finite(params$Qin_Frac)) {
+        frac_used <- params$Qin_Frac
+      } else {
+        frac_used <- 1.0
+      }
+
+      offline_meta[[i]] <- data.frame(
+        Date            = series$Date[i],
+        Qin_frac_base   = frac_used,
+        Qin_frac_used   = frac_used,
+        offline         = FALSE,
+        offline_index   = NA_integer_
+      )
+
+    }
+
+
 
     # Run one day
     day <- dmsta_flow_day(
@@ -1969,6 +2135,9 @@ dmsta_flow_series <- function(
   results_df <- do.call(rbind.data.frame, results_list)
   water_budget_df <- do.call(rbind.data.frame, water_budgets)
 
+  # Record day-by-day applied Qin_Frac for DMSTA 2C2B offline diversion diagnostics
+  offline_df <- do.call(rbind, offline_meta)
+
   out <- list(
     results = results_df,
     budgets = list(
@@ -1981,7 +2150,7 @@ dmsta_flow_series <- function(
       Nsteps = as.integer(Nsteps),
       A_cell = params$A_cell,
       Qmethod = Qmethod,
-      release_pause_days = release_pause_days
+      offline_qin_frac = offline_df
     )
   )
 
@@ -1989,4 +2158,66 @@ dmsta_flow_series <- function(
   out
 }
 
+#' Resolve offline diversion Qin_Frac for a given date (DMSTA 2C2B)
+#'
+#' Implements the DMSTA 2C2B "offline" scheduling logic that temporarily
+#' overrides Qin_Frac during an offline window of length `offline_dur`
+#' starting at a fixed month/day each year, repeating every `offline_freq` years.
+#'
+#' The fraction used during the offline window is selected from a vector
+#' of candidate fractions (frac_1..frac_6 in DMSTA 2C2B).
+#'
+#' @keywords internal
+.dmsta_offline_qin_frac <- function(
+    date, base_frac,
+    offline_trigger = FALSE,
+    offline_start = as.Date("1965-03-15"),
+    offline_freq = 3L,
+    offline_dur = 45L,
+    offline_fracs = NULL,
+    frac_1 = NULL, frac_2 = NULL, frac_3 = NULL,
+    frac_4 = NULL, frac_5 = NULL, frac_6 = NULL
 
+) {
+  date <- as.Date(date)
+
+  # default: no offline
+  out <- list(
+    Qin_frac = base_frac,
+    offline = FALSE,
+    offline_index = NA_integer_
+  )
+
+  # build fraction vector if not provided
+  if (is.null(offline_fracs)) {
+    offline_fracs <- c(frac_1, frac_2, frac_3, frac_4, frac_5, frac_6)
+  }
+  offline_fracs <- offline_fracs[is.finite(offline_fracs)]
+
+  if (!isTRUE(offline_trigger)) return(out)
+  if (length(offline_fracs) == 0) return(out)
+
+  # DMSTA logic: reuse month/day each year
+  off_start <- as.Date(offline_start)
+  off_ini <- as.Date(sprintf(
+    "%04d-%02d-%02d",
+    as.integer(format(date, "%Y")),
+    as.integer(format(off_start, "%m")),
+    as.integer(format(off_start, "%d"))
+  ))
+
+  off_diff <- as.integer(difftime(date, off_ini, units = "days"))
+  off_mod  <- (as.integer(format(date, "%Y")) -
+                 as.integer(format(off_start, "%Y"))) %% offline_freq
+
+  if (is.finite(off_diff) && off_diff >= 0 && off_diff < offline_dur) {
+    idx <- off_mod + 1L
+    idx <- max(1L, min(idx, length(offline_fracs)))
+
+    out$Qin_frac      <- offline_fracs[[idx]]
+    out$offline       <- TRUE
+    out$offline_index <- idx
+  }
+
+  out
+}

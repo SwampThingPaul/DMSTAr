@@ -82,7 +82,6 @@ params <- list(
  Zrelease = 0,   # cm; z_release; minimum depth for releases
  RecycleQ = 0,
  IsaNode = NULL,
- release_pause_days = 0L,
  enable_P_release = FALSE,
  K_release = 0,
  IsaNode = NULL

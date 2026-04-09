@@ -49,9 +49,19 @@ dmstar_default_params(
   DutyCycle = 0.95,
   Zmin = 2,
   Cmax = 2000,
-  release_pause_days = 0L,
   enable_P_release = FALSE,
   K_release = 0,
+  dmsta_version = "2E",
+  offline_trigger = NULL,
+  offline_start = NULL,
+  offline_freq = NULL,
+  offline_dur = NULL,
+  frac_1 = NULL,
+  frac_2 = NULL,
+  frac_3 = NULL,
+  frac_4 = NULL,
+  frac_5 = NULL,
+  frac_6 = NULL,
   IsaNode = NULL,
   ...
 )
@@ -146,8 +156,6 @@ the returned list with \code{0}. Defaults to \code{FALSE}.}
 
 \item{Cmax}{Numeric. Maximum concentration cap (model-specific).}
 
-\item{release_pause_days}{Numeric. The number of days Qr* are paused}
-
 \item{enable_P_release}{Logical. If \code{TRUE} P release from sediment is active}
 
 \item{K_release}{Numeric. Currently a kg/day rate. For future implementation}
@@ -156,6 +164,8 @@ the returned list with \code{0}. Defaults to \code{FALSE}.}
 
 \item{...}{Additional named parameters to add to the returned list, or to
 override existing defaults by name. All must be named (e.g., \code{foo = 1}).}
+
+\item{release_pause_days}{Numeric. The number of days Qr* are paused}
 }
 \value{
 A named list of DMSTAr parameters.

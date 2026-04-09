@@ -52,7 +52,7 @@ devtools::install_github("SwampThingPaul/DMSTAr")
 # install.packages("DMSTAr")
 ```
 
-## Parity <a name="parity"></a>
+## DMSTA version and test cases <a name="versions"></a>
 
 Currently `DMSTAr` has been evaluated against published DMSTA results from various planning efforts.
 
@@ -62,7 +62,7 @@ Currently `DMSTAr` has been evaluated against published DMSTA results from vario
   * Link to results and documentation - [Restoration Strategies - Negotiation Phase](https://smmsviewer.apps.sfwmd.gov/projectreport/487)
 
 * Western Everglades Restoration Plan
-  * DMSTA Model Version 2 (incomplete information)
+  * DMSTA Model Version 2 (incomplete information, assumes version 2c2b)
   
   * Link to results and documentation - [Western Everglades Restoration Project (WERP)](https://smmsviewer.apps.sfwmd.gov/projectreport/1360)
 

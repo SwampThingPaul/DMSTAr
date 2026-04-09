@@ -702,11 +702,6 @@ dmsta_flowP_case <- function(
   Qmethod <- match.arg(Qmethod)
   Pmethod <- match.arg(Pmethod)
 
-  ## Optional operational release pause (non‑DMSTA)
-  release_pause_days <- cells[[1]]$params$release_pause_days
-  if (is.null(release_pause_days)) release_pause_days <- 0L
-  release_pause_days <- max(0L, as.integer(release_pause_days))
-
   # Input checks
   req <- c("Date","Qi","Ci","Rain","Et","Zcontrol")
   miss <- setdiff(req, names(series))
@@ -849,6 +844,28 @@ dmsta_flowP_case <- function(
     )
   }
 
+  # helpers: force scalar numeric (DMSTA semantics: missing => 0)
+  .scalar0 <- function(x, default = 0) {
+    if (is.null(x) || length(x) == 0L) return(default)
+    x <- suppressWarnings(as.numeric(x[1]))
+    if (!is.finite(x)) default else x
+  }
+  # concentration helper: prefer explicit conc; else compute from L/Q
+  .scalarC <- function(Cx, Lx, Qx, default = 0) {
+    Cx0 <- .scalar0(Cx, default = NA_real_)
+    if (is.finite(Cx0)) return(Cx0)
+    Lx0 <- .scalar0(Lx, default = 0)
+    Qx0 <- .scalar0(Qx, default = 0)
+    if (Qx0 > 0) Lx0 / Qx0 else default
+  }
+
+  .scalarNA <- function(x) {
+    if (is.null(x) || length(x) == 0L) return(NA_real_)
+    x <- suppressWarnings(as.numeric(x[1]))
+    if (!is.finite(x)) NA_real_ else x
+  }
+
+
   cell_out <- cell_wb <- cell_mb <- NULL
   if (return_cell_series) {
     cell_out <- vector("list", ncell)
@@ -879,13 +896,35 @@ dmsta_flowP_case <- function(
   prev_totalL <- NA_real_
 
   ## Series‑level HydroIndex semantics
-  has_Qr0_series <- any(is.finite(series$Qr0) & series$Qr0 != 0)
-  has_Qr1_series <- any(is.finite(series$Qr1) & series$Qr1 != 0)
-  has_Qr2_series <- any(is.finite(series$Qr2) & series$Qr2 != 0)
-  has_depth_constraint_series <- any(is.finite(series$Zcontrol) & series$Zcontrol != 0)
+  # Per-cell HydroIndex semantics (structural flags)
+  # Structural presence (HydroIndex-style) should be per cell.
+  has_Qr0_cell <- vapply(cells, function(cd) {
+    nm <- cd$params$QR0_name
+    !is.null(nm) && is.character(nm) && nzchar(nm)
+  }, logical(1))
+
+  has_Qr1_cell <- vapply(cells, function(cd) {
+    nm <- cd$params$QR1_name
+    !is.null(nm) && is.character(nm) && nzchar(nm)
+  }, logical(1))
+
+  has_Qr2_cell <- vapply(cells, function(cd) {
+    nm <- cd$params$QR2_name
+    !is.null(nm) && is.character(nm) && nzchar(nm)
+  }, logical(1))
+
+  has_Zcon_cell <- vapply(cells, function(cd) {
+    nm <- cd$params$Zcon_name
+    !is.null(nm) && is.character(nm) && nzchar(nm)
+  }, logical(1))
+
+  # has_Qr0_series <- any(is.finite(series$Qr0) & series$Qr0 != 0)
+  # has_Qr1_series <- any(is.finite(series$Qr1) & series$Qr1 != 0)
+  # has_Qr2_series <- any(is.finite(series$Qr2) & series$Qr2 != 0)
+  # has_depth_constraint_series <- any(is.finite(series$Zcontrol) & series$Zcontrol != 0)
 
   ## DMSTA HydroIndex(1)
-  has_depth_constraint_series <- any(is.finite(series$Zcontrol) & series$Zcontrol != 0)
+  # has_depth_constraint_series <- any(is.finite(series$Zcontrol) & series$Zcontrol != 0)
 
   # Iteration loop
   for (iter in seq_len(max_iter)) {
@@ -900,9 +939,10 @@ dmsta_flowP_case <- function(
     for (ic in seq_len(ncell)) {
       p <- cells[[ic]]$params
 
-      p$force_Q_out <- has_Qr0_series
+      p$force_Q_out <- has_Qr0_cell[ic]# has_Qr0_series
 
-      if (isTRUE(has_depth_constraint_series)) {
+      # if (isTRUE(has_depth_constraint_series)) {
+      if (isTRUE(has_Zcon_cell[ic])){
         zc1 <- series$Zcontrol[1]   # meters
         if (!is.finite(zc1)) zc1 <- 0
         Z0_m <- max(zc1, p$Zmin / 100)
@@ -1016,7 +1056,7 @@ dmsta_flowP_case <- function(
         #   }
         # }
 
-        nz <- neighbors_zcontrol(day, series$Zcontrol)
+        nz <- dmsta_zneighbors(day, series$Zcontrol)
 
         day_inputs <- list(
           Date = series$Date[day],
@@ -1027,19 +1067,13 @@ dmsta_flowP_case <- function(
           Zcontrol = nz$today,
           Zcontrol_prev = nz$prev_day,
           Zcontrol_next = nz$nxt,
-          has_depth_constraint = has_depth_constraint_series,
-          Qr0 = if (has_Qr0_series) series$Qr0[day] else 0,
-          Qr1 = if (has_Qr1_series) series$Qr1[day] else 0,
-          Qr2 = if (has_Qr2_series) series$Qr2[day] else 0,
+          has_depth_constraint = has_Zcon_cell[ic],
+          Qr0 = if (has_Qr0_cell[ic]) series$Qr0[day] else 0,
+          Qr1 = if (has_Qr1_cell[ic]) series$Qr1[day] else 0,
+          Qr2 = if (has_Qr2_cell[ic]) series$Qr2[day] else 0,
           RecycleQ = RecycleQ,
           RecycleM = RecycleM
         )
-
-        ## Optional release pause (non‑DMSTA)
-        if (release_pause_days > 0L && day <= release_pause_days) {
-          day_inputs$Qr1 <- 0
-          day_inputs$Qr2 <- 0
-        }
 
         ## Rolling Z_plant
         if (day > 1) Z_hist[day, ic] <- V[ic] / p$A_cell
@@ -1082,9 +1116,9 @@ dmsta_flowP_case <- function(
 
         # DMSTA-style terms
         # Term 3: bypass
-        Q3  <- res$results$Bypass
-        L3  <- res$results$P$loads$bypass
-        C3  <- res$results$P$conc$C_bypass
+        Q3  <- .scalar0(res$results$Bypass,0)
+        L3  <- .scalar0(res$results$P$loads$bypass,0)
+        C3  <- .scalarC(res$results$P$conc$C_bypass, L3,Q3,default = 0)
 
         # Stream 7: into cell (treated inflow excluding bypass; excludes recycle)
         # (Matches the concept of "Qt(1)-Qt(3)" for Tank 1 inflow excluding bypass.)
@@ -1093,28 +1127,28 @@ dmsta_flowP_case <- function(
         C7 <- fw(L7, Q7)
 
         # Term 13: treated outflow (ONLY routed downstream)
-        Q13 <- res$results$Q_treated
-        L13 <- res$results$P$loads$treated
-        C13 <- res$results$P$conc$C_treated
+        Q13 <- .scalar0(res$results$Q_treated, 0)
+        L13 <- .scalar0(res$results$P$loads$treated, 0)
+        C13 <- .scalarC(res$results$P$conc$C_treated, L13, Q13, default = 0)
 
         # Term 25/26: releases (out-of-system)
-        Q25 <- res$results$Q_rel1
-        L25 <- res$results$P$loads$rel1
-        C25 <- res$results$P$conc$C_rel1
+        Q25 <- .scalar0(res$results$Q_rel1, 0)
+        L25 <- .scalar0(res$results$P$loads$rel1, 0)
+        C25 <- .scalarC(res$results$P$conc$C_rel1, L25, Q25, default = 0)
 
-        Q26 <- res$results$Q_rel2
-        L26 <- res$results$P$loads$rel2
-        C26 <- res$results$P$conc$C_rel2
+        Q26 <- .scalar0(res$results$Q_rel2, 0)
+        L26 <- .scalar0(res$results$P$loads$rel2, 0)
+        C26 <- .scalarC(res$results$P$conc$C_rel2, L26, Q26, default = 0)
 
         # Term 14: seepage discharge out-of-system
-        Q14 <- res$results$P$flows$seep_discharge
-        L14 <- res$results$P$loads$seep_discharge
-        C14 <- res$results$P$conc$C_seep_discharge
+        Q14 <- .scalar0(res$results$P$flows$seep_discharge, 0)
+        L14 <- .scalar0(res$results$P$loads$seep_discharge, 0)
+        C14 <- .scalarC(res$results$P$conc$C_seep_discharge, L14, Q14, default = 0)
 
-        # Seep recycle bookkeeping (lagged)
-        Q17 <- res$results$P$flows$seep_recycle
-        L17 <- res$results$P$loads$seep_recycle
-        C17 <- res$results$P$conc$C_seep_recycle
+        # Term 17: seep recycle bookkeeping (lagged)
+        Q17 <- .scalar0(res$results$P$flows$seep_recycle, 0)
+        L17 <- .scalar0(res$results$P$loads$seep_recycle, 0)
+        C17 <- .scalarC(res$results$P$conc$C_seep_recycle, L17, Q17, default = 0)
 
         pb <- res$budgets$mass
         if (is.null(pb) || is.null(pb$storage) || is.null(pb$closure)) {
@@ -1174,33 +1208,33 @@ dmsta_flowP_case <- function(
           c_wb$WB_err[day]  <- res$budgets$water$WB_err
           c_wb$WB_rel[day]  <- res$budgets$water$WB_rel
 
-          c_mb$dP[day] <- pb$storage$dP
-          c_mb$Pin_external[day] <- pb$closure$Pin_external
-          c_mb$Pout_external[day] <- pb$closure$Pout_external
-          c_mb$Perr_external[day] <- pb$closure$Perr_external
-          c_mb$Prel_external[day] <- pb$closure$Prel_external
-          c_mb$Pin_total[day] <- pb$closure$Pin_total
-          c_mb$Pout_total[day] <- pb$closure$Pout_total
-          c_mb$Perr_total[day] <- pb$closure$Perr_total
-          c_mb$Prel_total[day] <- pb$closure$Prel_total
-          c_mb$Q_in_tanks[day] <- pb$inflow_tanks$Q_in_tanks
-          c_mb$L_in_tanks[day] <- pb$inflow_tanks$L_in_tanks
-          c_mb$C_in_tanks[day] <- pb$inflow_tanks$C_in_tanks
-          c_mb$L_rain[day] <- pb$inputs_external$L_rain
-          c_mb$L_drydep[day] <- pb$inputs_external$L_drydep
-          c_mb$L_seepin[day] <- pb$inputs_external$L_seepin
-          c_mb$L_treated[day] <- res$results$P$loads$treated # pb$outputs_external$L_treated
-          c_mb$L_rel1[day] <- res$results$P$loads$rel1# pb$outputs_external$L_rel1
-          c_mb$L_rel2[day] <- res$results$P$loads$rel2# pb$outputs_external$L_rel2
-          c_mb$L_bypass[day] <- res$results$P$loads$bypass # pb$outputs_external$L_bypass
-          c_mb$L_seep_discharge[day] <- res$results$P$loads$seep_discharge #pb$outputs_external$L_seep_discharge
-          c_mb$L_seep_recycle_out[day] <- res$results$P$loads$seep_recycle # pb$transfers$L_seep_recycle_out
-          c_mb$L_uptake[day] <- pb$mechanisms$L_uptake
-          c_mb$L_recycle[day] <- pb$mechanisms$L_recycle
-          c_mb$L_sed[day] <- pb$mechanisms$L_sed
-          c_mb$L_direct[day] <- pb$mechanisms$L_direct
-          c_mb$L_burial[day] <- pb$mechanisms$L_burial
-          c_mb$L_release[day] <- pb$mechanisms$L_release
+          c_mb$dP[day] <- .scalarNA(pb$storage$dP)
+          c_mb$Pin_external[day]  <- .scalarNA(pb$closure$Pin_external)
+          c_mb$Pout_external[day] <- .scalarNA(pb$closure$Pout_external)
+          c_mb$Perr_external[day] <- .scalarNA(pb$closure$Perr_external)
+          c_mb$Prel_external[day] <- .scalarNA(pb$closure$Prel_external)
+          c_mb$Pin_total[day]     <- .scalarNA(pb$closure$Pin_total)
+          c_mb$Pout_total[day] <- .scalarNA(pb$closure$Pout_total)
+          c_mb$Perr_total[day] <- .scalarNA(pb$closure$Perr_total)
+          c_mb$Prel_total[day] <- .scalarNA(pb$closure$Prel_total)
+          c_mb$Q_in_tanks[day] <- .scalarNA(pb$inflow_tanks$Q_in_tanks)
+          c_mb$L_in_tanks[day] <- .scalarNA(pb$inflow_tanks$L_in_tanks)
+          c_mb$C_in_tanks[day] <- .scalarNA(pb$inflow_tanks$C_in_tanks)
+          c_mb$L_rain[day] <- .scalarNA(pb$inputs_external$L_rain)
+          c_mb$L_drydep[day] <- .scalarNA(pb$inputs_external$L_drydep)
+          c_mb$L_seepin[day] <- .scalarNA(pb$inputs_external$L_seepin)
+          c_mb$L_treated[day] <- .scalarNA(res$results$P$loads$treated) # pb$outputs_external$L_treated
+          c_mb$L_rel1[day] <- .scalarNA(res$results$P$loads$rel1) # pb$outputs_external$L_rel1
+          c_mb$L_rel2[day] <- .scalarNA(res$results$P$loads$rel2) # pb$outputs_external$L_rel2
+          c_mb$L_bypass[day] <- .scalarNA(res$results$P$loads$bypass) # pb$outputs_external$L_bypass
+          c_mb$L_seep_discharge[day] <- .scalarNA(res$results$P$loads$seep_discharge) #pb$outputs_external$L_seep_discharge
+          c_mb$L_seep_recycle_out[day] <- .scalarNA(res$results$P$loads$seep_recycle) # pb$transfers$L_seep_recycle_out
+          c_mb$L_uptake[day] <- .scalarNA(pb$mechanisms$L_uptake)
+          c_mb$L_recycle[day] <- .scalarNA(pb$mechanisms$L_recycle)
+          c_mb$L_sed[day] <- .scalarNA(pb$mechanisms$L_sed)
+          c_mb$L_direct[day] <- .scalarNA(pb$mechanisms$L_direct)
+          c_mb$L_burial[day] <- .scalarNA(pb$mechanisms$L_burial)
+          c_mb$L_release[day] <- .scalarNA(pb$mechanisms$L_release)
 
           cell_out[[ic]] <- co
           cell_wb[[ic]]  <- c_wb

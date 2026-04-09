@@ -200,13 +200,37 @@ dmsta_DerivMass <- function(state, drivers,ppar,constants) {
   Mo <- drivers$Mo_fix
   So <- drivers$So_fix
 
+  # Safe Mass Limiter
+  can_limit_M <-
+    is.numeric(Mo) &&
+    length(Mo) == 1L &&
+    is.finite(Mo) &&
+    is.finite(dMdt) &&
+    is.finite(Ddt) &&
+    Ddt > 0 &&
+    Mo > 0
 
-  if (Mo > 0 && (Mo + dMdt * Ddt) <= mratiO * Mo) {
+  if (isTRUE(can_limit_M) &&
+      isTRUE((Mo + dMdt * Ddt) <= mratiO * Mo)) {
+
     dMdt <- -Mo * (1 - mratiO) / Ddt
+
+    # S derivative unchanged (matches DMSTA)
     dSdt <- (P_uptake - P_recycle - P_sed) * A_tank
   }
 
-  if (So > 0 && (So + dSdt * Ddt) <= mratiO * So) {
+  can_limit_S <-
+    is.numeric(So) &&
+    length(So) == 1L &&
+    is.finite(So) &&
+    is.finite(dSdt) &&
+    is.finite(Ddt) &&
+    Ddt > 0 &&
+    So > 0
+
+  if (isTRUE(can_limit_S) &&
+      isTRUE((So + dSdt * Ddt) <= mratiO * So)) {
+
     dSdt <- -So * (1 - mratiO) / Ddt
   }
 
@@ -311,8 +335,8 @@ dmsta_rk4_P_step <- function(M, S, args_base, Dt,ppar,constants,
   S_new <- So + dSdt_ts * Dt
 
   if (clamp) {
-    if (!is.finite(M_new) || M_new < Mmin) M_new <- Mmin
-    if (!is.finite(S_new) || S_new < Smin) S_new <- Smin
+    if (isTRUE(!is.finite(M_new)) || isTRUE(M_new < Mmin)){M_new <- Mmin}
+    if (isTRUE(!is.finite(S_new)) || isTRUE(S_new < Smin)){S_new <- Smin}
   }
 
   #  averaged flux diagnostics over step
@@ -426,8 +450,8 @@ dmsta_euler_P_step <- function(
   S_new <- S + s$dSdt * Dt
 
   if (clamp) {
-    if (!is.finite(M_new) || M_new < Mmin) M_new <- Mmin
-    if (!is.finite(S_new) || S_new < Smin) S_new <- Smin
+    if (isTRUE(!is.finite(M_new)) || isTRUE(M_new < Mmin)){M_new <- Mmin}
+    if (isTRUE(!is.finite(S_new)) || isTRUE(S_new < Smin)){S_new <- Smin}
   }
 
   list(
@@ -493,7 +517,7 @@ dmsta_P_step <- function(
 ) {
   method <- match.arg(method)
 
-  switch(
+  res <- switch(
     method,
     RK4 = dmsta_rk4_P_step(
       M = M, S = S,
@@ -512,8 +536,19 @@ dmsta_P_step <- function(
       ...
     )
   )
-  # Phase 2 (post‑parity) RKF45 (diagnostic only, behind flag)
-  # Phase 3 (future research) Implicit solvers for novel extensions (not DMSTA parity)
+
+  ## ENFORCE RETURN CONTRACT (CRITICAL)
+
+  # If step did not produce updated masses, keep previous state
+  if (is.null(res$M_new) || length(res$M_new) != 1L || !is.finite(res$M_new)) {
+    res$M_new <- M
+  }
+
+  if (is.null(res$S_new) || length(res$S_new) != 1L || !is.finite(res$S_new)) {
+    res$S_new <- S
+  }
+
+  res
 }
 
 #' Integrate hydrology–phosphorus dynamics over one day using sub-day steps
@@ -1310,12 +1345,6 @@ dmsta_flowP_series <- function(
     tanks <- dmsta_build_tanks(params$A_cell, ttankS)
   }
 
-  # set release pause days (for Qr*)
-  release_pause_days <- params$release_pause_days
-  if (is.null(release_pause_days)) release_pause_days <- 0L
-  # defensive clamp - prevents negative values, fractional days, accidental characters
-  release_pause_days <- max(0L, as.integer(release_pause_days))
-
   # Build P kinetics slots once
   if (is.null(ppar)) {
     ppar <- build_P_kin_slots(
@@ -1457,11 +1486,6 @@ dmsta_flowP_series <- function(
     day_inputs$Qr1 <- if (has_Qr1_series) day_inputs$Qr1 else 0
     day_inputs$Qr2 <- if (has_Qr2_series) day_inputs$Qr2 else 0
 
-    if (release_pause_days > 0L && i <= release_pause_days) {
-      day_inputs$Qr1 <- 0
-      day_inputs$Qr2 <- 0
-    }
-
     if (is.null(day_inputs$RecycleQ)) day_inputs$RecycleQ <- 0
     if (is.null(day_inputs$RecycleM)) day_inputs$RecycleM <- 0
 
@@ -1560,8 +1584,7 @@ dmsta_flowP_series <- function(
     Qmethod = Qmethod,
     Pmethod = Pmethod,
     has_depth_constraint_series = has_depth_constraint_series,
-    has_Qr0_series = has_Qr0_series,
-    release_pause_days = release_pause_days
+    has_Qr0_series = has_Qr0_series
   )
 
   if (return_steps) meta$steps <- steps_store

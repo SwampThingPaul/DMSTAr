@@ -2,61 +2,68 @@
 % Please edit documentation in R/dmsta_hydrology.R
 \name{dmsta_gate_releases}
 \alias{dmsta_gate_releases}
-\title{Gate release flows based on storage relative to release depth}
+\title{Gate release flows based on storage and (optionally) hydraulic availability (DMSTA 2C2B)}
 \usage{
-dmsta_gate_releases(Vo, A_cell, Zrelease, Qr_0, Qr_1, Qr_2)
+dmsta_gate_releases(
+  Vo,
+  A_cell,
+  Zrelease,
+  Qr_0,
+  Qr_1,
+  Qr_2,
+  dmsta_version = c("2E", "2C2B"),
+  Zrelsign = NA_real_,
+  Z = NULL,
+  Q_a = 0,
+  Q_b = 1,
+  Width = 1,
+  Zweir = 0,
+  Qomax = 0
+)
 }
 \arguments{
 \item{Vo}{Numeric scalar. Current storage volume (hm^3).}
 
 \item{A_cell}{Numeric scalar. Cell area (km^2).}
 
-\item{Zrelease}{Numeric scalar. Release depth threshold (m). Releases
-are suppressed when \code{Vo <= Zrelease * A_cell}.}
+\item{Zrelease}{Numeric scalar. Release depth threshold (m). Discretionary
+releases are suppressed when \code{Vo <= Zrelease * A_cell}.}
 
-\item{Qr_0}{Numeric scalar. Fixed outflow or gate-controlled flow
-component (hm^3/day). Always passed through if finite.}
+\item{Qr_0}{Numeric scalar. Fixed outflow / gate-controlled component (hm^3/day).}
 
-\item{Qr_1}{Numeric scalar. First discretionary release component
-(hm^3/day).}
+\item{Qr_1}{Numeric scalar. Discretionary release 1 (hm^3/day).}
 
-\item{Qr_2}{Numeric scalar. Second discretionary release component
-(hm^3/day).}
+\item{Qr_2}{Numeric scalar. Discretionary release 2 (hm^3/day).}
+
+\item{dmsta_version}{Character. DMSTA version semantics. \code{"2E"} (default)
+applies depth-only gating. \code{"2C2B"} additionally applies hydraulic
+availability scaling (Qorel) when enabled by \code{Zrelsign < 0}.}
+
+\item{Zrelsign}{Numeric scalar. Raw (pre-unit-conversion) z_release value used
+by DMSTA 2C2B to enable hydraulic scaling when negative. Ignored unless
+\code{dmsta_version = "2C2B"}.}
+
+\item{Z}{Numeric scalar. Current depth used to compute hydraulic availability (m).
+If NULL, computed as \code{Vo / A_cell} when possible.}
+
+\item{Q_a, Q_b, Width, Zweir, Qomax}{Hydraulic parameters for Qorel computation, as in DMSTA.}
 }
 \value{
 A named list with elements:
 \describe{
-\item{QrU_0}{Effective fixed/gated outflow component (hm^3/day).}
-\item{QrU_1}{Effective first discretionary release component
-after gating (hm^3/day).}
-\item{QrU_2}{Effective second discretionary release component
-after gating (hm^3/day).}
-\item{Qrelease}{Total discretionary release
-(\code{QrU_1 + QrU_2}, hm^3/day).}
-\item{Sspec}{Total specified outflow including all components
-(\code{QrU_0 + QrU_1 + QrU_2}, hm^3/day).}
+\item{QrU_0}{Effective fixed/gated component (hm^3/day).}
+\item{QrU_1}{Effective discretionary release 1 (hm^3/day).}
+\item{QrU_2}{Effective discretionary release 2 (hm^3/day).}
+\item{Qrelease}{Total discretionary release (\code{QrU_1 + QrU_2}, hm^3/day).}
+\item{Sspec}{Total specified outflow including all components (\code{QrU_0 + QrU_1 + QrU_2}, hm^3/day).}
+\item{Qorel}{Hydraulically available discharge used for scaling (hm^3/day) or NA if not used.}
 }
 }
 \description{
 Applies DMSTA-style release gating logic to determine which release
 components are active based on current storage volume relative to a
-specified release depth. When storage is at or below the release
-elevation, discretionary release components are suppressed.
-}
-\details{
-This function implements the release gating behavior used in DMSTA
-to prevent releases when pool elevation is below the allowable
-release depth. It is a lightweight helper and does not perform
-hydrologic integration or time stepping.
-
-If \code{Zrelease} is missing or non-finite, it is treated as zero,
-allowing releases at all storage levels. When storage is below the
-release depth, discretionary releases (\code{Qr_1} and \code{Qr_2})
-are set to zero, while the fixed component (\code{Qr_0}) remains
-active if finite.
-
-This function corresponds to the release gating behavior embedded
-in the DMSTA VBA hydrology routines (Module1) and is intended for
-internal use by hydrology and flow–P orchestration functions.
+specified release depth. Optionally applies the DMSTA 2C2B hydraulic
+availability cap (Qorel) that scales releases when specified releases
+exceed hydraulically available discharge.
 }
 \keyword{internal}

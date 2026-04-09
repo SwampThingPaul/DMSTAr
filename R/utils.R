@@ -361,9 +361,22 @@ dmstar_default_params <- function(MT = FALSE,
                                   DutyCycle = 0.95,
                                   Zmin = 2,
                                   Cmax = 2000,
-                                  release_pause_days = 0L,
                                   enable_P_release = FALSE,
                                   K_release = 0,
+                                  dmsta_version = "2E",
+                                  offline_trigger = NULL,
+                                  offline_start = NULL,
+                                  offline_freq = NULL,
+                                  offline_dur = NULL,
+                                  frac_1 = NULL,
+                                  frac_2 = NULL,
+                                  frac_3 = NULL,
+                                  frac_4 = NULL,
+                                  frac_5 = NULL,
+                                  frac_6 = NULL,
+                                  # enable_latent_storage = FALSE,
+                                  # latent_storage_mode   = "strict_dmsta",# c("strict_dmsta", "conservative")
+                                  # latent_Z_threshold    = NA_real_,
                                   IsaNode = NULL,
                                   ...
 ){
@@ -411,9 +424,23 @@ dmstar_default_params <- function(MT = FALSE,
          Y_init_mgm2 = Y_init_mgm2,
          Qin_Frac = Qin_Frac,
          Ntanks = Ntanks,
-         release_pause_days = release_pause_days,
          enable_P_release = enable_P_release,
-         K_release = K_release)
+         K_release = K_release,
+         dmsta_version = dmsta_version,
+         offline_trigger =offline_trigger,
+         offline_start = offline_start,
+         offline_freq = offline_freq,
+         offline_dur = offline_dur,
+         frac_1 = frac_1,
+         frac_2 = frac_2,
+         frac_3 = frac_3,
+         frac_4 = frac_4,
+         frac_5 = frac_5,
+         frac_6 = frac_6
+         # enable_latent_storage = enable_latent_storage,
+         # latent_storage_mode = latent_storage_mode,
+         # latent_Z_threshold = latent_Z_threshold
+         )
 
 
   # derive IsaNode if not supplied
