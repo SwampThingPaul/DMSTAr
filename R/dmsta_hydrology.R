@@ -1695,9 +1695,28 @@ dmsta_flow_day <- function(
     sum(vapply(step_out, function(s) s$Etest * A_cell * s$Dt, 0.0))
   NetAtmo_day <- RainVol_day - EtVol_day
 
-  # Mean depth diagnostic
-  Z_day <- sum(vapply(step_out, function(s) (s$V / A_cell) * s$Dt, 0.0)) /
-    max(1e-12, sum(vapply(step_out, function(s) s$Dt, 0.0)))
+  # # Mean depth diagnostic
+  # Z_day <- sum(vapply(step_out, function(s) (s$V / A_cell) * s$Dt, 0.0)) /
+  #   max(1e-12, sum(vapply(step_out, function(s) s$Dt, 0.0)))
+
+    # 1) End-of-day depth (true state at end of integration)
+  Z_end <- if (is.finite(A_cell) && A_cell > 0) V_end / A_cell else NA_real_
+
+  # 2) Daily average depth (DMSTA uses midpoint volume each substep: (Vo+V)/2 )
+  V_cell_day <- if (length(step_out) == 0) {
+    NA_real_
+  } else {
+    sum(vapply(step_out, function(s) 0.5 * (s$Vo + s$V) * s$Dt, 0.0))
+  }
+  Z_avg <- if (is.finite(A_cell) && A_cell > 0 && is.finite(V_cell_day)) V_cell_day / A_cell else NA_real_
+
+  # 3) Legacy diagnostic (what the old code called Z_day): dt-weighted mean of end-of-substep depths
+  Z_step_end_mean <- if (length(step_out) == 0) {
+    NA_real_
+  } else {
+    sum(vapply(step_out, function(s) (s$V / A_cell) * s$Dt, 0.0)) /
+      max(1e-12, sum(vapply(step_out, function(s) s$Dt, 0.0)))
+  }
 
   # Water budget
   RecycleVol_day <- inputs2$RecycleQ
@@ -1722,7 +1741,10 @@ dmsta_flow_day <- function(
     RainVol = RainVol_day,
     EtVol = EtVol_day,
     NetAtmo = NetAtmo_day,
-    Z_end = Z_day
+    Z_end = Z_end,
+    Z_avg = Z_avg,
+    Z_step_end_mean = Z_step_end_mean
+
   )
 
   water_budget <- list(
@@ -1746,7 +1768,7 @@ dmsta_flow_day <- function(
     EtVol   = EtVol_day,
     Bypass  = Bypass_day,
     # Storage change
-    dV = V_end
+    dV = dV# V_end
   )
 
   meta <- list(
@@ -1865,32 +1887,21 @@ dmsta_flow_day_steps <- function(
 
   steps <- lapply(seq_along(steps), function(k) {
     s <- steps[[k]]
-
     # step index
     if (is.null(s$step)) s$step <- k
-
     # timestep (required by P integrators)
-    if (is.null(s$Dt)) {
-      s$Dt <- 1.0 / as.numeric(Nsteps)
-    }
-
+    if (is.null(s$Dt)) {s$Dt <- 1.0 / as.numeric(Nsteps)}
     # normalize volume names
     if (is.null(s$Vo) && !is.null(s$V0))     s$Vo <- s$V0
     if (is.null(s$V)  && !is.null(s$V_end))  s$V  <- s$V_end
-
     # normalize inflow naming
     if (is.null(s$Qi_eff)) {
       if (!is.null(s$Qin)) s$Qi_eff <- s$Qin else s$Qi_eff <- qi_eff
     }
-
     # normalize treated / release naming
-    if (is.null(s$Q_treated) && !is.null(s$Q_treated_ts))
-      s$Q_treated <- s$Q_treated_ts
-    if (is.null(s$Q_rel1) && !is.null(s$Q_rel1_ts))
-      s$Q_rel1 <- s$Q_rel1_ts
-    if (is.null(s$Q_rel2) && !is.null(s$Q_rel2_ts))
-      s$Q_rel2 <- s$Q_rel2_ts
-
+    if (is.null(s$Q_treated) && !is.null(s$Q_treated_ts)) s$Q_treated <- s$Q_treated_ts
+    if (is.null(s$Q_rel1) && !is.null(s$Q_rel1_ts)) s$Q_rel1 <- s$Q_rel1_ts
+    if (is.null(s$Q_rel2) && !is.null(s$Q_rel2_ts)) s$Q_rel2 <- s$Q_rel2_ts
     s
   })
 
@@ -1906,13 +1917,53 @@ dmsta_flow_day_steps <- function(
     steps   = steps
   )
 
+  # DMSTA-parity depth/volume diagnostics from step endpoints
+  A_cell <- params$A_cell
+
+  # V_end (prefer results$V_end)
+  V_end <- if (!is.null(res$V_end) && is.finite(res$V_end)) res$V_end else {
+    # fall back to last step V
+    tail(steps, 1)[[1]]$V
+  }
+
+  # DMSTA-style daily average volume:
+  # V_day = sum( 0.5*(Vo+V) * Dt )  (midpoint rule on step endpoints)
+  V_cell_day <- if (length(steps) > 0) {
+    sum(vapply(steps, function(s) 0.5 * (s$Vo + s$V) * s$Dt, 0.0))
+  } else {
+    NA_real_
+  }
+  Z_end <- if (is.finite(A_cell) && A_cell > 0) V_end / A_cell else NA_real_
+  Z_avg <- if (is.finite(A_cell) && A_cell > 0 && is.finite(V_cell_day)) V_cell_day / A_cell else NA_real_
+  # Legacy diagnostic: dt-weighted mean of end-of-step depth (useful QA)
+  Z_step_end_mean <- if (length(steps) > 0 && is.finite(A_cell) && A_cell > 0) {
+    sum(vapply(steps, function(s) (s$V / A_cell) * s$Dt, 0.0)) /
+      max(1e-12, sum(vapply(steps, function(s) s$Dt, 0.0)))
+  } else {
+    NA_real_
+  }
+
+  # Attach these to both top-level convenience fields and results (if present)
+  out$V_end <- V_end
+  out$V_cell_day <- V_cell_day
+  out$Z_end <- Z_end
+  out$Z_avg <- Z_avg
+  out$Z_step_end_mean <- Z_step_end_mean
+
+  if (is.list(out$results)) {
+    out$results$V_end <- V_end
+    out$results$V_cell_day <- V_cell_day
+    out$results$Z_end <- Z_end
+    out$results$Z_avg <- Z_avg
+    out$results$Z_step_end_mean <- Z_step_end_mean
+  }
+
   # 7) Legacy top-level aliases (required by dmsta_flowP_day)
   if (!is.null(res)) {
-    out$V_end     <- res$V_end
-    out$V_avg     <- res$V_avg
-    out$Z_end     <- res$Z_end
-    out$Z_avg     <- res$Z_avg
-
+    # out$V_end     <- res$V_end
+    # out$V_avg     <- res$V_avg
+    # out$Z_end     <- res$Z_end
+    # out$Z_avg     <- res$Z_avg
     out$Qin       <- res$Qin
     out$Qout      <- res$Qout
     out$Q_treated <- res$Q_treated
@@ -1931,7 +1982,6 @@ dmsta_flow_day_steps <- function(
     out$WB_out <- wb$WB_out
     out$WB_err <- wb$WB_err
     out$WB_rel <- wb$WB_rel
-
     # defensive legacy exposure
     if (is.null(out$RainVol)) out$RainVol <- wb$RainVol
     if (is.null(out$EtVol))   out$EtVol   <- wb$EtVol
@@ -2051,6 +2101,38 @@ dmsta_flow_series <- function(
   # Pre-allocate outputs
   results_list <- vector("list", n)
   water_budgets <- vector("list", n)
+  offline_meta <- vector("list",n)
+
+  dmsta_version <- if (!is.null(params$dmsta_version)) as.character(params$dmsta_version) else "2E"
+
+  # Normalize offline parameter defaults (safe, DMSTA-like defaults)
+  off_start <- if (!is.null(params$offline_start) && !is.na(params$offline_start)) {
+    as.Date(params$offline_start)
+  } else {
+    as.Date("1965-03-15")
+  }
+  off_freq <- if (!is.null(params$offline_freq) && is.finite(suppressWarnings(as.numeric(params$offline_freq)))) {
+    as.integer(params$offline_freq)
+  } else {
+    3L
+  }
+  off_dur <- if (!is.null(params$offline_dur) && is.finite(suppressWarnings(as.numeric(params$offline_dur)))) {
+    as.integer(params$offline_dur)
+  } else {
+    45L
+  }
+
+  # Base inflow fraction (numeric, default 1)
+  base_frac <- suppressWarnings(as.numeric(if (!is.null(params$Qin_Frac)) params$Qin_Frac else 1))
+  if (!is.finite(base_frac)) base_frac <- 1
+
+  # Prefer params$offline_fracs if present; otherwise build from frac_1..frac_6
+  offline_fracs <- params$offline_fracs
+  if (is.null(offline_fracs)) {
+    offline_fracs <- c(params$frac_1, params$frac_2, params$frac_3,
+                       params$frac_4, params$frac_5, params$frac_6)
+  }
+
 
   for (i in seq_len(n)) {
     row <- series[i, , drop = FALSE]
@@ -2060,57 +2142,51 @@ dmsta_flow_series <- function(
     inputs$Zcontrol_prev <- if (i > 1) series$Zcontrol[i - 1] else series$Zcontrol[i]
     inputs$Zcontrol_next <- if (i < n) series$Zcontrol[i + 1] else series$Zcontrol[i]
 
-
-    # storage for offline diagnostics
-    if (i == 1) {
-      offline_meta <- vector("list", n)
-    }
-
-    # Offline diversion scheduling (2C2B semantics)
-    dmsta_version <- if (!is.null(params$dmsta_version)) as.character(params$dmsta_version) else "2E"
+    # Offline scheduling (2C2B only)
     if (identical(dmsta_version, "2C2B")) {
 
-      base_frac <- if (!is.null(params$Qin_Frac)) params$Qin_Frac else 1.0
-
       off <- .dmsta_offline_qin_frac(
-        date           = series$Date[i],
-        base_frac      = base_frac,
-        offline_trigger= isTRUE(params$offline_trigger),
-        offline_start  = params$offline_start,
-        offline_freq   = params$offline_freq,
-        offline_dur    = params$offline_dur,
-        offline_fracs  = params$offline_fracs
+        date            = series$Date[i],
+        base_frac       = base_frac,
+        offline_trigger = isTRUE(params$offline_trigger),
+        offline_start   = off_start,
+        offline_freq    = off_freq,
+        offline_dur     = off_dur,
+        offline_fracs   = offline_fracs
       )
 
-      # apply fraction used *today*
-      inputs$Qin_Frac <- off$Qin_frac
+      # Use revised function's "used" field when present
+      qfrac_used <- if (!is.null(off$Qin_frac_used)) off$Qin_frac_used else off$Qin_frac
+      inputs$Qin_Frac <- qfrac_used
 
-      # keep metadata record
       offline_meta[[i]] <- data.frame(
-        Date            = series$Date[i],
-        Qin_frac_base   = base_frac,
-        Qin_frac_used   = off$Qin_frac,
-        offline         = off$offline,
-        offline_index   = off$offline_index
+        Date          = as.Date(series$Date[i]),
+        Qin_frac_base = if (!is.null(off$Qin_frac_base)) off$Qin_frac_base else base_frac,
+        Qin_frac_used = qfrac_used,
+        offline       = isTRUE(off$offline),
+        offline_index = if (!is.null(off$offline_index)) off$offline_index else NA_integer_,
+        off_ini       = if (!is.null(off$off_ini)) as.Date(off$off_ini) else as.Date(NA),
+        off_diff      = if (!is.null(off$off_diff)) as.integer(off$off_diff) else NA_integer_,
+        off_mod       = if (!is.null(off$off_mod)) as.integer(off$off_mod) else NA_integer_,
+        frac_selected = if (!is.null(off$frac_selected)) as.numeric(off$frac_selected) else NA_real_,
+        stringsAsFactors = FALSE
       )
+
     } else {
-      if (!is.null(params$Qin_Frac) && is.finite(params$Qin_Frac)) {
-        frac_used <- params$Qin_Frac
-      } else {
-        frac_used <- 1.0
-      }
-
+      # Non-2C2B: record stable fraction diagnostics (no offline)
       offline_meta[[i]] <- data.frame(
-        Date            = series$Date[i],
-        Qin_frac_base   = frac_used,
-        Qin_frac_used   = frac_used,
-        offline         = FALSE,
-        offline_index   = NA_integer_
+        Date          = as.Date(series$Date[i]),
+        Qin_frac_base = base_frac,
+        Qin_frac_used = base_frac,
+        offline       = FALSE,
+        offline_index = NA_integer_,
+        off_ini       = as.Date(NA),
+        off_diff      = NA_integer_,
+        off_mod       = NA_integer_,
+        frac_selected = NA_real_,
+        stringsAsFactors = FALSE
       )
-
     }
-
-
 
     # Run one day
     day <- dmsta_flow_day(
@@ -2134,9 +2210,7 @@ dmsta_flow_series <- function(
 
   results_df <- do.call(rbind.data.frame, results_list)
   water_budget_df <- do.call(rbind.data.frame, water_budgets)
-
-  # Record day-by-day applied Qin_Frac for DMSTA 2C2B offline diversion diagnostics
-  offline_df <- do.call(rbind, offline_meta)
+  offline_df      <- do.call(rbind, offline_meta)
 
   out <- list(
     results = results_df,
@@ -2177,28 +2251,62 @@ dmsta_flow_series <- function(
     offline_fracs = NULL,
     frac_1 = NULL, frac_2 = NULL, frac_3 = NULL,
     frac_4 = NULL, frac_5 = NULL, frac_6 = NULL
-
 ) {
   date <- as.Date(date)
 
-  # default: no offline
+  # defaults / outputs (always returned)
   out <- list(
     Qin_frac = base_frac,
     offline = FALSE,
-    offline_index = NA_integer_
+    offline_index = NA_integer_,
+
+    # richer diagnostics (safe defaults)
+    Qin_frac_base = base_frac,
+    Qin_frac_used = base_frac,
+    frac_selected = NA_real_,
+    off_ini = as.Date(NA),
+    off_diff = NA_integer_,
+    off_mod = NA_integer_,
+    offline_start_used = as.Date(offline_start),
+    offline_freq_used = as.integer(offline_freq),
+    offline_dur_used = as.integer(offline_dur)
   )
 
-  # build fraction vector if not provided
+  # Normalize base_frac
+  base_frac0 <- suppressWarnings(as.numeric(base_frac[1]))
+  if (!is.finite(base_frac0)) base_frac0 <- 0
+  out$Qin_frac_base <- base_frac0
+  out$Qin_frac <- base_frac0
+  out$Qin_frac_used <- base_frac0
+
+  # Trigger must be TRUE
+  if (!isTRUE(offline_trigger)) {
+    return(out)
+  }
+
+  # Build 6-slot fraction vector WITHOUT dropping positions
   if (is.null(offline_fracs)) {
     offline_fracs <- c(frac_1, frac_2, frac_3, frac_4, frac_5, frac_6)
   }
-  offline_fracs <- offline_fracs[is.finite(offline_fracs)]
 
-  if (!isTRUE(offline_trigger)) return(out)
-  if (length(offline_fracs) == 0) return(out)
+  # Coerce to numeric while preserving length/positions
+  offline_fracs <- suppressWarnings(as.numeric(offline_fracs))
+  if (length(offline_fracs) < 6L) {
+    offline_fracs <- c(offline_fracs, rep(NA_real_, 6L - length(offline_fracs)))
+  } else if (length(offline_fracs) > 6L) {
+    offline_fracs <- offline_fracs[1:6]
+  }
 
-  # DMSTA logic: reuse month/day each year
+  # avoid index shifts, replace non-finite with 0 (not dropped).
+  offline_fracs[!is.finite(offline_fracs)] <- 0
+
+  # offline_start validity
   off_start <- as.Date(offline_start)
+  if (is.na(off_start)) {
+    return(out)
+  }
+
+  # reuse month/day each year
   off_ini <- as.Date(sprintf(
     "%04d-%02d-%02d",
     as.integer(format(date, "%Y")),
@@ -2208,14 +2316,23 @@ dmsta_flow_series <- function(
 
   off_diff <- as.integer(difftime(date, off_ini, units = "days"))
   off_mod  <- (as.integer(format(date, "%Y")) -
-                 as.integer(format(off_start, "%Y"))) %% offline_freq
+                 as.integer(format(off_start, "%Y"))) %% as.integer(offline_freq)
 
-  if (is.finite(off_diff) && off_diff >= 0 && off_diff < offline_dur) {
-    idx <- off_mod + 1L
-    idx <- max(1L, min(idx, length(offline_fracs)))
+  out$off_ini <- off_ini
+  out$off_diff <- off_diff
+  out$off_mod <- as.integer(off_mod)
 
-    out$Qin_frac      <- offline_fracs[[idx]]
-    out$offline       <- TRUE
+  # Apply offline only during window
+  if (is.finite(off_diff) && off_diff >= 0 && off_diff < as.integer(offline_dur)) {
+    idx <- as.integer(off_mod) + 1L
+    idx <- max(1L, min(idx, 6L))
+
+    frac_sel <- offline_fracs[[idx]]
+
+    out$Qin_frac <- frac_sel
+    out$Qin_frac_used <- frac_sel
+    out$frac_selected <- frac_sel
+    out$offline <- TRUE
     out$offline_index <- idx
   }
 

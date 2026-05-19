@@ -69,7 +69,7 @@ devtools::install_github("SwampThingPaul/DMSTAr")
 
 <!-- To install the deployed version from CRAN use: -->
 
-## Parity <a name="parity"></a>
+## DMSTA version and test cases <a name="versions"></a>
 
 Currently `DMSTAr` has been evaluated against published DMSTA results
 from various planning efforts.
@@ -79,13 +79,7 @@ from various planning efforts.
 
   - Link to results and documentation - [Restoration Strategies -
     Negotiation
-    Phase](https://smmsviewer.apps.sfwmd.gov/projectreport/487)
-- Western Everglades Restoration Plan
-  - DMSTA Model Version 2 (incomplete information)
-
-  - Link to results and documentation - [Western Everglades Restoration
-    Project
-    (WERP)](https://smmsviewer.apps.sfwmd.gov/projectreport/1360)
+    Phase](https://smmsviewer.apps.sfwmd.gov/modelreport/1687)
 - Central Everglades Planning Project, Post Authorization Change Report
   - DMSTA Model Version 2c2b (2010?),
     [CEPP](https://smmsviewer.apps.sfwmd.gov/modelreport/2327) used
@@ -93,6 +87,17 @@ from various planning efforts.
 
   - Link to results and documentation - [DMSTA_C240TSP -
     EAA](https://smmsviewer.apps.sfwmd.gov/modelreport/3426)
+- Western Everglades Restoration Plan
+  - DMSTA Model Version 2 (incomplete information, assumes version 2c)
+
+  - Link to results and documentation - [Western Everglades Restoration
+    Project (WERP)](https://smmsviewer.apps.sfwmd.gov/modelreport/3458)
+- Lake Okeechobee System Operating Manual (LOSOM)
+  - DMSTA Model Version 2c2b 2010v2b
+
+  - Link to results and documentation - [Lake Okeechobee System
+    Operating Manual
+    (LOSOM)](https://smmsviewer.apps.sfwmd.gov/modelreport/3580)
 
 <!-- ## *Indevelopment* -->
 

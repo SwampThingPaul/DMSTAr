@@ -343,9 +343,25 @@ dmsta_case_components <- function(
   ## map fields that differ between cell vs case
   # State / water levels
   V_end <- get_first(c("V_end", "V_total_end"))
-  Z_end <- get_first(c("Z_total_end", "Z_end"))
-  Z_avg <- get_first(c("Z_total_avg", "Z_avg"))
+
+  # Prefer patched (true) depths first; fall back to legacy totals if present
+  Z_end <- get_first(c("Z_end", "Z_total_end"))
+  Z_avg <- get_first(c("Z_avg", "Z_total_avg"))
+
+  # DMSTA-style daily avg volume (midpoint-integrated); keep legacy alias too
   V_cell_day <- get_first(c("V_cell_day", "V_cell_day_total"))
+
+  ## Z_* should always be present ... commenting out for now.
+  ## Optional fallbacks if Z_* not present but volumes + A_cell are
+  # A_cell <- get_first(c("A_cell", "A_cell_km2", "A_cell_total"))
+
+  ## If Z_end missing but V_end and A_cell exist, compute Z_end = V_end / A_cell
+  # if (all(!is.finite(Z_end)) && any(is.finite(V_end)) && any(is.finite(A_cell)) && all(A_cell > 0, na.rm = TRUE)) {
+  #   Z_end <- V_end / A_cell
+  # }
+
+  ## If Z_avg missing but V_cell_day and A_cell exist, compute Z_avg = V_cell_day / A_cell
+  # if (all(!is.finite(Z_avg)) && any(is.finite(V_cell_day)) && any(is.finite(A_cell)) && all(A_cell > 0, na.rm = TRUE)) {
 
   # Atmospheric totals
   RainVol <- get_first(c("RainVol", "RainVol_total"))
@@ -754,6 +770,13 @@ dmsta_flowP_case <- function(
       Q26 = NA_real_, C26 = NA_real_, L26 = NA_real_,
       # Term 17: seepage recycling bookkeeping (lagged +1 day)
       Q17 = NA_real_, C17 = NA_real_, L17 = NA_real_,
+      # offline values
+      Qin_frac_base = NA_real_,
+      Qin_frac_used = NA_real_,
+      offline = NA,
+      offline_index = NA_integer_,
+      off_diff = NA_integer_,
+      off_mod = NA_integer_,
       stringsAsFactors = FALSE
     )
   }
@@ -924,7 +947,72 @@ dmsta_flowP_case <- function(
   # has_depth_constraint_series <- any(is.finite(series$Zcontrol) & series$Zcontrol != 0)
 
   ## DMSTA HydroIndex(1)
-  # has_depth_constraint_series <- any(is.finite(series$Zcontrol) & series$Zcontrol != 0)
+  has_depth_constraint_series <- any(is.finite(series$Zcontrol) & series$Zcontrol != 0)
+
+  # Effective depth-constraint flag per cell:
+  # - if the cell structurally has a depth-series mapped (Zcon_name), honor it
+  # - OR if the global series provides a nonzero Zcontrol (RS-style), honor it
+  has_depth_constraint_cell <- has_Zcon_cell | has_depth_constraint_series
+
+
+  # Offline schedules per cell (precomputed; DMSTA 2C2B) ---
+  offline_by_cell <- vector("list", ncell)
+
+  for (ic in seq_len(ncell)) {
+    cd <- cells[[ic]]
+    p  <- cd$params
+
+    dmsta_version <- if (!is.null(p$dmsta_version)) as.character(p$dmsta_version) else "2E"
+    base_frac <- if (!is.null(cd$Qin_Frac) && is.finite(as.numeric(cd$Qin_Frac))) as.numeric(cd$Qin_Frac) else 0.0
+
+    # defaults
+    off_start <- if (!is.null(p$offline_start) && !is.na(p$offline_start)) as.Date(p$offline_start) else as.Date("1965-03-15")
+    off_freq  <- if (!is.null(p$offline_freq)  && is.finite(as.numeric(p$offline_freq)))  as.integer(p$offline_freq) else 3L
+    off_dur   <- if (!is.null(p$offline_dur)   && is.finite(as.numeric(p$offline_dur)))   as.integer(p$offline_dur) else 45L
+
+    fracs6 <- c(p$frac_1, p$frac_2, p$frac_3, p$frac_4, p$frac_5, p$frac_6)
+
+    if (!identical(dmsta_version, "2C2B")) {
+      # non-2C2B: always base fraction, no offline
+      offline_by_cell[[ic]] <- data.frame(
+        Date = as.Date(series$Date),
+        Qin_frac_base = base_frac,
+        Qin_frac_used = base_frac,
+        offline = FALSE,
+        offline_index = NA_integer_,
+        off_ini = as.Date(NA),
+        off_diff = NA_integer_,
+        off_mod = NA_integer_,
+        frac_selected = NA_real_,
+        stringsAsFactors = FALSE
+      )
+    } else {
+      tmp <- lapply(seq_len(nday), function(d) {
+        .dmsta_offline_qin_frac(
+          date = series$Date[d],
+          base_frac = base_frac,
+          offline_trigger = isTRUE(p$offline_trigger),
+          offline_start = off_start,
+          offline_freq  = off_freq,
+          offline_dur   = off_dur,
+          offline_fracs = fracs6
+        )
+      })
+
+      offline_by_cell[[ic]] <- data.frame(
+        Date = as.Date(series$Date),
+        Qin_frac_base = vapply(tmp, `[[`, numeric(1), "Qin_frac_base"),
+        Qin_frac_used = vapply(tmp, `[[`, numeric(1), "Qin_frac_used"),
+        offline       = vapply(tmp, `[[`, logical(1), "offline"),
+        offline_index = vapply(tmp, `[[`, integer(1), "offline_index"),
+        off_ini       = as.Date(vapply(tmp, function(x) as.character(x$off_ini), character(1))),
+        off_diff      = vapply(tmp, `[[`, integer(1), "off_diff"),
+        off_mod       = vapply(tmp, `[[`, integer(1), "off_mod"),
+        frac_selected = vapply(tmp, `[[`, numeric(1), "frac_selected"),
+        stringsAsFactors = FALSE
+      )
+    }
+  }
 
   # Iteration loop
   for (iter in seq_len(max_iter)) {
@@ -942,7 +1030,8 @@ dmsta_flowP_case <- function(
       p$force_Q_out <- has_Qr0_cell[ic]# has_Qr0_series
 
       # if (isTRUE(has_depth_constraint_series)) {
-      if (isTRUE(has_Zcon_cell[ic])){
+      # if (isTRUE(has_Zcon_cell[ic])){
+      if (isTRUE(has_depth_constraint_cell[ic])) {
         zc1 <- series$Zcontrol[1]   # meters
         if (!is.finite(zc1)) zc1 <- 0
         Z0_m <- max(zc1, p$Zmin / 100)
@@ -978,7 +1067,10 @@ dmsta_flowP_case <- function(
     # Rolling depth history per cell for Z_plant (seed from initialized V)
     Z_hist <- matrix(0.0, nrow=nday, ncol=ncell)
     for (ic in seq_len(ncell)) {
-      Z_hist[1, ic] <- V[ic] / cells[[ic]]$params$A_cell
+      # Z_hist[1, ic] <- V[ic] / cells[[ic]]$params$A_cell
+      Aic <- cells[[ic]]$params$A_cell
+      Z_hist[1, ic] <- if (is.finite(Aic) && Aic > 0) V[ic] / Aic else NA_real_
+
     }
 
     # Daily loop
@@ -1010,9 +1102,10 @@ dmsta_flowP_case <- function(
       for (ic in seq_len(ncell)) {
         cd <- cells[[ic]]
         basin_ok <- (spl_idx == 0L) || (ic <= spl_idx)
+        Qin_frac_eff <- offline_by_cell[[ic]]$Qin_frac_used[day]
 
-        Qin_basin <- if (basin_ok) series$Qi[day] * cd$Qin_Frac else 0.0
-        Lin_basin <- if (basin_ok) (series$Qi[day] * series$Ci[day]) * cd$Qin_Frac else 0.0
+        Qin_basin <- if (basin_ok) series$Qi[day] * Qin_frac_eff else 0.0
+        Lin_basin <- if (basin_ok) (series$Qi[day] * series$Ci[day]) * Qin_frac_eff else 0.0
 
         Qi_cell[day, ic] <- Qi_cell[day, ic] + Qin_basin
         Mi_cell[day, ic] <- Mi_cell[day, ic] + Lin_basin
@@ -1067,7 +1160,8 @@ dmsta_flowP_case <- function(
           Zcontrol = nz$today,
           Zcontrol_prev = nz$prev_day,
           Zcontrol_next = nz$nxt,
-          has_depth_constraint = has_Zcon_cell[ic],
+          # has_depth_constraint = has_Zcon_cell[ic],
+          has_depth_constraint = has_depth_constraint_cell[ic],
           Qr0 = if (has_Qr0_cell[ic]) series$Qr0[day] else 0,
           Qr1 = if (has_Qr1_cell[ic]) series$Qr1[day] else 0,
           Qr2 = if (has_Qr2_cell[ic]) series$Qr2[day] else 0,
@@ -1199,6 +1293,14 @@ dmsta_flowP_case <- function(
           if (keep_Q17) {
             co$Q17[day] <- Q17; co$L17[day] <- L17; co$C17[day] <- C17
           }
+
+          offrow <- offline_by_cell[[ic]][day, ]
+          co$Qin_frac_base[day] <- offrow$Qin_frac_base
+          co$Qin_frac_used[day] <- offrow$Qin_frac_used
+          co$offline[day]       <- offrow$offline
+          co$offline_index[day] <- offrow$offline_index
+          co$off_diff[day]      <- offrow$off_diff
+          co$off_mod[day]       <- offrow$off_mod
 
           c_wb$RainVol[day] <- res$budgets$water$RainVol
           c_wb$EtVol[day]   <- res$budgets$water$EtVol
@@ -1432,8 +1534,8 @@ dmsta_flowP_case <- function(
     N_plant = N_plant,
     max_iter = max_iter,
     conv_tol = conv_tol,
-    cells = cells
-
+    cells = cells,
+    offline_qin_frac = offline_by_cell
   )
 
   out <- list(

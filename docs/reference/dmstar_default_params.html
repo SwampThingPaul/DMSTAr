@@ -120,9 +120,19 @@ and will override any existing defaults with the same name.</p>
 <span>  DutyCycle <span class="op">=</span> <span class="fl">0.95</span>,</span>
 <span>  Zmin <span class="op">=</span> <span class="fl">2</span>,</span>
 <span>  Cmax <span class="op">=</span> <span class="fl">2000</span>,</span>
-<span>  release_pause_days <span class="op">=</span> <span class="fl">0L</span>,</span>
 <span>  enable_P_release <span class="op">=</span> <span class="cn">FALSE</span>,</span>
 <span>  K_release <span class="op">=</span> <span class="fl">0</span>,</span>
+<span>  dmsta_version <span class="op">=</span> <span class="st">"2E"</span>,</span>
+<span>  offline_trigger <span class="op">=</span> <span class="cn">FALSE</span>,</span>
+<span>  offline_start <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  offline_freq <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  offline_dur <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  frac_1 <span class="op">=</span> <span class="fl">0</span>,</span>
+<span>  frac_2 <span class="op">=</span> <span class="fl">0</span>,</span>
+<span>  frac_3 <span class="op">=</span> <span class="fl">0</span>,</span>
+<span>  frac_4 <span class="op">=</span> <span class="fl">0</span>,</span>
+<span>  frac_5 <span class="op">=</span> <span class="fl">0</span>,</span>
+<span>  frac_6 <span class="op">=</span> <span class="fl">0</span>,</span>
 <span>  IsaNode <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  <span class="va">...</span></span>
 <span><span class="op">)</span></span></code></pre></div>
@@ -309,10 +319,6 @@ the returned list with <code>0</code>. Defaults to <code>FALSE</code>.</p></dd>
 <dd><p>Numeric. Maximum concentration cap (model-specific).</p></dd>
 
 
-<dt id="arg-release-pause-days">release_pause_days<a class="anchor" aria-label="anchor" href="#arg-release-pause-days"></a></dt>
-<dd><p>Numeric. The number of days Qr* are paused</p></dd>
-
-
 <dt id="arg-enable-p-release">enable_P_release<a class="anchor" aria-label="anchor" href="#arg-enable-p-release"></a></dt>
 <dd><p>Logical. If <code>TRUE</code> P release from sediment is active</p></dd>
 
@@ -328,6 +334,10 @@ the returned list with <code>0</code>. Defaults to <code>FALSE</code>.</p></dd>
 <dt id="arg--">...<a class="anchor" aria-label="anchor" href="#arg--"></a></dt>
 <dd><p>Additional named parameters to add to the returned list, or to
 override existing defaults by name. All must be named (e.g., <code>foo = 1</code>).</p></dd>
+
+
+<dt id="arg-release-pause-days">release_pause_days<a class="anchor" aria-label="anchor" href="#arg-release-pause-days"></a></dt>
+<dd><p>Numeric. The number of days Qr* are paused</p></dd>
 
 </dl></div>
     <div id="value">

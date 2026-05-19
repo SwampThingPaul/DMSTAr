@@ -107,25 +107,32 @@ dmsta_DerivMass <- function(state, drivers,ppar,constants) {
   Y <- S / A_tank      # mg/m2 (DMSTA uses kg/km2 == mg/m2)
   zZ <- vV / A_tank    # m
 
+  # NA-safe C and Czero
+  if (!is.finite(C)) C <- 0
+  Czero <- ppar$CZero
+  if (is.null(Czero) || length(Czero) != 1L || !is.finite(Czero)) Czero <- 0
+
+  # NA-safe Cmax for min(C, Cmax)
+  Cmax <- constants$Cmax
+  if (is.null(Cmax) || !is.finite(Cmax)) Cmax <- Inf
+
   # depth and concentration modifiers for each module (1..3)
   Fz <- fC <- c(1, 1, 1)
   for (k in 1:3) {
-    if (isTRUE(ppar$Z_1[k] > 0 && zZ < ppar$Z_1[k])){
-      Fz[k] <- zZ / ppar$Z_1[k] # Fz is a list of 1 so no else Fz[k] <- 1
+    if (isTRUE(ppar$Z_1[k] > 0 && zZ < ppar$Z_1[k])) {
+      Fz[k] <- zZ / ppar$Z_1[k]
     }
-
     if (isTRUE(ppar$Chalf[k] > 0)) {
-      fC[k] <- ppar$Chalf[k] / (ppar$Chalf[k] + min(C, constants$Cmax))
+      fC[k] <- ppar$Chalf[k] / (ppar$Chalf[k] + min(C, Cmax))
     } else {
       fC[k] <- 1
     }
-    # CZero adjustment (resistant P)
-    if (C < ppar$CZero) {
+    # CZero adjustment (resistant P) -- NA safe
+    if (C <= Czero) {
       fC[k] <- 0
-    } else if (C > 0) {
-      fC[k] <- fC[k] * (C - ppar$CZero) / C
     } else {
-      fC[k] <- 0
+      # here C is > Czero and finite, so division is safe
+      fC[k] <- fC[k] * (C - Czero) / C
     }
   }
 
@@ -335,9 +342,10 @@ dmsta_rk4_P_step <- function(M, S, args_base, Dt,ppar,constants,
   S_new <- So + dSdt_ts * Dt
 
   if (clamp) {
-    if (isTRUE(!is.finite(M_new)) || isTRUE(M_new < Mmin)){M_new <- Mmin}
-    if (isTRUE(!is.finite(S_new)) || isTRUE(S_new < Smin)){S_new <- Smin}
+    if (!is.finite(M_new) || M_new < Mmin) M_new <- Mmin
+    if (!is.finite(S_new) || S_new < Smin) S_new <- Smin
   }
+
 
   #  averaged flux diagnostics over step
   avg_flux <- function(name) {
@@ -450,9 +458,10 @@ dmsta_euler_P_step <- function(
   S_new <- S + s$dSdt * Dt
 
   if (clamp) {
-    if (isTRUE(!is.finite(M_new)) || isTRUE(M_new < Mmin)){M_new <- Mmin}
-    if (isTRUE(!is.finite(S_new)) || isTRUE(S_new < Smin)){S_new <- Smin}
+    if (!is.finite(M_new) || M_new < Mmin) M_new <- Mmin
+    if (!is.finite(S_new) || S_new < Smin) S_new <- Smin
   }
+
 
   list(
     M_new = M_new,
@@ -1359,7 +1368,6 @@ dmsta_flowP_series <- function(
 
   # Constants (as expected by dmsta_DerivMass)
   if (is.null(constants)) {
-
     seepin_conc_val <- 0
     if (!is.null(params$Seepin_Conc)) seepin_conc_val <- params$Seepin_Conc
     if (!is.null(params$seepin_conc)) seepin_conc_val <- params$seepin_conc
@@ -1467,9 +1475,59 @@ dmsta_flowP_series <- function(
     steps_store <- NULL
   }
 
+  ## Offline
+  dmsta_version <- if (!is.null(params$dmsta_version)) as.character(params$dmsta_version) else "2E"
+
+  offline_df <- NULL
+  if (identical(dmsta_version, "2C2B")) {
+    base_frac <- if (!is.null(params$Qin_Frac) && is.finite(as.numeric(params$Qin_Frac))) {
+      as.numeric(params$Qin_Frac)
+    } else 1.0
+
+    off_start <- if (!is.null(params$offline_start) && !is.na(params$offline_start)) as.Date(params$offline_start) else as.Date("1965-03-15")
+    off_freq  <- if (!is.null(params$offline_freq)  && is.finite(as.numeric(params$offline_freq)))  as.integer(params$offline_freq) else 3L
+    off_dur   <- if (!is.null(params$offline_dur)   && is.finite(as.numeric(params$offline_dur)))   as.integer(params$offline_dur) else 45L
+
+    fracs6 <- c(params$frac_1, params$frac_2, params$frac_3, params$frac_4, params$frac_5, params$frac_6)
+
+    tmp <- lapply(seq_len(n), function(i) {
+      .dmsta_offline_qin_frac(
+        date = series$Date[i],
+        base_frac = base_frac,
+        offline_trigger = isTRUE(params$offline_trigger),
+        offline_start = off_start,
+        offline_freq  = off_freq,
+        offline_dur   = off_dur,
+        offline_fracs = fracs6
+      )
+    })
+
+    offline_df <- data.frame(
+      Date = as.Date(series$Date),
+      Qin_frac_base = vapply(tmp, `[[`, numeric(1), "Qin_frac_base"),
+      Qin_frac_used = vapply(tmp, `[[`, numeric(1), "Qin_frac_used"),
+      offline       = vapply(tmp, `[[`, logical(1), "offline"),
+      offline_index = vapply(tmp, `[[`, integer(1), "offline_index"),
+      off_ini       = as.Date(vapply(tmp, function(x) as.character(x$off_ini), character(1))),
+      off_diff      = vapply(tmp, `[[`, integer(1), "off_diff"),
+      off_mod       = vapply(tmp, `[[`, integer(1), "off_mod"),
+      frac_selected = vapply(tmp, `[[`, numeric(1), "frac_selected"),
+      stringsAsFactors = FALSE
+    )
+  }
+
   # MAIN DAY LOOP (delegates everything downstream)
   for (i in seq_len(n)) {
     day_inputs <- as.list(series[i, ])
+
+    # Apply offline Qin fraction (2C2B only)
+    params_run <- params
+    if (!is.null(offline_df)) {
+      qf <- offline_df$Qin_frac_used[i]
+      day_inputs$Qin_Frac <- qf
+      # also set on params_run to cover IsaNode path in dmsta_flowP_day()
+      params_run$Qin_Frac <- qf
+    }
 
     nz <- dmsta_zneighbors(i, series$Zcontrol)
 
@@ -1498,7 +1556,7 @@ dmsta_flowP_series <- function(
       P_state = P_state,
       tanks = tanks,
       inputs = day_inputs,
-      params = params,
+      params = params_run,
       ppar = ppar,
       constants = constants,
       Qmethod = Qmethod,
@@ -1584,7 +1642,8 @@ dmsta_flowP_series <- function(
     Qmethod = Qmethod,
     Pmethod = Pmethod,
     has_depth_constraint_series = has_depth_constraint_series,
-    has_Qr0_series = has_Qr0_series
+    has_Qr0_series = has_Qr0_series,
+    offline_qin_frac = offline_df
   )
 
   if (return_steps) meta$steps <- steps_store
