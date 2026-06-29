@@ -1,0 +1,21 @@
+citHeader("To cite DMSTAr in publications, please use:")
+
+bibentry(
+  bibtype = "Manual",
+  title = "DMSTAr: An R implementation of the Dynamic Model for Stormwater Treatment Areas",
+  author = c(
+    person(
+      given = "Paul",
+      family = "Julian",
+      comment = c(ORCID = "0000-0002-7617-1354")
+    )
+  ),
+  year = "2026",
+  note = paste("R package version", meta$Version),
+  doi = "10.5281/zenodo.XXXXXXX",
+  url = "https://github.com/SwampThingPaul/DMSTAr"
+)
+
+citFooter(
+  "Please cite the version-specific Zenodo DOI for the version of DMSTAr used in your analysis to support reproducibility."
+)

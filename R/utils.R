@@ -290,9 +290,19 @@ dmsta_zneighbors <- function(i, z) {
 #' @param Zmin Numeric. Minimum elevation (model-specific).
 #' @param Cmax Numeric. Maximum concentration cap (model-specific).
 #' @param IsaNode Logical or `NULL`. If `NULL`, derived as `(A_cell <= 0)`.
-#' @param release_pause_days Numeric. The number of days Qr* are paused
 #' @param enable_P_release Logical. If `TRUE` P release from sediment is active
 #' @param K_release Numeric. Currently a kg/day rate. For future implementation
+#' @param dmsta_version Text. Version of DMSTA to implement default is set to "2E",
+#' @param offline_trigger Logical. If `FALSE`, STA rest period not implement.
+#' @param offline_start Date. Implement STA rest period start date. Default is `as.Date("1965-03-15)`
+#' @param offline_freq Numeric. frequency of rest period. Default `3L`
+#' @param offline_dur Numeric. Duration of rest period. Default `45L`
+#' @param frac_1  Numeric. value used to update Qfrac during rest period implement
+#' @param frac_2  Numeric. value used to update Qfrac during rest period implement
+#' @param frac_3  Numeric. value used to update Qfrac during rest period implement
+#' @param frac_4  Numeric. value used to update Qfrac during rest period implement
+#' @param frac_5  Numeric. value used to update Qfrac during rest period implement
+#' @param frac_6  Numeric. value used to update Qfrac during rest period implement
 #' @param ... Additional named parameters to add to the returned list, or to
 #'   override existing defaults by name. All must be named (e.g., `foo = 1`).
 #'

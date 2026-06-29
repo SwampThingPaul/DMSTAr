@@ -16,6 +16,10 @@
 )
 }
 \arguments{
+\item{Vo}{Numeric scalar. Volume at start of day.}
+
+\item{k}{Numeric. number of steps.}
+
 \item{Nsteps}{Integer. Nominal steps per day.}
 
 \item{inputs}{List of daily hydrologic forcings.}
@@ -25,16 +29,6 @@
 \item{atol}{Absolute tolerance.}
 
 \item{rtol}{Relative tolerance.}
-
-\item{V}{Numeric scalar. Volume at start of day.}
-
-\item{TrackDeficit}{Logical. Track volume deficit diagnostics.}
-
-\item{VDeficit0}{Numeric. Initial deficit.}
-
-\item{isa_node}{Logical. Whether cell is a node.}
-
-\item{...}{Additional options.}
 }
 \value{
 Hydrology result object with adaptive diagnostics.

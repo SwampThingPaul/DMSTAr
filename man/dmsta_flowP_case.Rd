@@ -204,8 +204,7 @@ P_base <- list(
    Nsteps = 4L,
    max_iter = 1L,
    return_cell_series = TRUE,
-   keep_Q17 = TRUE,
-   keep_extra = FALSE
+   keep_Q17 = TRUE
   )
   head(out$results$case)
   head(out$results$cells[[1]])

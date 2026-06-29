@@ -1,8 +1,8 @@
 Package: DMSTAr
 Type: Package
 Title: Dynamic Model for Stormwater Treatment Areas in R
-Version: 0.1.0
-Date: 2026-03-06
+Version: 0.1.1
+Date: 2026-06-29
 Authors@R: c(person("Paul", "Julian",role=c("aut","cre"),
             email="pjulian@evergladesfoundation.org"))
 Maintainer: Paul Julian <pjulian@evergladesfoundation.org>

@@ -1301,6 +1301,8 @@ dmsta_flowP_day <- function(
 #'   sub-step outputs in the result metadata.
 #' @param ... Additional arguments passed to daily hydrology integration.
 #'
+#' @importFrom utils modifyList
+#'
 #' @return An object of class `"dmsta_result"` with elements:
 #' \describe{
 #'   \item{results}{Data frame of daily hydrology and phosphorus outputs.}

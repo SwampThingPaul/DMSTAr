@@ -1,0 +1,35 @@
+cff-version: 1.2.0
+message: "If you use DMSTAr, please cite the software using the metadata below."
+title: "DMSTAr: An R implementation of the Dynamic Model for Stormwater Treatment Areas"
+type: software
+
+authors:
+  - family-names: "Julian"
+    given-names: "Paul"
+    name-suffix: "II"
+    orcid: "https://orcid.org/0000-0002-7617-1354"
+    affiliation: "The Everglades Foundation"
+
+abstract: "DMSTAr is an open-source R implementation of the Dynamic Model for Stormwater Treatment Areas designed to preserve legacy DMSTA behavior while providing a modular, reproducible, and script-based modeling framework."
+
+keywords:
+  - R
+  - R package
+  - DMSTA
+  - DMSTAr
+  - Stormwater Treatment Areas
+  - Everglades
+  - phosphorus
+  - water quality modeling
+  - wetland modeling
+  - reproducible modeling
+
+license: "MIT"
+version: "0.1.1"
+date-released: "2026-06-29"
+
+repository-code: "https://github.com/SwampThingPaul/DMSTAr"
+url: "https://github.com/SwampThingPaul/DMSTAr"
+
+# Replace this with the version-specific Zenodo DOI after release.
+doi: "10.5281/zenodo.XXXXXXX"

@@ -883,16 +883,13 @@ dmsta_euler_hydro_day <- function(V, inputs, params) {
 #' stepping. Intended for numerical diagnostics and sensitivity
 #' analysis rather than DMSTA parity runs.
 #'
-#' @param V Numeric scalar. Volume at start of day.
+#' @param Vo Numeric scalar. Volume at start of day.
+#' @param k Numeric. number of steps.
 #' @param inputs List of daily hydrologic forcings.
 #' @param params List of hydrologic parameters.
 #' @param Nsteps Integer. Nominal steps per day.
 #' @param atol Absolute tolerance.
 #' @param rtol Relative tolerance.
-#' @param TrackDeficit Logical. Track volume deficit diagnostics.
-#' @param VDeficit0 Numeric. Initial deficit.
-#' @param isa_node Logical. Whether cell is a node.
-#' @param ... Additional options.
 #'
 #' @return Hydrology result object with adaptive diagnostics.
 #'

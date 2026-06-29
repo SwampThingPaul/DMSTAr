@@ -160,12 +160,32 @@ the returned list with \code{0}. Defaults to \code{FALSE}.}
 
 \item{K_release}{Numeric. Currently a kg/day rate. For future implementation}
 
+\item{dmsta_version}{Text. Version of DMSTA to implement default is set to "2E",}
+
+\item{offline_trigger}{Logical. If \code{FALSE}, STA rest period not implement.}
+
+\item{offline_start}{Date. Implement STA rest period start date. Default is \verb{as.Date("1965-03-15)}}
+
+\item{offline_freq}{Numeric. frequency of rest period. Default \code{3L}}
+
+\item{offline_dur}{Numeric. Duration of rest period. Default \code{45L}}
+
+\item{frac_1}{Numeric. value used to update Qfrac during rest period implement}
+
+\item{frac_2}{Numeric. value used to update Qfrac during rest period implement}
+
+\item{frac_3}{Numeric. value used to update Qfrac during rest period implement}
+
+\item{frac_4}{Numeric. value used to update Qfrac during rest period implement}
+
+\item{frac_5}{Numeric. value used to update Qfrac during rest period implement}
+
+\item{frac_6}{Numeric. value used to update Qfrac during rest period implement}
+
 \item{IsaNode}{Logical or \code{NULL}. If \code{NULL}, derived as \code{(A_cell <= 0)}.}
 
 \item{...}{Additional named parameters to add to the returned list, or to
 override existing defaults by name. All must be named (e.g., \code{foo = 1}).}
-
-\item{release_pause_days}{Numeric. The number of days Qr* are paused}
 }
 \value{
 A named list of DMSTAr parameters.
