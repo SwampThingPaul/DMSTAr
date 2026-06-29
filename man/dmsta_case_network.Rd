@@ -37,7 +37,7 @@ run_network_of_cases(
 }
 \arguments{
 \item{net_table}{Optional DMSTA-style network table. If provided and \code{routes} is \code{NULL},
-routing is built with \code{\link[=build_routes_from_net_table]{build_routes_from_net_table()}}.}
+routing is built with \code{build_routes_from_net_table()}.}
 
 \item{outlet_count}{Integer number of outlet bins (used when parsing numeric destinations).}
 
@@ -163,7 +163,7 @@ to downstream CASE inflows.
 \item Routes may terminate at downstream CASEs or numeric outlet bins.
 }
 
-These helpers are primarily used by \code{\link[=run_network_of_cases]{run_network_of_cases()}},
+These helpers are primarily used by \code{run_network_of_cases()},
 but many are also useful independently for diagnostics, testing, and
 custom orchestration.
 
@@ -209,9 +209,9 @@ load and discharge; ensure \code{fw()} is available in your namespace.
 \section{Main user-facing functions}{
 
 \itemize{
-\item \code{\link[=build_routes_from_net_table]{build_routes_from_net_table()}}
-\item \code{\link[=extract_df]{extract_df()}}
-\item \code{\link[=run_network_of_cases]{run_network_of_cases()}}
+\item \code{build_routes_from_net_table()}
+\item \code{extract_df()}
+\item \code{run_network_of_cases()}
 }
 }
 
@@ -285,6 +285,6 @@ head(out$ledger)
 }
 }
 \seealso{
-\code{\link[=dmsta_flowP_case]{dmsta_flowP_case()}}
+\code{dmsta_flowP_case()}
 }
 \keyword{internal}

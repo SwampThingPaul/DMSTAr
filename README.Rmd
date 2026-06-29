@@ -14,10 +14,17 @@ knitr::opts_chunk$set(
   echo = TRUE
 )
 
+# usethis::use_lifecycle_badge("stable")
+# usethis::use_cran_badge()
 ```
-# DMSTAr <img src="man/figures/DMSTAr_hexish.png" align="right" alt="" width="120" />
 
-DMSTAr is a deterministic hydrology and phosphorous mass-balance engine replicating the VBA code semantics of the original Dynamic Model for Stormwater Treatment Areas (DMSTA). For complete details regarding DMSTA background and development see [DMSTA webpage](https://wwwalker.net/dmsta/) and relevant publications below. 
+# DMSTAr <img src="man/figures/DMSTAr_hexish.png" align="right" alt="" width="120" />
+<!-- badges: start -->
+[![DOI](https://zenodo.org/badge/1157489208.svg)](https://doi.org/10.5281/zenodo.21037938)
+[![Lifecycle: stable](https://img.shields.io/badge/lifecycle-stable-brightgreen.svg)](https://lifecycle.r-lib.org/articles/stages.html#stable)
+<!-- badges: end -->
+
+DMSTAr is a deterministic hydrology and phosphorous mass-balance engine replicating the VBA code semantics of the original Dynamic Model for Stormwater Treatment Areas (DMSTA). For complete details regarding DMSTA background and development see [DMSTA webpage](http://wwwalker.net/dmsta/) and relevant publications below. 
 
   * Kadlec RH, Wallace SD (2009) Treatment wetlands, 2nd edn. CRC Press, Boca Raton, FL
 

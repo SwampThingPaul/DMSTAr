@@ -36,6 +36,6 @@ The function also returns per-tank area fractions and cumulative fractions
 fraction can be "snapped" to exactly 1.0 for numerical stability.
 }
 \seealso{
-\code{\link[=dmsta_p_init_state]{dmsta_p_init_state()}} for initializing state vectors
+\code{dmsta_p_init_state()} for initializing state vectors
 compatible with the returned \code{Ntanks}.
 }

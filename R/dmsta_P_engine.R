@@ -4,7 +4,7 @@
 #' Internal helpers implementing DMSTA coupled phosphorus mass balance within
 #' a tank series, including derivative evaluation and RK4 stepping.
 #'
-#' These functions are used by [dmsta_flowP_series()].
+#' These functions are used by `dmsta_flowP_series()`.
 #'
 #' @name internal_dmsta_phosphorus
 #' @keywords internal

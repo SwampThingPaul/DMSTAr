@@ -20,7 +20,7 @@ and will override any existing defaults with the same name."><!-- mathjax --><sc
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">DMSTAr</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">0.1.0</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">0.1.1</span>
       </span>
     </div>
 
@@ -327,6 +327,50 @@ the returned list with <code>0</code>. Defaults to <code>FALSE</code>.</p></dd>
 <dd><p>Numeric. Currently a kg/day rate. For future implementation</p></dd>
 
 
+<dt id="arg-dmsta-version">dmsta_version<a class="anchor" aria-label="anchor" href="#arg-dmsta-version"></a></dt>
+<dd><p>Text. Version of DMSTA to implement default is set to "2E",</p></dd>
+
+
+<dt id="arg-offline-trigger">offline_trigger<a class="anchor" aria-label="anchor" href="#arg-offline-trigger"></a></dt>
+<dd><p>Logical. If <code>FALSE</code>, STA rest period not implement.</p></dd>
+
+
+<dt id="arg-offline-start">offline_start<a class="anchor" aria-label="anchor" href="#arg-offline-start"></a></dt>
+<dd><p>Date. Implement STA rest period start date. Default is <code>as.Date("1965-03-15)</code></p></dd>
+
+
+<dt id="arg-offline-freq">offline_freq<a class="anchor" aria-label="anchor" href="#arg-offline-freq"></a></dt>
+<dd><p>Numeric. frequency of rest period. Default <code>3L</code></p></dd>
+
+
+<dt id="arg-offline-dur">offline_dur<a class="anchor" aria-label="anchor" href="#arg-offline-dur"></a></dt>
+<dd><p>Numeric. Duration of rest period. Default <code>45L</code></p></dd>
+
+
+<dt id="arg-frac-">frac_1<a class="anchor" aria-label="anchor" href="#arg-frac-"></a></dt>
+<dd><p>Numeric. value used to update Qfrac during rest period implement</p></dd>
+
+
+<dt id="arg-frac-">frac_2<a class="anchor" aria-label="anchor" href="#arg-frac-"></a></dt>
+<dd><p>Numeric. value used to update Qfrac during rest period implement</p></dd>
+
+
+<dt id="arg-frac-">frac_3<a class="anchor" aria-label="anchor" href="#arg-frac-"></a></dt>
+<dd><p>Numeric. value used to update Qfrac during rest period implement</p></dd>
+
+
+<dt id="arg-frac-">frac_4<a class="anchor" aria-label="anchor" href="#arg-frac-"></a></dt>
+<dd><p>Numeric. value used to update Qfrac during rest period implement</p></dd>
+
+
+<dt id="arg-frac-">frac_5<a class="anchor" aria-label="anchor" href="#arg-frac-"></a></dt>
+<dd><p>Numeric. value used to update Qfrac during rest period implement</p></dd>
+
+
+<dt id="arg-frac-">frac_6<a class="anchor" aria-label="anchor" href="#arg-frac-"></a></dt>
+<dd><p>Numeric. value used to update Qfrac during rest period implement</p></dd>
+
+
 <dt id="arg-isanode">IsaNode<a class="anchor" aria-label="anchor" href="#arg-isanode"></a></dt>
 <dd><p>Logical or <code>NULL</code>. If <code>NULL</code>, derived as <code>(A_cell &lt;= 0)</code>.</p></dd>
 
@@ -334,10 +378,6 @@ the returned list with <code>0</code>. Defaults to <code>FALSE</code>.</p></dd>
 <dt id="arg--">...<a class="anchor" aria-label="anchor" href="#arg--"></a></dt>
 <dd><p>Additional named parameters to add to the returned list, or to
 override existing defaults by name. All must be named (e.g., <code>foo = 1</code>).</p></dd>
-
-
-<dt id="arg-release-pause-days">release_pause_days<a class="anchor" aria-label="anchor" href="#arg-release-pause-days"></a></dt>
-<dd><p>Numeric. The number of days Qr* are paused</p></dd>
 
 </dl></div>
     <div id="value">

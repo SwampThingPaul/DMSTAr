@@ -156,7 +156,7 @@ mass balances over a sub-day interval. This integrator evaluates
 matching DMSTA conventions for within-day process evaluation.
 }
 \details{
-These functions are used by \code{\link[=dmsta_flowP_series]{dmsta_flowP_series()}}.
+These functions are used by \code{dmsta_flowP_series()}.
 
 Internal diagnostics are computed from stage volume \code{vV}:
 \itemize{

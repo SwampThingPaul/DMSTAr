@@ -7,7 +7,7 @@
 dmsta_p_init_state(tanks, Z_init_m, C_init_ppb, Y_init_mgm2)
 }
 \arguments{
-\item{tanks}{A list as returned by \code{\link[=dmsta_build_tanks]{dmsta_build_tanks()}} containing
+\item{tanks}{A list as returned by \code{dmsta_build_tanks()} containing
 \code{Ntanks} and \code{A_Tank}.}
 
 \item{Z_init_m}{Numeric scalar. Initial water column depth (meters).}
@@ -38,5 +38,5 @@ where \code{A_Tank[i]} is the area of tank \code{i}. Units are assumed to be
 consistent with the DMSTA implementation (e.g., depth in meters).
 }
 \seealso{
-\code{\link[=dmsta_build_tanks]{dmsta_build_tanks()}} to generate tank geometry.
+\code{dmsta_build_tanks()} to generate tank geometry.
 }

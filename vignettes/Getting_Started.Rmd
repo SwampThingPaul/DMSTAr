@@ -31,7 +31,7 @@ The package is designed to:
 This vignette provides a practical introduction to the main ideas and a minimal working example.
 
 ## Core Concepts
-Before running a model, it hepls to understand a few core terms/concepts used throghout `DMSTAr` taken from DMSTA. For more information on DMSTA specifically, please visit the [DMSTA2](https://wwwalker.net/dmsta/) webpage.
+Before running a model, it hepls to understand a few core terms/concepts used throghout `DMSTAr` taken from DMSTA. For more information on DMSTA specifically, please visit the [DMSTA2](http://wwwalker.net/dmsta/) webpage.
 
 A **case** represents a single modeled unit (e.g., an STA cell, reservoir, or reach). Each case has:
 - inflows and outflows

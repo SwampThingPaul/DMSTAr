@@ -32,7 +32,7 @@ NULL
 #'   \item{Fcum}{Numeric vector of cumulative area fractions (`cumsum(F_Tank)`).}
 #' }
 #'
-#' @seealso [dmsta_p_init_state()] for initializing state vectors
+#' @seealso `dmsta_p_init_state()` for initializing state vectors
 #'   compatible with the returned `Ntanks`.
 #'
 #' @export
@@ -71,7 +71,7 @@ dmsta_build_tanks <- function(A_cell, ttankS,snap_last = TRUE) {
 #' where `A_Tank[i]` is the area of tank `i`. Units are assumed to be
 #' consistent with the DMSTA implementation (e.g., depth in meters).
 #'
-#' @param tanks A list as returned by [dmsta_build_tanks()] containing
+#' @param tanks A list as returned by `dmsta_build_tanks()` containing
 #'   `Ntanks` and `A_Tank`.
 #' @param Z_init_m Numeric scalar. Initial water column depth (meters).
 #' @param C_init_ppb Numeric scalar. Initial concentration (ppb).
@@ -83,7 +83,7 @@ dmsta_build_tanks <- function(A_cell, ttankS,snap_last = TRUE) {
 #'   \item{S}{Numeric vector (length `tanks$Ntanks`) of initialized sediment/areal stores.}
 #' }
 #'
-#' @seealso [dmsta_build_tanks()] to generate tank geometry.
+#' @seealso `dmsta_build_tanks()` to generate tank geometry.
 #'
 #' @export
 dmsta_p_init_state <- function(tanks, Z_init_m, C_init_ppb, Y_init_mgm2) {

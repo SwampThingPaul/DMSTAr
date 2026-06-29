@@ -4,7 +4,7 @@
 #' including per-cell initialization, validation, per-cell kinetics preparation,
 #' daily-mean volume calculations, and output column normalization.
 #'
-#' These functions are used by [dmsta_flowP_case()] and related
+#' These functions are used by `dmsta_flowP_case()` and related
 #' network orchestration logic.
 #'
 #' @name internal_dmsta_case
@@ -57,7 +57,7 @@ dmsta_daily_avg_volume <- function(step_list) {
 #' @return The updated `cells` list with `$ppar` and `$constants`
 #'   added to each element.
 #'
-#' @seealso [dmsta_validate_cells()] for strict validation of the
+#' @seealso `dmsta_validate_cells()` for strict validation of the
 #'   resulting cell definitions.
 #'
 #' @rdname internal_dmsta_case
@@ -107,7 +107,7 @@ dmsta_prepare_cells_modules <- function(cells) {
 #'
 #' The function also fills defaults for some routing fields if missing.
 #'
-#' @param cells A list of cell definitions (as created by [dmsta_make_cell()]
+#' @param cells A list of cell definitions (as created by `dmsta_make_cell()`
 #'   or assembled manually).
 #'
 #' @return The normalized `cells` list (with defaults filled in). Invisibly
@@ -170,7 +170,7 @@ dmsta_validate_cells <- function(cells) {
 
 #' Create a DMSTA network cell definition
 #'
-#' Constructs a cell definition used by [dmsta_flowP_case()] network/case
+#' Constructs a cell definition used by `dmsta_flowP_case()` network/case
 #' simulations. The function attaches:
 #' \itemize{
 #'   \item per-cell tank specification `ttankS`,
@@ -197,9 +197,9 @@ dmsta_validate_cells <- function(cells) {
 #'   or a named vector/list mapping downstream indices to fractions.
 #'
 #' @return A named list representing a cell definition, suitable for inclusion
-#'   in the `cells` argument of [dmsta_flowP_case()].
+#'   in the `cells` argument of `dmsta_flowP_case()`.
 #'
-#' @seealso [dmsta_flowP_case()] for running a multi-cell simulation.
+#' @seealso `dmsta_flowP_case()` for running a multi-cell simulation.
 #'
 #' @export
 dmsta_make_cell <- function(label, params, ttankS, DownCell = 0L, Qin_Frac = 0,

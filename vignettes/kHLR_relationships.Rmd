@@ -22,7 +22,7 @@ library(kableExtra)
 
 ```
 
-<!-- https://wwwalker.net/dmsta1/doc/theory/pcycle.htm  good background -->
+<!-- http://wwwalker.net/dmsta1/doc/theory/pcycle.htm  good background -->
 
 The purpose of this vignette is to explain a way to derive "equivalent"k-HLR relationships that let you translate between Dynamic DMSTA-style P model parameters (ie. $K_1$, $K_2$, $K_3$,$C_0$ and $C_1$), and the familiar $k-C^*$/N-tank-in-series design relationships used for screening and sizing of treatment wetlands. 
 

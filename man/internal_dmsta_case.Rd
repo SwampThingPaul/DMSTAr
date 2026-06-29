@@ -81,7 +81,7 @@ case-level result data frames. The function:
 }
 }
 \details{
-These functions are used by \code{\link[=dmsta_flowP_case]{dmsta_flowP_case()}} and related
+These functions are used by \code{dmsta_flowP_case()} and related
 network orchestration logic.
 
 The function returns the updated \code{cells} object.
@@ -91,7 +91,7 @@ This function uses the phosphorus model registry exposed as
 builders are available in the registry.
 }
 \seealso{
-\code{\link[=dmsta_validate_cells]{dmsta_validate_cells()}} for strict validation of the
+\code{dmsta_validate_cells()} for strict validation of the
 resulting cell definitions.
 }
 \keyword{internal}

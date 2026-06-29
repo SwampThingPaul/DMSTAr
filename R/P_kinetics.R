@@ -156,7 +156,7 @@ build_P_kinetics <- function(mod_type, Dpy = 365.25, DutyCycle = NULL, pparams, 
 #' Builds phosphorus kinetics for multiple model "slots" and assembles the
 #' results into K-length vectors (where `K = length(mods)`).
 #'
-#' Each slot is constructed by calling [build_P_kinetics()] with the same
+#' Each slot is constructed by calling `build_P_kinetics()` with the same
 #' parameter list `pparams`. This is useful when a simulation uses multiple
 #' phosphorus modules that differ by model type but share the same raw parameter set.
 #'
@@ -169,7 +169,7 @@ build_P_kinetics <- function(mod_type, Dpy = 365.25, DutyCycle = NULL, pparams, 
 #' @param DutyCycle Numeric scalar in \eqn{[0,1]}. Duty cycle multiplier.
 #' @param derive_PModel Logical; reserved for future use.
 #' @param default_PModel Integer scalar; reserved for future use.
-#' @param ... Additional arguments passed to [build_P_kinetics()].
+#' @param ... Additional arguments passed to `build_P_kinetics()`.
 #'
 #' @return A named `list` containing:
 #' \describe{

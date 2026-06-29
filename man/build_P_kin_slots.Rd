@@ -32,7 +32,7 @@ passed to every slot.}
 
 \item{default_PModel}{Integer scalar; reserved for future use.}
 
-\item{...}{Additional arguments passed to \code{\link[=build_P_kinetics]{build_P_kinetics()}}.}
+\item{...}{Additional arguments passed to \code{build_P_kinetics()}.}
 }
 \value{
 A named \code{list} containing:
@@ -49,7 +49,7 @@ Builds phosphorus kinetics for multiple model "slots" and assembles the
 results into K-length vectors (where \code{K = length(mods)}).
 }
 \details{
-Each slot is constructed by calling \code{\link[=build_P_kinetics]{build_P_kinetics()}} with the same
+Each slot is constructed by calling \code{build_P_kinetics()} with the same
 parameter list \code{pparams}. This is useful when a simulation uses multiple
 phosphorus modules that differ by model type but share the same raw parameter set.
 }

@@ -7,7 +7,7 @@
 dmsta_validate_cells(cells)
 }
 \arguments{
-\item{cells}{A list of cell definitions (as created by \code{\link[=dmsta_make_cell]{dmsta_make_cell()}}
+\item{cells}{A list of cell definitions (as created by \code{dmsta_make_cell()}
 or assembled manually).}
 }
 \value{

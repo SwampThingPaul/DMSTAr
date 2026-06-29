@@ -38,10 +38,10 @@ or a named vector/list mapping downstream indices to fractions.}
 }
 \value{
 A named list representing a cell definition, suitable for inclusion
-in the \code{cells} argument of \code{\link[=dmsta_flowP_case]{dmsta_flowP_case()}}.
+in the \code{cells} argument of \code{dmsta_flowP_case()}.
 }
 \description{
-Constructs a cell definition used by \code{\link[=dmsta_flowP_case]{dmsta_flowP_case()}} network/case
+Constructs a cell definition used by \code{dmsta_flowP_case()} network/case
 simulations. The function attaches:
 \itemize{
 \item per-cell tank specification \code{ttankS},
@@ -53,5 +53,5 @@ simulations. The function attaches:
 }
 }
 \seealso{
-\code{\link[=dmsta_flowP_case]{dmsta_flowP_case()}} for running a multi-cell simulation.
+\code{dmsta_flowP_case()} for running a multi-cell simulation.
 }

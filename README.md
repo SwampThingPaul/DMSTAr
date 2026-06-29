@@ -1,11 +1,18 @@
 
 # DMSTAr <img src="man/figures/DMSTAr_hexish.png" align="right" alt="" width="120" />
 
+<!-- badges: start -->
+
+[![DOI](https://zenodo.org/badge/1157489208.svg)](https://doi.org/10.5281/zenodo.21037938)
+[![Lifecycle:
+stable](https://img.shields.io/badge/lifecycle-stable-brightgreen.svg)](https://lifecycle.r-lib.org/articles/stages.html#stable)
+<!-- badges: end -->
+
 DMSTAr is a deterministic hydrology and phosphorous mass-balance engine
 replicating the VBA code semantics of the original Dynamic Model for
 Stormwater Treatment Areas (DMSTA). For complete details regarding DMSTA
 background and development see [DMSTA
-webpage](https://wwwalker.net/dmsta/) and relevant publications below.
+webpage](http://wwwalker.net/dmsta/) and relevant publications below.
 
 - Kadlec RH, Wallace SD (2009) Treatment wetlands, 2nd edn. CRC Press,
   Boca Raton, FL
@@ -41,21 +48,26 @@ with using the model for designing treatment areas or any other purpose.
 
 ``` r
 citation('DMSTAr')
-#> To cite package 'DMSTAr' in publications use:
+#> To cite DMSTAr in publications, please use:
 #> 
-#>   Julian P (2026). _DMSTAr: Dynamic Model for Stormwater Treatment
-#>   Areas in R_. R package version 0.1.0,
+#>   Julian P (2026). _DMSTAr: An R implementation of the Dynamic Model
+#>   for Stormwater Treatment Areas_. doi:10.5281/zenodo.21037939
+#>   <https://doi.org/10.5281/zenodo.21037939>, R package version 0.1.1,
 #>   <https://github.com/SwampThingPaul/DMSTAr>.
 #> 
 #> A BibTeX entry for LaTeX users is
 #> 
 #>   @Manual{,
-#>     title = {DMSTAr: Dynamic Model for Stormwater Treatment Areas in R},
+#>     title = {DMSTAr: An R implementation of the Dynamic Model for Stormwater Treatment Areas},
 #>     author = {Paul Julian},
 #>     year = {2026},
-#>     note = {R package version 0.1.0},
+#>     note = {R package version 0.1.1},
+#>     doi = {10.5281/zenodo.21037939},
 #>     url = {https://github.com/SwampThingPaul/DMSTAr},
 #>   }
+#> 
+#> Please cite the version-specific Zenodo DOI for the version of DMSTAr
+#> used in your analysis to support reproducibility.
 ```
 
 ## Installation <a name="install"></a>

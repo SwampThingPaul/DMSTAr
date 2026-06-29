@@ -27,15 +27,15 @@
 #'   \item Routes may terminate at downstream CASEs or numeric outlet bins.
 #' }
 #'
-#' These helpers are primarily used by [run_network_of_cases()],
+#' These helpers are primarily used by `run_network_of_cases()`,
 #' but many are also useful independently for diagnostics, testing, and
 #' custom orchestration.
 #'
 #' @section Main user-facing functions:
 #' \itemize{
-#'   \item [build_routes_from_net_table()]
-#'   \item [extract_df()]
-#'   \item [run_network_of_cases()]
+#'   \item `build_routes_from_net_table()`
+#'   \item `extract_df()`
+#'   \item `run_network_of_cases()`
 #' }
 #'
 #' @section Internal helpers:
@@ -109,7 +109,7 @@ build_routes_from_net_table <- function(net_table,
   miss <- setdiff(req, names(net_table))
   if (length(miss)) stop("net_table missing columns: ", paste(miss, collapse = ", "))
 
-  # DMSTA rule: blank means ignore stream. [1](http://www.wwwalker.net/dmsta/)
+  # DMSTA rule: blank means ignore stream.
   parse_dest <- function(x) {
     if (is.null(x) || length(x) == 0 || is.na(x) || trimws(as.character(x)) == "") return(NULL)
     x_chr <- trimws(as.character(x))
@@ -280,7 +280,7 @@ stream_map_cols <- function(stream, outflow_def = c("treated", "total")) {
 #' (i.e., contains no directed cycles).
 #'
 #' @param routes A `data.frame` of routes such as produced by
-#'   [build_routes_from_net_table()]. Must include `from_case`,
+#'   `build_routes_from_net_table()`. Must include `from_case`,
 #'   `to_type`, and `to_id`.
 #' @param case_names Character vector of all CASE IDs participating in the network.
 #'
@@ -383,7 +383,7 @@ lag_vec <- function(x, lag_days) {
 #'     \item `cells`: a list of cell definitions for `dmsta_flowP_case()`
 #'   }
 #' @param net_table Optional DMSTA-style network table. If provided and `routes` is `NULL`,
-#'   routing is built with [build_routes_from_net_table()].
+#'   routing is built with `build_routes_from_net_table()`.
 #' @param routes Optional normalized routing table. If provided, `net_table` is ignored.
 #' @param outlet_count Integer number of outlet bins (used when parsing numeric destinations).
 #' @param verbose Logical; if `TRUE`, prints execution order and per-CASE summaries.
@@ -446,7 +446,7 @@ lag_vec <- function(x, lag_days) {
 #' out$outlet_summary
 #' head(out$ledger)
 #' }
-#' @seealso [dmsta_flowP_case()]
+#' @seealso `dmsta_flowP_case()`
 #' @rdname dmsta_case_network
 #' @export
 
