@@ -1,3 +1,10 @@
+# DMSTAr 0.1.1
+
+## 2026-06-29
+
+* Publicly release repo on Github and got zenodo DOI
+* Submitted to CRAN
+
 # DMSTAr 0.1.0 
 
 ## 2026-02-13
