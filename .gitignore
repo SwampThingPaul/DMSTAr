@@ -12,3 +12,8 @@
 /docs/pkg_reference.md
 /docs/pkg_reference.txt
 inst/doc
+
+
+# CRAN release bookkeeping
+CRAN-SUBMISSION
+CRAN-RELEASE
