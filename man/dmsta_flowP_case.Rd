@@ -111,7 +111,7 @@ hydro_base <- list(
   Zweir  = 0,              # cm
   Q_zmin = 38,             # cm
   Zrelease = 0,            # cm
-  Bypass_elev = 121.92,    # cm (≈ 1.2192 m)
+  Bypass_elev = 121.92,    # cm (approx 1.2192 m)
   # hydraulics
   Q_a = 1.0,
   Q_b = 4.0,

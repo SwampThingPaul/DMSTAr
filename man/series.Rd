@@ -16,7 +16,8 @@ format in the raw object shown; you may convert to \code{Date} with \code{as.Dat
 }
 }
 \source{
-Source workbook: \file{DMSTA_Apr2012-Final/PROJECT_SFWMD_EC_01MAR2012_NET_EAA_STA1E.xls}
+Source workbook: \code{PROJECT_SFWMD_EC_01MAR2012_NET_EAA_STA1E.xls}
+
 sheet \code{Series_Input}
 }
 \usage{

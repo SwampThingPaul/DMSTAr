@@ -1,9 +1,13 @@
 # DMSTAr 0.1.1
 
+## 2026-06-30
+
+* Submitted to CRAN
+* Blog post written [DMSTAr blog](https://swampthingecology.org/news/20260630_DMSTAr.html)
+
 ## 2026-06-29
 
 * Publicly release repo on Github and got zenodo DOI
-* Submitted to CRAN
 
 # DMSTAr 0.1.0 
 

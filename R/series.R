@@ -20,7 +20,8 @@
 #' (e.g., `Flow -> Qi`, `Conc -> Ci`, `Rainfall -> Rain`).
 #'
 #' @source
-#' Source workbook: \file{DMSTA_Apr2012-Final/PROJECT_SFWMD_EC_01MAR2012_NET_EAA_STA1E.xls}
+#' Source workbook: `PROJECT_SFWMD_EC_01MAR2012_NET_EAA_STA1E.xls`
+#'
 #' sheet `Series_Input`
 #'
 #' @examples
